@@ -95,6 +95,26 @@ This paper describes that artifact and the loop around it.  The ingredients are:
   \item a \textbf{gate} $\gate$: replay plus semantic comparison over every promoted case.
 \end{enumerate}
 
+\begin{figure}[t]
+\begin{center}
+\setlength{\fboxsep}{6pt}
+\fbox{%
+\begin{tabular}{c}
+Human sketch $\sketch$ names strategy and holes \\
+$\Downarrow$ \\
+Agent edits code and prompt surfaces under anchors $\anchors$ \\
+$\Downarrow$ \\
+Replay checks state repair over each promoted case \\
+$\Downarrow$ \\
+Semantic compare checks policy-bearing fields \\
+$\Downarrow$ \\
+Failure promotes a counterexample into $\corpus$ and sharpens $\sketch$
+\end{tabular}}
+\end{center}
+\caption{The repository loop that turns a tempting wrong repair into durable guidance.}
+\label{fig:loop}
+\end{figure}
+
 The sketch records the human's current strategy: which repairs are permitted, prioritized, or
 forbidden.  The corpus records cases that have earned specification authority through
 promotion.  The gate is the executable boundary for the current done state.  A failure becomes
@@ -358,6 +378,25 @@ current executable semantics.  Keeping those jobs separate makes failures easier
 when a gate fails, the maintainer can ask whether the sketch, corpus, anchor, implementation,
 or checker needs to change.
 
+\begin{table}[t]
+\begin{center}
+\small
+\begin{tabular}{p{0.17\linewidth}p{0.34\linewidth}p{0.36\linewidth}}
+\toprule
+Artifact & Reader question & Failure if blurred \\
+\midrule
+Sketch & What rule should future repairs preserve? & The prompt drifts and the rule stays hidden. \\
+Corpus & Which cases have specification authority? & Examples become anecdotes, not promoted constraints. \\
+Anchors & What local code shape must the agent preserve? & The agent invents a second convention. \\
+Implementation & Which code or prompt handles the hole? & A paper rule cannot be traced to the surface that applies it. \\
+Gate & What behavior is executable now? & The claim floats above the repository instead of being checked. \\
+\bottomrule
+\end{tabular}
+\end{center}
+\caption{Artifact responsibilities from a reader's point of view.}
+\label{tab:artifact-map}
+\end{table}
+
 \begin{definition}[Sketch]
 A sketch $\sketch$ is a human-editable artifact that fixes the permitted strategy space and
 names holes.  It may contain prose, tables, pseudo-code, type shapes, policy order, abstention
@@ -589,6 +628,23 @@ different wrong repairs.  In the roster example, an append repair can close the 
 while choosing the wrong operation; replay accepts the state change and compare rejects the
 policy violation.
 
+\begin{table}[t]
+\begin{center}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.16\linewidth}p{0.17\linewidth}p{0.33\linewidth}}
+\toprule
+Candidate behavior & Replay & Compare & Interpretation \\
+\midrule
+Open state gap & reject & not reached & Candidate fails encoded state repair. \\
+Closed state, wrong op & accept & reject & Candidate repairs state but violates a policy field. \\
+Closed state, right op & accept & accept & Case satisfies $\corpus$ under current repo semantics. \\
+\bottomrule
+\end{tabular}
+\end{center}
+\caption{Replay and semantic compare answer different reader questions.}
+\label{tab:gate-matrix}
+\end{table}
+
 \subsection{Design rules for gates}
 
 A gate should be deterministic, local, and specific.  It should run locally, report the exact
@@ -697,6 +753,22 @@ append an adjustment that closes the delta.  That patch can make the numbers bal
 policy interpretation is different: when duplicate active bookings with the same relevant
 shape explain the gap, cancel the selected duplicate.  The difference is small in output shape
 and large in meaning.
+
+\begin{table}[t]
+\begin{center}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.23\linewidth}p{0.21\linewidth}p{0.22\linewidth}}
+\toprule
+Repair & Visible state effect & Policy meaning & Gate result \\
+\midrule
+Append adjustment & hours delta closed & gap compensation & replay accepts; compare rejects \\
+Cancel duplicate & hours delta closed & duplicate removed & replay accepts; compare accepts \\
+\bottomrule
+\end{tabular}
+\end{center}
+\caption{The worked example separates state repair from policy repair in one small case.}
+\label{tab:worked-example-repairs}
+\end{table}
 
 \subsection{Tempting repair}
 

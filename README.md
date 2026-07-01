@@ -8,6 +8,21 @@
 
 The paper is the primary artifact. It names the method, gives the formal model, places the work against sketching, CEGIS, programming by example, tests-as-prompts, and coding-agent benchmarks, and states the finite-corpus correctness claim. This repository is companion evidence: runnable examples, fixtures, provenance, and tests for the paper's worked claims.
 
+## Method at a glance
+
+```mermaid
+flowchart LR
+    Sketch["Sketch: permitted strategy"] --> Agent["Agent edits code/prompts"]
+    Anchors["Known-code anchors"] --> Agent
+    Corpus["Promoted corpus E"] --> Replay["Replay: did state repair?"]
+    Agent --> Replay
+    Replay --> Compare["Semantic compare: did policy field match?"]
+    Corpus --> Compare
+    Compare -->|pass| Done["Current artifact satisfies E"]
+    Compare -->|fail| Counterexample["Promote counterexample"]
+    Counterexample --> Sketch
+```
+
 ## Read by path
 
 - **Academics:** start with [`paper/main.tex`](paper/main.tex), then inspect [`paper/references.bib`](paper/references.bib) and the executable evidence below. The claim boundary is finite-corpus soundness over the promoted corpus `E`.
