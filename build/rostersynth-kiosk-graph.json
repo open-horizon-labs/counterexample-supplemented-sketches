@@ -146,14 +146,14 @@
       "kind": "promotion_step",
       "name": "Historical Op 1-only failure promotes Op 2",
       "selector": "examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:140-150",
-      "observation": "Append closed delta but compare failed: expected modify, got append."
+      "observation": "Append closed delta; compare expected modify and got append."
     },
     {
       "id": "session.step3",
       "kind": "session_step",
       "name": "Hybrid uses Oracle A",
       "selector": "examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:154-176",
-      "observation": "Hybrid passes; Oracle A wins so no LLM fallback for kiosk."
+      "observation": "Hybrid passes; Oracle A handles kiosk."
     },
     {
       "id": "session.step4",
@@ -165,9 +165,9 @@
     {
       "id": "session.step5",
       "kind": "negative_check",
-      "name": "Wrong cassette fails compare",
+      "name": "Lower-booking cassette fails compare",
       "selector": "examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:210-232",
-      "observation": "Wrong bookingId 1801 still closes replay but compare fails."
+      "observation": "Lower bookingId 1801 closes replay; compare catches the wrong booking."
     },
     {
       "id": "session.step7",
@@ -195,7 +195,7 @@
       "kind": "verification_check",
       "name": "test_kiosk_hybrid_uses_deterministic_without_fallback",
       "selector": "examples/rostersynth-kiosk/source/tests/test_rostersynth.py:152-159",
-      "check": "Hybrid must keep deterministic row and not require fallback."
+      "check": "Hybrid keeps the deterministic row and avoids fallback for kiosk."
     },
     {
       "id": "test.row-closes-delta",

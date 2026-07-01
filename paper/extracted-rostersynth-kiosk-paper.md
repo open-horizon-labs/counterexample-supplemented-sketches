@@ -1,6 +1,6 @@
 # Agentic Synthesis against Counterexample-Supplemented Sketches
 
-> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example, not the process name; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
+> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example for the process; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
 
 ## Abstract
 
@@ -318,10 +318,10 @@ Selector: `examples/rostersynth-kiosk/source/cassettes/roster.kiosk_double_booki
 - `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:36-58` — Golden op is modify bookingId 1802.
 - `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:63-96` — Prompt gives Op 2 priority over append and shows kiosk payload.
 - `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:100-135` — Deterministic gate passes; compare and replay both green.
-- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:140-150` — Append closed delta but compare failed: expected modify, got append.
-- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:154-176` — Hybrid passes; Oracle A wins so no LLM fallback for kiosk.
+- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:140-150` — Append closed delta; compare expected modify and got append.
+- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:154-176` — Hybrid passes; Oracle A handles kiosk.
 - `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:182-205` — Cassette emits bookingId 1802.
-- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:210-232` — Wrong bookingId 1801 still closes replay but compare fails.
+- `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:210-232` — Lower bookingId 1801 closes replay; compare catches the wrong booking.
 - `examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:281-299` — Deterministic 12/12 plus 2 excluded; hybrid and llm-only cassette 14/14.
 
 ## Query: How Is This Counterexample Handled?
@@ -333,16 +333,16 @@ Tempting patch: append -40 hours to close coverageDelta, or cancel lower booking
 Path:
 - Sketch clause: examples/rostersynth-kiosk/source/docs/sketch.md:20-27 — Twins on windowEnd with same shiftKind and hours cancel the higher bookingId when that alone closes delta; clusterNotes route to Oracle B.
 - Corpus/session observation: examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:36-58 — Golden op is modify bookingId 1802.
-- Promotion trigger: examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:140-150 — Append closed delta but compare failed: expected modify, got append.
+- Promotion trigger: examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:140-150 — Append closed delta; compare expected modify and got append.
 - Oracle A: examples/rostersynth-kiosk/source/rostersynth/playbook.py:109-137 — Groups active windowEnd bookings by (shiftKind, hours), picks max bookingId, and only emits modify if deactivation closes coverageDelta.
 - Replay: examples/rostersynth-kiosk/source/rostersynth/verifier.py:8-18 — Rows must close each imbalanced employee's coverageDelta.
 - Compare: examples/rostersynth-kiosk/source/rostersynth/eval/comparer.py:8-55 — Golden compare catches wrong op, wrong bookingId, and wrong fields.status.
 - Oracle B prompt: examples/rostersynth-kiosk/source/rostersynth/oracle/prompt.py:14-40 — Puts Op 2 before Op 1 and states the higher-bookingId tie-break plus required modify shape.
-- Negative check: examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:210-232 — Wrong bookingId 1801 still closes replay but compare fails.
+- Negative check: examples/rostersynth-kiosk/source/docs/sessions/01-kiosk-double-booking.md:210-232 — Lower bookingId 1801 closes replay; compare catches the wrong booking.
 Verified by:
 - examples/rostersynth-kiosk/source/tests/test_rostersynth.py:99-105: Oracle A must emit modify bookingId 1802.
 - examples/rostersynth-kiosk/source/tests/test_rostersynth.py:129-135: Oracle B cassette must emit modify bookingId 1802.
-- examples/rostersynth-kiosk/source/tests/test_rostersynth.py:152-159: Hybrid must keep deterministic row and not require fallback.
+- examples/rostersynth-kiosk/source/tests/test_rostersynth.py:152-159: Hybrid keeps the deterministic row and avoids fallback for kiosk.
 - examples/rostersynth-kiosk/source/tests/test_rostersynth.py:24-52: Deterministic excludes LLM fallbacks; hybrid and llm-only cassette pass manifest count.
 ~~~
 
@@ -350,14 +350,14 @@ Verified by:
 
 - `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:99-105` — Oracle A must emit modify bookingId 1802.
 - `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:129-135` — Oracle B cassette must emit modify bookingId 1802.
-- `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:152-159` — Hybrid must keep deterministic row and not require fallback.
+- `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:152-159` — Hybrid keeps the deterministic row and avoids fallback for kiosk.
 - `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:138-149` — Replay rejects an append with the wrong magnitude.
 - `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:162-175` — Prompt includes DECISION ORDER, kiosk employee, and Op 2.
 - `examples/rostersynth-kiosk/source/tests/test_rostersynth.py:24-52` — Deterministic excludes LLM fallbacks; hybrid and llm-only cassette pass manifest count.
 
 ## Bounded Claim
 
-This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. It does not by itself prove the full method across every domain; the full-corpus gate node only establishes the referenced RosterSynth corpus evidence.
+This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The evidence covers the referenced RosterSynth corpus and the public companion artifact.
 
 ## Regenerate
 

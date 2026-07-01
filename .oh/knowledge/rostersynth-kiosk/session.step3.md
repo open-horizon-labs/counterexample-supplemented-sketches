@@ -11,4 +11,4 @@ rna:
 
 # Hybrid uses Oracle A
 
-Observation: Hybrid passes; Oracle A wins so no LLM fallback for kiosk.
+Observation: Hybrid passes; Oracle A handles kiosk.

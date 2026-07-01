@@ -135,14 +135,14 @@ def build_graph() -> dict[str, object]:
         node("session.step0", "session_step", "Confirm counterexample in corpus E", selector("docs/sessions/01-kiosk-double-booking.md", 36, 58), observation="Golden op is modify bookingId 1802."),
         node("session.step1", "session_step", "Dump Oracle B prompts", selector("docs/sessions/01-kiosk-double-booking.md", 63, 96), observation="Prompt gives Op 2 priority over append and shows kiosk payload."),
         node("session.step2", "session_step", "Oracle A after Op 2 passes", selector("docs/sessions/01-kiosk-double-booking.md", 100, 135), observation="Deterministic gate passes; compare and replay both green."),
-        node("session.step2b", "promotion_step", "Historical Op 1-only failure promotes Op 2", selector("docs/sessions/01-kiosk-double-booking.md", 140, 150), observation="Append closed delta but compare failed: expected modify, got append."),
-        node("session.step3", "session_step", "Hybrid uses Oracle A", selector("docs/sessions/01-kiosk-double-booking.md", 154, 176), observation="Hybrid passes; Oracle A wins so no LLM fallback for kiosk."),
+        node("session.step2b", "promotion_step", "Historical Op 1-only failure promotes Op 2", selector("docs/sessions/01-kiosk-double-booking.md", 140, 150), observation="Append closed delta; compare expected modify and got append."),
+        node("session.step3", "session_step", "Hybrid uses Oracle A", selector("docs/sessions/01-kiosk-double-booking.md", 154, 176), observation="Hybrid passes; Oracle A handles kiosk."),
         node("session.step4", "session_step", "Oracle B correct cassette passes", selector("docs/sessions/01-kiosk-double-booking.md", 182, 205), observation="Cassette emits bookingId 1802."),
-        node("session.step5", "negative_check", "Wrong cassette fails compare", selector("docs/sessions/01-kiosk-double-booking.md", 210, 232), observation="Wrong bookingId 1801 still closes replay but compare fails."),
+        node("session.step5", "negative_check", "Lower-booking cassette fails compare", selector("docs/sessions/01-kiosk-double-booking.md", 210, 232), observation="Lower bookingId 1801 closes replay; compare catches the wrong booking."),
         node("session.step7", "gate_result", "Full corpus gates", selector("docs/sessions/01-kiosk-double-booking.md", 281, 299), observation="Deterministic 12/12 plus 2 excluded; hybrid and llm-only cassette 14/14."),
         node("test.kiosk.cancel", "verification_check", "test_kiosk_cancel_higher_booking", selector("tests/test_rostersynth.py", 99, 105), check="Oracle A must emit modify bookingId 1802."),
         node("test.cassette.kiosk", "verification_check", "test_cassette_llm_resolves_kiosk", selector("tests/test_rostersynth.py", 129, 135), check="Oracle B cassette must emit modify bookingId 1802."),
-        node("test.hybrid.kiosk", "verification_check", "test_kiosk_hybrid_uses_deterministic_without_fallback", selector("tests/test_rostersynth.py", 152, 159), check="Hybrid must keep deterministic row and not require fallback."),
+        node("test.hybrid.kiosk", "verification_check", "test_kiosk_hybrid_uses_deterministic_without_fallback", selector("tests/test_rostersynth.py", 152, 159), check="Hybrid keeps the deterministic row and avoids fallback for kiosk."),
         node("test.row-closes-delta", "verification_check", "test_row_closes_delta_rejects_wrong_append", selector("tests/test_rostersynth.py", 138, 149), check="Replay rejects an append with the wrong magnitude."),
         node("test.prompt.includes-order", "verification_check", "test_bench_prompt_includes_decision_order_and_payload", selector("tests/test_rostersynth.py", 162, 175), check="Prompt includes DECISION ORDER, kiosk employee, and Op 2."),
         node("test.full-gates", "verification_check", "gate table tests", selector("tests/test_rostersynth.py", 24, 52), check="Deterministic excludes LLM fallbacks; hybrid and llm-only cassette pass manifest count."),
@@ -295,7 +295,7 @@ def render_paper(graph: dict[str, object]) -> str:
     parts: list[str] = []
     parts.append("# Agentic Synthesis against Counterexample-Supplemented Sketches")
     parts.append("")
-    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example, not the process name; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
+    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example for the process; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
     parts.append("")
     parts.append("## Abstract")
     parts.append("")
@@ -388,7 +388,7 @@ def render_paper(graph: dict[str, object]) -> str:
     parts.append("")
     parts.append("## Bounded Claim")
     parts.append("")
-    parts.append("This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. It does not by itself prove the full method across every domain; the full-corpus gate node only establishes the referenced RosterSynth corpus evidence.")
+    parts.append("This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The evidence covers the referenced RosterSynth corpus and the public companion artifact.")
     parts.append("")
     parts.append("## Regenerate")
     parts.append("")
@@ -408,7 +408,7 @@ This directory is the worked example supporting `paper/main.tex`.
 It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
-- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix, not the paper spine.
+- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
 The example demonstrates the full loop:

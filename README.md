@@ -4,7 +4,7 @@
 **Bibliography:** [`paper/references.bib`](paper/references.bib)  
 **Companion artifact:** runnable examples, fixtures, and provenance for the paper's claims.
 
-This repository is a supporting document to the paper. The code is here so readers can inspect and run the examples behind the argument; it is not the headline and it is not a framework.
+This repository supports the paper. The code lets readers inspect and run the examples behind the argument; the paper carries the claim.
 
 The paper argues for **agentic synthesis against counterexample-supplemented sketches**: a process for programming with coding agents under checkable rules. A human writes a partial program-like sketch, failures are promoted into a counterexample corpus, an agent edits code and prompts, and a replay/compare gate establishes finite-corpus correctness for the current promoted cases.
 
@@ -15,7 +15,13 @@ Start with the paper:
 - [`paper/main.tex`](paper/main.tex) — process paper with references, formal model, synthesis loop, and finite-corpus correctness theorem.
 - [`paper/references.bib`](paper/references.bib) — references for sketching, CEGIS, program synthesis, programming-by-example, SWE-bench, and tests-as-prompts.
 
-The RosterSynth kiosk material is a worked example inside the paper. It is not the name of the process and not the center of the repo.
+The RosterSynth kiosk material is a worked example inside the paper. The process name is **agentic synthesis against counterexample-supplemented sketches**.
+
+## Originating setting
+
+The method came from a proprietary enterprise harness. The original deployment used a custom Cursor extension, `cursor://`-style commands, and an embedded web app so subject-matter experts could load production examples, provide corrections, and have those corrections converted with LLM assistance into input/output specs. Selected failures were promoted into a golden corpus for a counterexample loop that constrained code and prompt implementations of a heterogeneous data-cleansing pipeline for multiple downstream clients.
+
+This public companion contains the publishable slice: the paper, clean fixtures, runnable examples, tests, and provenance. Production data, client-specific rules, proprietary extension code, and private SME workflows stay outside the repo.
 
 ## What this companion artifact supports
 
@@ -38,23 +44,23 @@ The repository supports that claim with:
 
 ## Worked example: RosterSynth kiosk
 
-The paper uses one concrete case to show why replay alone is not enough.
+The paper uses one concrete case to show why replay and semantic compare are separate checks.
 
-A roster has twin active 40-hour bookings on the pay-window end date. Badge hours are 40 and scheduled hours are 80, so a naive append of `-40h` closes the coverage math. That repair is replay-valid but semantically wrong. The correct repair cancels the duplicate booking with the higher `bookingId`.
+A roster has twin active 40-hour bookings on the pay-window end date. Badge hours are 40 and scheduled hours are 80, so a naive append of `-40h` closes the coverage math while violating duplicate policy. The correct repair cancels the duplicate booking with the higher `bookingId`.
 
 The counterexample path is:
 
 ```text
 roster.kiosk_double_booking.v1
 → sketch Op 2: cancel duplicate higher bookingId when it alone closes delta
-→ historical failure: append -40h passes replay but fails compare
+→ historical failure: append -40h passes replay; compare rejects expected append vs modify
 → Oracle A: _try_cancel_duplicate emits modify bookingId=1802 status=4
 → Oracle B prompt/cassette path states the same rule
-→ wrong cassette bookingId=1801 passes replay but fails compare
+→ lower-booking cassette bookingId=1801 passes replay; compare catches wrong booking
 → gate passes after sketch/code/prompt alignment
 ```
 
-That path is evidence for the paper's method, not the method itself.
+That path supplies evidence for the paper's method.
 
 ## Reproduce the paper artifact
 
@@ -76,9 +82,9 @@ OK
 The checks exercise the paper's worked-example obligations:
 
 - Oracle A cancels higher duplicate `bookingId=1802`.
-- Wrong append passes replay but fails compare.
-- Wrong cassette cancels `1801`, passes replay, and fails compare.
-- Hybrid uses deterministic Oracle A for kiosk instead of fallback.
+- Wrong append passes replay; compare rejects it.
+- Lower-booking cassette cancels `1801`; compare rejects it.
+- Hybrid keeps deterministic Oracle A on the kiosk case and avoids fallback.
 - Oracle B prompt includes decision order, Op 2, higher-bookingId rule, and payload.
 - Full corpus gates match deterministic, hybrid cassette, and llm-only cassette evidence.
 
@@ -100,7 +106,7 @@ A tiny didactic parser slice remains under [`examples/task-line-parser/`](exampl
 Treat the repository as supplementary material for evaluating the paper's claims:
 
 - the method is named and argued in [`paper/main.tex`](paper/main.tex);
-- the correctness result is finite-corpus soundness, not universal correctness;
+- the correctness result is finite-corpus soundness over the promoted corpus `E`;
 - the RosterSynth kiosk case is the concrete witness;
 - the tests and graph show how source artifacts back the paper's claims.
 
@@ -112,7 +118,7 @@ The relevant comparison points are program sketching, CEGIS, programming by exam
 paper/
   main.tex                               # paper: process, references, formal model, correctness theorem
   references.bib                         # bibliography
-  extracted-rostersynth-kiosk-paper.md   # generated evidence appendix; not the paper spine
+  extracted-rostersynth-kiosk-paper.md   # generated evidence appendix
 examples/
   rostersynth-kiosk/                     # worked example supporting the paper
     source/                              # copied RosterSynth source slice: sketch, scenarios, cassettes, code, tests

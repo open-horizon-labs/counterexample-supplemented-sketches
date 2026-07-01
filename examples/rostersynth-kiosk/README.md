@@ -5,7 +5,7 @@ This directory is the worked example supporting `paper/main.tex`.
 It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
-- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix, not the paper spine.
+- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
 The example demonstrates the full loop:

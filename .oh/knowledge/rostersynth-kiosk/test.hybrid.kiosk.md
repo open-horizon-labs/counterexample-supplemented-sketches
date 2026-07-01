@@ -8,4 +8,4 @@ rna:
 
 # test_kiosk_hybrid_uses_deterministic_without_fallback
 
-Check: Hybrid must keep deterministic row and not require fallback.
+Check: Hybrid keeps the deterministic row and avoids fallback for kiosk.

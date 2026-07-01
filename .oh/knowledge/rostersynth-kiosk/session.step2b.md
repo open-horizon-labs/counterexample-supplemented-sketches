@@ -8,4 +8,4 @@ rna:
 
 # Historical Op 1-only failure promotes Op 2
 
-Observation: Append closed delta but compare failed: expected modify, got append.
+Observation: Append closed delta; compare expected modify and got append.
