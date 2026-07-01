@@ -1,0 +1,20 @@
+{
+  "scenarioId": "roster.basic.overtime.v1",
+  "mode": "llm-only",
+  "generatedBy": "bedrock-record",
+  "suggestions": [
+    {
+      "employeeId": "E-3001",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "suggestion": "Employee E-3001 has positive coverageDelta of 4.0 hours (badgeHours 44.0 > scheduledHours 40.0). No active bookings exist; applying work-date rule 3: use windowEnd. Appending overtime adjustment (shiftKind 8) for 4.0 hours on 2024-04-01.",
+      "generatedBy": "bedrock",
+      "adjustment": {
+        "shiftKind": 8,
+        "hours": 4.0,
+        "workDate": "2024-04-01",
+        "status": 1
+      }
+    }
+  ]
+}

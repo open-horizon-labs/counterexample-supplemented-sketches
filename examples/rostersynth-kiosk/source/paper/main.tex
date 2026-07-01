@@ -1,0 +1,364 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\title{Agentic Synthesis against Counterexample-Supplemented Sketches}
+\author{Muness Castle \and Eric Rubeck}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\textbf{Agentic synthesis against counterexample-supplemented sketches} is a method
+for programming with agents under checkable rules: fix a partial program (a \emph{sketch}),
+maintain a growing observation set~$E$ that \emph{supplements} the sketch with
+counterexamples, and refuse ``done'' until a gate passes every case.
+
+When validation fails, the failure is promoted into~$E$; an agent in an IDE-shaped
+environment edits the sketch and the code and prompts that implement it until gates go
+green. Solar-Lezama's sketching and \textsc{cegis}~\cite{solar2013sketching,solar2008sketching}
+supply lineage; our contribution is the closed loop that holds agentic coding accountable
+to sketch~$+$~$E$---not chat history or spot checks. Hole-filling splits across
+agent-maintained code (Oracle~A) and LLM completion of sketch-declared narrative holes
+(Oracle~B), with hybrid escalation and layered replay/compare validation.
+
+We evaluate the method on a public reference implementation (synthetic roster remediation,
+14~scenarios, three gate modes, one recorded promotion session). The domain is illustrative;
+the technique is domain-agnostic.
+\end{abstract}
+
+% ---------------------------------------------------------------------------
+\section{Introduction}
+\label{sec:intro}
+
+Enterprise remediation is not a chat problem. Policy lives in prose, dates, duplicate
+clusters, and wire mutations that must close an observed gap. Unconstrained agents
+paraphrase intent and miss field-level invariants; pure rules lag the playbook SMEs edit.
+
+\textbf{Agentic synthesis against counterexample-supplemented sketches} fixes a
+\textbf{constraint environment} around the agent:
+
+\begin{enumerate}
+\item A \textbf{sketch}~$\mathcal{S}$---partial program: fixed operations, documented holes.
+\item A \textbf{counterexample-supplemented} corpus~$E$---observations promoted when
+      validation fails.
+\item A \textbf{gate}---replay plus golden compare over all of~$E$; pass/fail evidence,
+      not narrative confidence.
+\item \textbf{Agentic synthesis}---the developer or coding agent edits $\mathcal{S}$,
+      Oracle~A (encodable holes in code), and Oracle~B (sketch-declared LLM holes in
+      prompts) until all target gates pass.
+\end{enumerate}
+
+This is counterexample-guided inductive synthesis (\textsc{cegis})~\cite{solar2008sketching}
+with the sketch as stable contract and~$E$ as the growing boundary of ``done.''
+Solar-Lezama's Sketch~\cite{solar2013sketching} assumed one synthesizer searching holes;
+in agentic practice, holes split across \emph{code the agent writes} and \emph{LLM calls
+the sketch declares}, with hybrid escalation when code abstains or replay rejects a row.
+
+Sect.~\ref{sec:harness} defines the constraint environment generically.
+Sects.~\ref{sec:sketch-lang}--\ref{sec:validation} instantiate sketch semantics and
+validation on a \textbf{worked example} (workforce roster remediation) so readers can
+reproduce gates without client data.
+Sect.~\ref{sec:case} walks one counterexample promotion on that example.
+
+\subsection{Relation to algorithmic \textsc{cegis}}
+\label{sec:related}
+
+Solar-Lezama's lineage splits into \emph{automated} and \emph{agentic} poles that share
+loop grammar but not synthesizers. Do not collapse them---they fail differently.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.22\linewidth}p{0.22\linewidth}p{0.24\linewidth}}
+\hline
+ & Sketch compiler~\cite{solar2013sketching} & Z3 \textsc{cegis}~\cite{marcelwa2016cegis} & Agentic CE-supplemented sketches (this work) \\
+\hline
+Sketch & Sketch language + holes & SMT impl / input / helper vars & Prose + partial program file \\
+Synthesizer & Built-in search & \texttt{findImplementation} (SMT) & Agent edits Oracle~A / Oracle~B \\
+Counterexample & Validator search & \texttt{findCounterExample} (SMT) & Gate notes $\rightarrow$ promote into~$E$ \\
+Validation & Sketch semantics & Correctness constraints & Replay + golden compare on~$E$ \\
+Coverage & $\forall$ inputs (via CE growth) & Minimal input subset & Bounded observation on~$E$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Classic \textsc{cegis} libraries such as marcelwa/CEGIS automate alternation between
+implementation search and counterexample discovery inside an SMT solver.
+Our harness keeps the \textbf{validation discipline} of that loop but replaces automated
+synthesis with \textbf{agent-performed} edits to sketch, code, and prompts---unlike
+\texttt{CEGISHandler::CEGISRoutine()}, which needs no IDE-shaped agent.
+
+% ---------------------------------------------------------------------------
+\section{The constraint environment}
+\label{sec:harness}
+
+\subsection{Artifacts the agent may edit}
+
+The agent does not patch production payloads ad hoc. It edits auditable artifacts that
+the gate evaluates:
+
+\begin{center}
+\begin{tabular}{ll}
+\hline
+Artifact & Role \\
+\hline
+Sketch~$\mathcal{S}$ & Partial program; SME- and agent-editable \\
+Oracle~A & Code implementing encodable sketch clauses \\
+Oracle~B prompts & LLM path for sketch-declared non-code holes \\
+Corpus~$E$ & Observations; failures promote new counterexamples \\
+Oracle~B cassettes & Frozen LLM output for CI (optional) \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{What the gate runs}
+
+Each gate invocation over~$E$:
+
+\begin{enumerate}
+\item \textbf{Resolve} rows (deterministic, hybrid, or LLM-only mode).
+\item \textbf{Replay} --- does the suggestion close the domain gap?
+\item \textbf{Compare} --- does it match golden fields replay under-specifies?
+\item \textbf{Report} per-scenario pass/fail.
+\end{enumerate}
+
+A prompt-dump command (e.g.\ \texttt{bench prompt} in our reference implementation)
+exposes live Oracle~B system and user text so prompt edits stay inspectable.
+
+\subsection{Agentic coding inside the loop}
+
+\begin{quote}
+Run gate $\rightarrow$ read failure notes $\rightarrow$ edit sketch / Oracle~A /
+Oracle~B $\rightarrow$ rerun until green.
+\end{quote}
+
+Oracle~A is \textbf{code the agent maintains} under gate pressure---not a black-box
+synthesizer. Oracle~B completes sketch-declared narrative holes. Hybrid keeps A on the
+hot path and escalates to B on abstention or replay failure (Sect.~\ref{sec:resolution}).
+
+\subsection{Counterexample-supplemented sketches}
+
+Corpus~$E$ is not a static test suite. It \textbf{grows when validation fails}:
+a gate note such as \texttt{expected op modify, got append} promotes a scenario, tightens
+$\mathcal{S}$, and drives edits to Oracle~A or Oracle~B. Convergence means all target
+gates pass on the current~$E$---permission to ship regression, not proof over all inputs
+(bounded observation hypothesis~\cite{solar2013sketching}).
+
+\subsection{Reference implementation (worked example)}
+
+To make the method runnable, we ship a public reference implementation on a \textbf{synthetic
+workforce roster} domain (badge hours vs.\ scheduled hours). Repository name
+\textit{RosterSynth}; illustrative only. Artifact paths: \texttt{docs/sketch.md},
+\texttt{playbook.py}, \texttt{oracle/prompt.py}, \texttt{scenarios/*.json},
+\texttt{bench gate}, \texttt{bench oracle}, \texttt{bench prompt}. Corpus
+\texttt{reference-v1}: 14~scenarios, cassette-backed CI, session transcripts.
+Sections~\ref{sec:sketch-lang}--\ref{sec:experience} use this example; the method
+transfers to any sketch with replay, compare, and a scenario corpus.
+
+% ---------------------------------------------------------------------------
+\section{Sketch language (worked example)}
+\label{sec:sketch-lang}
+
+The following instantiates~$\mathcal{S}$ on the roster reference implementation.
+Other domains replace wire format and hole rules; the CE-supplemented agent loop is unchanged.
+
+The sketch extends a fixed wire format with prose hole rules. A suggestion is either an
+append adjustment or a modify that sets \texttt{status=4} on one booking.
+
+\subsection{Sketching with adjustment holes (Op~1)}
+When no duplicate cancellation closes the gap, the sketch fixes \texttt{op=append} and
+leaves \texttt{shiftKind}, \texttt{hours} (typically $\Delta$), and \texttt{workDate} open.
+Work-date policy: use pay-window end~$w$ when the latest active booking falls in
+$[w^-, w)$; else $\max(\mathrm{workDate})$ among active bookings; else~$w$.
+
+\subsection{Higher-level duplicate holes (Op~2)}
+When twin active bookings on~$w$ share $(\mathrm{shiftKind}, \mathrm{hours})$, the sketch
+fixes \texttt{op=modify} and \texttt{fields.status=4}. The synthesizer chooses
+\texttt{bookingId}. Default tie-break: the higher id, only if canceling that booking alone
+closes~$\Delta$.
+
+\subsection{Abstraction in the sketch (Op~2b)}
+Some payloads carry \texttt{clusterNotes}: payroll text on an ambiguous duplicate cluster.
+The sketch marks these as deliberate non-encoding: Oracle~A must abstain. Oracle~B reads
+tags, narrative, and sketch prose. Matching scenarios set \texttt{requiresLlmFallback}.
+
+\subsection{Putting it all together}
+Oracle~A and Oracle~B both emit one row per imbalanced employee. The sketch picks the
+operation key; implementations fill holes; Sect.~\ref{sec:validation} decides acceptance.
+
+% ---------------------------------------------------------------------------
+\section{Semantics of sketches}
+\label{sec:semantics}
+
+Each employee state~$\sigma$ has badge hours~$B$, scheduled rollup~$R$, window~$w$,
+bookings, and optional \texttt{clusterNotes}. Badge hours are never edited. Define
+\begin{equation}
+  \Delta = B - R .
+\end{equation}
+
+Applying suggestion~$\phi$ yields effective gap~$\Delta_\phi$ under replay rules in
+\texttt{verifier.py}. Row~$\phi$ is \emph{replay-valid} when $|\Delta_\phi| < \epsilon$.
+
+Golden expectation~$g$ adds fields replay under-specifies. Row~$\phi$ is \emph{compare-valid}
+for~$g$ when \texttt{comparer.py} matches \texttt{op}, \texttt{workDate},
+\texttt{bookingId}, and related columns.
+
+A row is \emph{valid} on~$(\sigma, g)$ when it is both replay-valid and compare-valid.
+Replay alone is not enough: an append can close~$\Delta$ while using the wrong
+operation---compare exists because we initially treated ``delta closed'' as ``done.'' That
+failure mode motivated Op~2 in Sect.~\ref{sec:case}.
+
+% ---------------------------------------------------------------------------
+\section{Resolution in the harness}
+\label{sec:resolution}
+
+Let $E = \{(\sigma_i, g_i)\}_{i=1}^n$ be observations from \texttt{scenarios/*.json}.
+Hybrid strategy~$\mathcal{H} = (A, B, \mathit{hybrid})$ is \emph{valid on $E$} when, for
+every $(\sigma, g) \in E$, hybrid resolution on~$\sigma$ yields a row valid on~$(\sigma, g)$.
+
+The agent's job in the harness is to refine~$\mathcal{S}$, Oracle~A, and Oracle~B sketch
+alignment until~$\mathcal{H}$ is valid on~$E$. Hybrid resolution per employee:
+$r_A \leftarrow A(\sigma)$; if $r_A$ is missing or replay-invalid, $r \leftarrow B(\sigma)$;
+else $r \leftarrow r_A$.
+
+% ---------------------------------------------------------------------------
+\section{The \textsc{cegis}-shaped agent loop}
+\label{sec:cegis}
+
+Figure~\ref{fig:cegis} is the harness loop: validation (gates) and repair (agent + oracles)
+are separate modules tied by counterexample promotion. \textbf{Synthesis is agent-performed:}
+the developer or coding agent edits artifacts between gate runs. This is not automated
+\textsc{cegis} synthesis as in Z3's \texttt{CEGISRoutine()}~\cite{marcelwa2016cegis}, which
+alternates SMT solvers without an IDE-shaped editor.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.88\linewidth}{\small
+\textbf{Input:} sketch~$\mathcal{S}$, corpus~$E$, harness (\texttt{bench})\\[3pt]
+1. Agent edits $\mathcal{S}$, Oracle~A code, Oracle~B prompts\\
+2. Synthesize: run \texttt{bench gate} (deterministic / hybrid / llm-only)\\
+3. Validate: replay + compare per scenario in~$E$\\
+4. If all pass: done\\
+5. Else: promote failure notes to~$E$; goto 1
+}}
+\caption{CEGIS-shaped agent loop in a counterexample-supplemented sketch harness.}
+\label{fig:cegis}
+\end{figure}
+
+Oracle~A implements \texttt{playbook.build\_rows}. Oracle~B calls Bedrock
+\texttt{Converse} with tool \texttt{emit\_roster\_suggestions}~\cite{awsbedrockconverse2024}
+or reads \texttt{cassettes/*.json} in CI.
+
+\texttt{bench gate --mode $m$} walks the manifest, resolves rows under~$m$, runs verifier
+and comparer, and aggregates results. Mode \texttt{deterministic} skips scenarios tagged
+\texttt{requiresLlmFallback} so Oracle~A is scored on the rule-encodable subset (12 of
+14 in corpus \texttt{reference-v1}).
+
+% ---------------------------------------------------------------------------
+\section{Validation}
+\label{sec:validation}
+
+Validation is layered so the harness returns actionable failure modes:
+
+\textbf{Replay} (\texttt{verifier.py}): appends count toward closing~$\Delta$ only when
+\texttt{workDate} $\le w$; cancels remove scheduled hours from active bookings on or before~$w$.
+
+\textbf{Golden compare} (\texttt{comparer.py}): checks promoted policy fields replay
+under-specifies. Compare caught kiosk append rows that replay closed but used the wrong
+\texttt{op}---the signal that replay-only validation would have shipped the wrong fix.
+
+% ---------------------------------------------------------------------------
+\section{Experience on the reference implementation}
+\label{sec:experience}
+
+All runs below use the roster worked example, cassette Oracle~B, no AWS---matching CI.
+
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+Gate & Result & Role in harness \\
+\hline
+Deterministic & 12/12 & Agent-written Oracle~A on encodable subset \\
+Hybrid + cassette & 14/14 & Production-shaped path \\
+LLM-only + cassette & 14/14 & Oracle~B ablation \\
+\hline
+\end{tabular}
+\end{center}
+
+Corpus \texttt{reference-v1} has 14~scenarios. Gates finish in seconds on a laptop.
+The repository includes \texttt{bench gate|oracle|prompt}, session docs with command
+transcripts, and \texttt{scripts/record\_session.sh}.
+
+% ---------------------------------------------------------------------------
+\section{Comparison with unconstrained agents and automated \textsc{cegis}}
+\label{sec:comparison}
+
+\paragraph{Versus unconstrained agentic coding.}
+Without the harness, an agent edits code until tests ``look right''---often replay-only
+checks or spot checks. The reference implementation forces three separable accountabilities: sketch
+clauses, Oracle~A implementation, and Oracle~B prompt/cassette alignment, each
+falsifiable by gate mode.
+
+A single Oracle~B on every row merges failure modes (sketch lag vs.\ prompt drift vs.\
+narrative holes). Hybrid plus sketch-declared abstention keeps agent-written code on
+encodable policy while the LLM handles prose the sketch marks non-encoding.
+
+\paragraph{Versus automated \textsc{cegis} (Z3).}
+SMT \textsc{cegis}~\cite{marcelwa2016cegis} searches implementations and discovers
+counterexamples inside the solver; correctness is encoded as constraints over impl, input,
+and helper variables. That path requires encodable policy and does not accommodate
+sketch-declared narrative holes (Sect.~\ref{sec:sketch-lang}, Op~2b).
+Our method inherits \textsc{cegis} loop structure---grow~$E$, refuse done until gates pass---but
+locates synthesis in the agent and locates validation in replay/compare over a promoted scenario
+corpus rather than in a second SMT solver. The reference implementation is a \textbf{constraint
+environment for agentic coding}, not a drop-in replacement for marcelwa/CEGIS.
+
+% ---------------------------------------------------------------------------
+\section{Worked example: kiosk counterexample promotion}
+\label{sec:case}
+
+One promotion on the roster reference implementation, with commands and output in
+\texttt{docs/sessions/01-kiosk-double-booking.md}.
+
+\paragraph{Counterexample in $E$.}
+Employee E-1800: $B=40$, $R=80$, $\Delta=-40$, twin 40h bookings on~$w$. Golden expects
+\texttt{modify} on booking 1802.
+
+\paragraph{Gate failure (historical).}
+With only Op~1 in~$\mathcal{S}$, Oracle~A appends $-40$h. Replay passes; compare fails
+(\texttt{expected op modify, got append}). The harness note tells the agent to extend
+the sketch, not tweak the LLM.
+
+\paragraph{Agent edits sketch + Oracle~A.}
+Add Op~2 to~$\mathcal{S}$; implement \texttt{\_try\_cancel\_duplicate}. Deterministic gate
+passes this scenario.
+
+\paragraph{Agent aligns Oracle~B.}
+Wrong cassette (lower \texttt{bookingId}) fails \texttt{llm-only} compare until sketch
+prose, \texttt{prompt.py} decision order, and cassette align. \texttt{bench prompt} dumps
+the live prompts for inspection.
+
+\paragraph{Sketch-declared LLM holes.}
+\texttt{cluster\_notes\_*} scenarios: Oracle~A abstains; hybrid requires Oracle~B.
+Deterministic gate excludes them (\texttt{requiresLlmFallback}).
+
+% ---------------------------------------------------------------------------
+\section{Conclusions}
+\label{sec:conclusions}
+
+We demonstrate \textbf{agentic synthesis against counterexample-supplemented sketches}:
+sketch~$+$ growing~$E$, IDE-shaped gates, agent-edited Oracle~A and Oracle~B until pass.
+Dual oracles and hybrid escalation are mechanisms inside that loop. The roster domain is
+one worked example; the method transfers wherever sketch, replay, compare, and a scenario
+corpus apply. Run \texttt{bench gate} on cassettes to reproduce the experience table without AWS.
+
+Open work: richer repair loops, multi-row fixes per employee, and tracking live-Bedrock
+drift when the sketch changes.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

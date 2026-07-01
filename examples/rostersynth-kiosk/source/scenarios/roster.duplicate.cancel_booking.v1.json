@@ -1,0 +1,56 @@
+{
+  "id": "roster.duplicate.cancel_booking.v1",
+  "title": "Duplicate bookings on window end: cancel higher id",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 9,
+        "employees": [
+          {
+            "employeeId": "E-4004",
+            "roleCode": "RN",
+            "deptId": 9,
+            "windowEnd": "2024-07-01",
+            "priorWindowEnd": "2024-06-30",
+            "badgeHours": 36.0,
+            "scheduledHours": 72.0,
+            "coverageDelta": -36.0,
+            "bookings": [
+              {
+                "bookingId": 801,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 36.0,
+                "workDate": "2024-07-01"
+              },
+              {
+                "bookingId": 802,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 36.0,
+                "workDate": "2024-07-01"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-4004",
+          "issueType": "cancel-duplicate-booking",
+          "op": "modify",
+          "bookingId": 802,
+          "fields": {
+            "status": 4
+          },
+          "suggestion": "Cancel duplicate booking 802 (status 1 \u2192 4) on pay window end date."
+        }
+      ]
+    }
+  }
+}

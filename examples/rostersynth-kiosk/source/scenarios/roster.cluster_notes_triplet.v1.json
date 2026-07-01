@@ -1,0 +1,66 @@
+{
+  "id": "roster.cluster_notes_triplet.v1",
+  "title": "Triplet duplicate cluster: cancel orphan middle booking per clusterNotes",
+  "outcomeKind": "fix",
+  "requiresLlmFallback": true,
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 21,
+        "employees": [
+          {
+            "employeeId": "E-2100",
+            "roleCode": "RN",
+            "deptId": 21,
+            "windowEnd": "2024-08-15",
+            "priorWindowEnd": "2024-08-14",
+            "badgeHours": 60.0,
+            "scheduledHours": 90.0,
+            "coverageDelta": -30.0,
+            "clusterNotes": "ICU-4 triplet cluster alert: bookings 2101 and 2103 are verified 30h split shifts (badge total 60h). Booking 2102 is an orphan interface repost — cancel booking 2102 only; do not cancel 2101 or 2103.",
+            "bookings": [
+              {
+                "bookingId": 2101,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 30.0,
+                "workDate": "2024-08-15",
+                "tags": ["DUPLICATE_CLUSTER", "VERIFIED_SPLIT"]
+              },
+              {
+                "bookingId": 2102,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 30.0,
+                "workDate": "2024-08-15",
+                "tags": ["DUPLICATE_CLUSTER", "ORPHAN_REPOST"]
+              },
+              {
+                "bookingId": 2103,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 30.0,
+                "workDate": "2024-08-15",
+                "tags": ["DUPLICATE_CLUSTER", "VERIFIED_SPLIT"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-2100",
+          "issueType": "cancel-duplicate-booking",
+          "op": "modify",
+          "bookingId": 2102,
+          "fields": { "status": 4 },
+          "suggestion": "Cancel orphan repost booking 2102 (status 1 → 4) per clusterNotes — keep verified split shifts 2101 and 2103."
+        }
+      ]
+    }
+  }
+}

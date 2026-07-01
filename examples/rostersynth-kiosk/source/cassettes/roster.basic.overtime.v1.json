@@ -1,0 +1,20 @@
+{
+  "scenarioId": "roster.basic.overtime.v1",
+  "mode": "llm-only",
+  "generatedBy": "sync-from-golden",
+  "suggestions": [
+    {
+      "employeeId": "E-3001",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "adjustment": {
+        "shiftKind": 8,
+        "hours": 4.0,
+        "workDate": "2024-04-01",
+        "status": 1
+      },
+      "suggestion": "Post Overtime adjustment for 4.0 hours for TECH (E-3001, dept 3, work date 2024-04-01) \u2014 roster is under-scheduled vs badge by 4.0 hours (coverageDelta 4.0).",
+      "generatedBy": "cassette-from-golden"
+    }
+  ]
+}

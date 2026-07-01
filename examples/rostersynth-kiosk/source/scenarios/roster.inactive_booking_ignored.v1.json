@@ -1,0 +1,58 @@
+{
+  "id": "roster.inactive_booking_ignored.v1",
+  "title": "Cancelled booking ignored for work-date policy",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 5,
+        "employees": [
+          {
+            "employeeId": "E-5005",
+            "roleCode": "HUC",
+            "deptId": 5,
+            "windowEnd": "2024-06-25",
+            "priorWindowEnd": "2024-06-24",
+            "badgeHours": 32.0,
+            "scheduledHours": 40.0,
+            "coverageDelta": -8.0,
+            "bookings": [
+              {
+                "bookingId": 601,
+                "shiftKind": 10,
+                "status": 4,
+                "hours": 40.0,
+                "workDate": "2024-06-24"
+              },
+              {
+                "bookingId": 602,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 32.0,
+                "workDate": "2024-06-25"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-5005",
+          "issueType": "coverage-hour-gap",
+          "op": "append",
+          "adjustment": {
+            "shiftKind": 51,
+            "hours": -8.0,
+            "workDate": "2024-06-25",
+            "status": 1
+          },
+          "suggestion": "Post Underschedule adjustment for -8.0 hours for HUC (E-5005, dept 5, work date 2024-06-25) \u2014 roster is over-scheduled vs badge by 8.0 hours (coverageDelta -8.0)."
+        }
+      ]
+    }
+  }
+}

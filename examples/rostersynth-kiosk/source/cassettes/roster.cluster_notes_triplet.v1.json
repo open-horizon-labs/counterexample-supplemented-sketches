@@ -1,0 +1,17 @@
+{
+  "scenarioId": "roster.cluster_notes_triplet.v1",
+  "mode": "llm-only",
+  "generatedBy": "sync-from-golden",
+  "notes": "Oracle B reads clusterNotes; cancels middle orphan repost 2102",
+  "suggestions": [
+    {
+      "employeeId": "E-2100",
+      "issueType": "cancel-duplicate-booking",
+      "op": "modify",
+      "generatedBy": "cassette-from-golden",
+      "bookingId": 2102,
+      "fields": { "status": 4 },
+      "suggestion": "Cancel orphan repost booking 2102 (status 1 → 4) per clusterNotes — keep verified split shifts 2101 and 2103."
+    }
+  ]
+}

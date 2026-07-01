@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "rostersynth.manifest.v1",
+  "id": "reference-v1",
+  "scenarioIds": [
+    "roster.new_period.undersched.v1",
+    "roster.prior_work_date.v1",
+    "roster.basic.overtime.v1",
+    "roster.duplicate.cancel_booking.v1",
+    "roster.inactive_booking_ignored.v1",
+    "roster.short_with_history.v1",
+    "roster.empty_history.v1",
+    "roster.multiline_max_date.v1",
+    "roster.fractional_hours.v1",
+    "roster.duplicate_mismatch_append.v1",
+    "roster.multi_employee.v1",
+    "roster.kiosk_double_booking.v1",
+    "roster.cluster_notes_duplicate.v1",
+    "roster.cluster_notes_triplet.v1"
+  ]
+}
