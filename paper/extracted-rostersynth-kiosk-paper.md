@@ -1,6 +1,6 @@
-# Extracted Paper: RosterSynth Kiosk Counterexample
+# Agentic Synthesis against Counterexample-Supplemented Sketches
 
-> Generated from repo-local RosterSynth source snapshots and graph selectors. This is the canonical full example artifact for the clean-room extraction slice; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
+> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example, not the process name; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
 
 ## Abstract
 

@@ -1,11 +1,11 @@
-# RosterSynth Kiosk Clean-Room Extraction
+# RosterSynth Kiosk Worked Example
 
-This directory is a full extracted example of the Sketch + Counterexample + Coding Agent process using the RosterSynth kiosk double-booking case.
+This directory is the worked example supporting `paper/main.tex`.
 
 It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
-- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated paper-style explanation.
+- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix, not the paper spine.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
 The example demonstrates the full loop:

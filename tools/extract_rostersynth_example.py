@@ -293,9 +293,9 @@ def render_paper(graph: dict[str, object]) -> str:
     scenario = json.loads(read(SOURCE / "scenarios" / "roster.kiosk_double_booking.v1.json"))
     manifest = json.loads(read(SOURCE / "scenarios" / "manifest.json"))
     parts: list[str] = []
-    parts.append("# Extracted Paper: RosterSynth Kiosk Counterexample")
+    parts.append("# Agentic Synthesis against Counterexample-Supplemented Sketches")
     parts.append("")
-    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. This is the canonical full example artifact for the clean-room extraction slice; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
+    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example, not the process name; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
     parts.append("")
     parts.append("## Abstract")
     parts.append("")
@@ -401,14 +401,14 @@ def render_paper(graph: dict[str, object]) -> str:
 
 
 def write_readme() -> None:
-    text = """# RosterSynth Kiosk Clean-Room Extraction
+    text = """# RosterSynth Kiosk Worked Example
 
-This directory is a full extracted example of the Sketch + Counterexample + Coding Agent process using the RosterSynth kiosk double-booking case.
+This directory is the worked example supporting `paper/main.tex`.
 
 It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
-- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated paper-style explanation.
+- `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix, not the paper spine.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
 The example demonstrates the full loop:
