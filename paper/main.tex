@@ -41,12 +41,13 @@ matter experts correct concrete outputs.  A coding agent edits deterministic cod
 surfaces under known-code anchors.  The workflow treats completion as blocked unless a gate
 reports replay and semantic-comparison success for every promoted case.
 
-The method imports the loop grammar of sketching and counterexample-guided inductive
-synthesis (CEGIS) and changes the synthesizer.  In classical Sketch, a solver fills holes
-inside a formal language.  Here, the synthesizer is an IDE-shaped coding agent whose edits
-span ordinary source code and LLM prompt surfaces.  The bounded claim is finite-corpus gate
-satisfaction: when the gate passes, the current strategy satisfies the repository's encoded
-replay and comparison predicates for every promoted case.
+The method borrows the loop grammar of sketching and counterexample-guided inductive
+synthesis (CEGIS) for a different execution surface.  Classical sketching and CEGIS keep
+stronger claims when the search space, specification, and checker can be formalized.  Here,
+the synthesizer is an IDE-shaped coding agent whose edits span ordinary source code and LLM
+prompt surfaces.  The bounded claim is finite-corpus gate satisfaction: when the gate passes,
+the current strategy satisfies the repository's encoded replay and comparison predicates for
+every promoted case.
 
 In the authors' proprietary deployment, this loop ran inside an enterprise harness: a custom
 Cursor extension, \texttt{cursor://}-style commands, and an embedded web application through
@@ -107,6 +108,13 @@ it, the replay check that verifies state repair, and the semantic compare check 
 the tempting wrong repair.  This is an artifact-level definition of inspectability.  It gives
 maintainers a bounded gate invariant for the current promoted corpus and a promotion procedure
 for adding new failures.
+
+\paragraph{Positioning.}
+The comparison target is bounded.  Existing agentic workflows can make tests and prompts
+durable, and conventional CEGIS already has counterexample discipline when its formal
+assumptions hold.  This paper addresses a narrower repository setting where three things often
+live apart: the human strategy, the promoted counterexample, and the executable check that
+rejects the tempting repair.
 
 \paragraph{Contributions.}
 This paper contributes a formulation and worked artifact.
@@ -216,8 +224,8 @@ that the row used the expected operation, target, date, or status.  The sketch e
 those semantic fields matter.
 
 The issue is the gap between what many tests encode and what a policy-heavy repair needs to
-preserve.  Tests are strongest when the expected behavior
-is already explicit.  A counterexample-supplemented sketch helps at the moment when the
+preserve.  Tests work well when the expected behavior is already explicit.  A
+counterexample-supplemented sketch helps at the moment when the
 failure exposes a rule that had been implicit: it gives the rule a name, links it to the
 fixture that exposed it, and tells the next repair which tempting path to avoid.
 
@@ -238,48 +246,86 @@ Prompt text can encode narrative criteria; the resulting output remains subject 
 gate.  The repository becomes the place where the prompt, the fixture, the sketch clause, and
 the check meet.
 
-\subsection{Where formal synthesis leaves a practical gap}
+\subsection{A repository-native version of the loop}
 
-Formal synthesis is strongest in settings where the policy can be expressed in a formal
-language and checked by the synthesis or validation machinery.  Enterprise data-cleaning work
-often mixes formal constraints with prose conventions, client-specific policies, ambiguous
-notes, historical exceptions, and output formats.  Some rules become deterministic code.
-Others remain narrative criteria for a model-mediated surface until the team learns how to
-encode them.
+Formal synthesis and CEGIS already cover a large design space.  When the program template, the
+specification, and the checker can be written in a formal language, solver-backed synthesis can
+search a constrained space and return results with stronger semantic force than the repository
+gate in this paper.  Those systems also have well-known variations: counterexamples may come
+from a verifier, examples may guide inductive search, and oracles may help steer component
+selection or specification refinement~\cite{solar2006combinatorial,jha2010oracle}.
 
-The method targets that middle ground.  It keeps the CEGIS loop shape: generate a candidate,
-validate it, feed back a counterexample, and try again.  It changes the machinery around the
-loop.  The validator is a repository-native gate.  The repair engine is a coding agent.  The
-specification surface is a sketch plus a finite promoted corpus rather than a complete formal
-language.
+The setting here gives up some of that formal strength in exchange for a different kind of
+coverage.  Enterprise data-cleaning work often mixes deterministic constraints with prose
+conventions, client-specific policies, ambiguous notes, historical exceptions, and output
+formats.  Some rules can become deterministic code.  Others remain prompt-mediated narrative
+criteria until the team has enough counterexamples to encode them.  The method therefore
+targets a repository-native loop: generate or edit a candidate, run the current gate, promote a
+counterexample when the gate exposes missing policy, and repair the sketch, code, prompt, or
+checker that carried the gap.
+
+That choice trades formal strength for operational traceability.  The method inherits the
+CEGIS habit of using counterexamples to constrain the next candidate, while accepting a weaker
+result: finite-corpus predicate satisfaction under the repository's current semantics.  Its
+value is the explicit join across artifacts that often sit outside one formal specification:
+comments, prompts, cassettes, fixture names, code anchors, and generated provenance.
 
 % ---------------------------------------------------------------------------
 \section{Lineage}
 \label{sec:lineage}
 
+\subsection{Sketch and CEGIS}
+
 Solar-Lezama's sketching work framed synthesis as collaboration between programmer insight
 and automated search: the programmer writes a partial program, leaving holes for a
-synthesizer to fill~\cite{solar2008sketching,solar2013sketching}.  The programmer supplies
-structure; the machine searches within it.  CEGIS adds the validation loop: generate a
-candidate, validate it externally, feed counterexamples back into the next synthesis step.
+synthesizer to fill~\cite{solar2008sketching,solar2013sketching}.  Earlier sketching work
+already used counterexamples to refine candidates in finite-program synthesis
+settings~\cite{solar2006combinatorial}.  The programmer supplies structure; the machine
+searches within it.  CEGIS adds the validation loop: generate a candidate, validate it
+externally, and feed counterexamples back into the next synthesis step.
+
+That loop carries an important discipline.  A counterexample is more than a failing test case.
+It removes a region of the candidate space by showing a concrete input on which the current
+candidate violates the specification.  In solver-backed settings, the synthesizer can use the
+growing counterexample set to search a formal space more intelligently than blind generate and
+check.  Oracle-guided synthesis extends the picture by letting an oracle guide or validate
+choices in component-based synthesis~\cite{jha2010oracle}.
+
+\subsection{Programming by example}
 
 Programming-by-example systems such as FlashMeta and PROSE synthesize DSL programs from
 examples using domain-specific deduction~\cite{polozov2015flashmeta,gulwani2017program}.
-Agent benchmarks such as SWE-bench evaluate whether language models can resolve real
-repository issues~\cite{jimenez2024swebench}.  Tests-as-prompts work studies tests as both
-input and evaluation for LLM code generation~\cite{cui2025tests}.
+Those systems show a different but related lesson: examples can be a specification surface
+when the target language and domain-specific operators are chosen carefully.  The examples
+serve as constraints on a search procedure inside a language designed for that family of
+tasks.
 
-Agentic synthesis against counterexample-supplemented sketches combines those traditions
-with ordinary repository work.  The sketch resembles a partial program.  The corpus resembles
-the growing example set in CEGIS and programming by example.  The gate resembles a bounded
-validator.  The synthesizer is a coding agent with permission to edit source and prompts.
+\subsection{Agentic coding and tests}
+
+Agentic coding work changes the repair surface again.  Agent benchmarks such as SWE-bench
+evaluate whether language models can resolve real repository issues~\cite{jimenez2024swebench}.
+Tests-as-prompts work studies tests as both input and evaluation for LLM code
+generation~\cite{cui2025tests}.  These approaches already use repository artifacts and
+executable checks to steer agents.  The method here is compatible with that direction.  It
+adds a specific artifact boundary for policy-heavy repairs: every promoted counterexample
+should say which sketch clause changed, which tempting repair is rejected, which code or prompt
+surface handled the rule, and which gate check enforces it.
+
+\subsection{Positioning boundary}
+
+Agentic synthesis against counterexample-supplemented sketches therefore borrows from several
+traditions and treats them as live comparators.  The sketch resembles a partial
+program.  The corpus resembles the growing example set in CEGIS and programming by example.
+The gate resembles a bounded validator.  The synthesizer is a coding agent with permission to
+edit source and prompts.  The paper's specific claim begins where those pieces meet in an
+ordinary repository.
 
 The difference is the shape of the hole.  In classical Sketch, the hole is usually inside a
 formal program and the solver searches a formal space.  In a repository with code, fixtures,
-prompts, cassettes, and review comments, the hole can be split across artifacts.  A rule may
-need one deterministic branch, one prompt instruction, one fixture, and one semantic compare
-field.  The method in this paper treats those artifacts as the synthesis surface and uses
-counterexamples to keep the surface aligned.
+prompts, cassettes, review comments, and generated evidence, the hole can be split across
+artifacts.  A rule may need one deterministic branch, one prompt instruction, one fixture, and
+one semantic compare field.  The method in this paper treats those artifacts as the synthesis
+surface and uses counterexamples to keep the surface aligned.
 
 \begin{center}
 \scriptsize
@@ -295,6 +341,12 @@ Result boundary & Solver-relative result & DSL/example consistency & Finite-corp
 \bottomrule
 \end{tabular}
 \end{center}
+
+Read this table as a positioning map rather than a complete taxonomy of synthesis or agentic
+coding approaches.  Each column stands for a family resemblance that matters to this paper:
+partial programs, example-driven constraints, repository repair, and executable validation.
+The method's contribution is the artifact join between those resemblances: how a repository
+links sketch clauses, promoted counterexamples, code or prompt surfaces, and gate checks.
 
 % ---------------------------------------------------------------------------
 \section{Artifacts}
