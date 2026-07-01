@@ -1,17 +1,17 @@
 # RosterSynth Kiosk Worked Example
 
-This directory is the worked example supporting `paper/main.tex`.
+This directory is companion evidence for `paper/main.tex`. It shows one promoted RosterSynth counterexample moving through the method: sketch clause, corpus case, Oracle A rule code, Oracle B prompt/cassette path, replay/compare gates, and verification tests.
 
-It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
+The generated files come from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compile into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
 - `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
-The example demonstrates the full loop:
+The worked loop:
 
 ```text
-sketch Op 2 + corpus counterexample
+sketch Op 2 + promoted corpus counterexample
 → historical append failure
 → Oracle A duplicate-cancel implementation
 → replay check + semantic compare

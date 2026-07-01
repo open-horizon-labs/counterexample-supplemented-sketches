@@ -61,13 +61,13 @@ def render() -> str:
     implementation = nodes["implementation.parse-task-line"]
 
     parts: list[str] = []
-    parts.append("# Extracted Paper: Sketch + Counterexample + Coding Agent")
+    parts.append("# Extracted Session Evidence: Sketch + Counterexample + Coding Agent")
     parts.append("")
-    parts.append("> This paper is generated from the clean-room session graph and source selectors. Do not treat it as canonical unless `tools/extract_session_graph.py --write` and this extractor both pass.")
+    parts.append("> Generated from the clean-room session graph and source selectors. This appendix is companion evidence for `paper/main.tex`; regenerate after `tools/extract_session_graph.py --write` and this extractor pass.")
     parts.append("")
-    parts.append("## Abstract")
+    parts.append("## Claim Boundary")
     parts.append("")
-    parts.append("This artifact demonstrates one extracted claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence instead of independent prose.")
+    parts.append("This artifact supports one finite-session claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence.")
     parts.append("")
     parts.append("## Source Sketch")
     parts.append("")
@@ -89,7 +89,7 @@ def render() -> str:
     parts.append("")
     parts.append(f"Selector: `{implementation['selector']}`")
     parts.append("")
-    parts.append("The implementation is not quoted in full here; each counterexample below links to the execution selectors that handle it.")
+    parts.append("The implementation is referenced by selector; each counterexample below links to the execution selectors that handle it.")
     parts.append("")
     parts.append("## Extracted Counterexample Handling")
     parts.append("")
@@ -122,7 +122,7 @@ def render() -> str:
 
     parts.append("## Extracted Claim")
     parts.append("")
-    parts.append("The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims must not exceed that extracted evidence.")
+    parts.append("The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims should stay within that extracted evidence.")
     parts.append("")
     parts.append("## Verification")
     parts.append("")

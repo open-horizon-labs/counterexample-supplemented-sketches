@@ -1,10 +1,10 @@
-# Extracted Paper: Sketch + Counterexample + Coding Agent
+# Extracted Session Evidence: Sketch + Counterexample + Coding Agent
 
-> This paper is generated from the clean-room session graph and source selectors. Do not treat it as canonical unless `tools/extract_session_graph.py --write` and this extractor both pass.
+> Generated from the clean-room session graph and source selectors. This appendix is companion evidence for `paper/main.tex`; regenerate after `tools/extract_session_graph.py --write` and this extractor pass.
 
-## Abstract
+## Claim Boundary
 
-This artifact demonstrates one extracted claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence instead of independent prose.
+This artifact supports one finite-session claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence.
 
 ## Source Sketch
 
@@ -13,7 +13,7 @@ Selector: `examples/task-line-parser/sketch.md`
 ```md
 # Sketch: Task Line Parser
 
-Build a boring parser that converts one loose task line into a normalized task record.
+This sketch is the method input for the clean-room parser example. It gives the coding agent the intended shape while the companion counterexamples name plausible wrong implementations.
 
 Input shape:
 
@@ -31,11 +31,11 @@ Supported statuses:
 Rules:
 
 - The first colon selects the status; later colons belong to the title.
-- `todo` and `done` do not parse `|` as a reason. Their whole body is title text.
+- For `todo` and `done`, `|` stays in title text; only `blocked` uses it as a reason separator.
 - `blocked` requires `|` and a non-empty reason after it.
 - Empty titles reject.
 - Unknown statuses reject.
-- Return explicit result objects from `known_code/result.py`; do not throw for validation errors.
+- Return explicit result objects from `known_code/result.py`; validation errors return `Err`.
 - Keep the implementation dependency-free and pure.
 ```
 
@@ -85,7 +85,7 @@ def err(code: str, message: str) -> Err:
 
 Selector: `examples/task-line-parser/generated/parse_task_line.py`
 
-The implementation is not quoted in full here; each counterexample below links to the execution selectors that handle it.
+The implementation is referenced by selector; each counterexample below links to the execution selectors that handle it.
 
 ## Extracted Counterexample Handling
 
@@ -129,12 +129,12 @@ def test_only_first_colon_separates_status_from_title(self) -> None:
         )
 ```
 
-### Blocked reason cannot be empty
+### Blocked reason requires text
 
 Counterexample selector: `examples/task-line-parser/counterexamples.md:21-32`
 
 ```md
-## Blocked reason cannot be empty
+## Blocked reason requires text
 
 Input:
 
@@ -256,7 +256,7 @@ def test_pipe_is_title_text_for_unblocked_statuses(self) -> None:
 
 ## Extracted Claim
 
-The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims must not exceed that extracted evidence.
+The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims should stay within that extracted evidence.
 
 ## Verification
 

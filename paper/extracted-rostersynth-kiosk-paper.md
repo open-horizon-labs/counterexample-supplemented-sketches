@@ -1,10 +1,10 @@
-# Agentic Synthesis against Counterexample-Supplemented Sketches
+# RosterSynth Kiosk Evidence Appendix
 
-> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example for the process; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
+> Generated from repo-local RosterSynth source snapshots and graph selectors. This appendix is companion evidence for `paper/main.tex`; regenerate with `tools/extract_rostersynth_example.py --write --paper`.
 
-## Abstract
+## Claim Boundary
 
-This example shows the full RosterSynth process on one counterexample: a kiosk double-tap creates twin 40-hour active bookings, and the tempting append repair closes the hours math while violating duplicate policy. The sketch clause, corpus case, Oracle A implementation, Oracle B prompt/cassette path, replay check, semantic compare, promotion step, negative cassette, full-gate evidence, and verification tests are all linked by graph nodes with source selectors.
+This worked example supports the paper's finite-corpus claim: for the promoted corpus E, the kiosk counterexample is traceable from sketch clause to replay/compare gates, Oracle A code, Oracle B prompt/cassette behavior, and verification tests.
 
 ## Method Claim
 
@@ -357,7 +357,7 @@ Verified by:
 
 ## Bounded Claim
 
-This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The evidence covers the referenced RosterSynth corpus and the public companion artifact.
+This extracted example supports finite-corpus soundness over the referenced RosterSynth corpus E. It shows the kiosk counterexample end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The claim boundary is finite: the evidence applies to the promoted corpus and companion artifact.
 
 ## Regenerate
 

@@ -1,6 +1,6 @@
 # Sketch: Task Line Parser
 
-Build a boring parser that converts one loose task line into a normalized task record.
+This sketch is the method input for the clean-room parser example. It gives the coding agent the intended shape while the companion counterexamples name plausible wrong implementations.
 
 Input shape:
 
@@ -18,9 +18,9 @@ Supported statuses:
 Rules:
 
 - The first colon selects the status; later colons belong to the title.
-- `todo` and `done` do not parse `|` as a reason. Their whole body is title text.
+- For `todo` and `done`, `|` stays in title text; only `blocked` uses it as a reason separator.
 - `blocked` requires `|` and a non-empty reason after it.
 - Empty titles reject.
 - Unknown statuses reject.
-- Return explicit result objects from `known_code/result.py`; do not throw for validation errors.
+- Return explicit result objects from `known_code/result.py`; validation errors return `Err`.
 - Keep the implementation dependency-free and pure.

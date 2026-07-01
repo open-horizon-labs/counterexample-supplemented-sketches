@@ -6,12 +6,12 @@ Run:
 python3 -m unittest discover -s sketch-counterexample-agent/examples/task-line-parser/tests
 ```
 
-The test suite must prove:
+The test suite must prove the finite parser example:
 
 - happy paths parse;
 - counterexamples fail tempting wrong patches;
 - implementation uses the known-code `Ok` / `Err` result shape;
-- validation errors do not throw.
+- validation errors return `Err`.
 
 Adversarial check:
 

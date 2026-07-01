@@ -1,6 +1,6 @@
 # Repair From Counterexample
 
-A generated implementation failed or would fail a counterexample.
+Use this flow when an implementation failed, or would fail, a counterexample.
 
 ## Inputs
 
@@ -13,12 +13,12 @@ Read:
 
 ## Task
 
-Repair the implementation so the counterexample fails the tempting wrong patch and passes the intended behavior.
+Repair the implementation so the tempting wrong patch fails and the intended behavior passes.
 
 ## Rules
 
-- Do not weaken the counterexample.
-- Do not special-case only the exact string when the sketch describes a broader rule.
+- Keep the counterexample strict.
+- Repair the broader rule when the sketch describes one; avoid exact-string special cases.
 - Preserve known-code style.
 - Add or update the smallest test that proves the rule.
 

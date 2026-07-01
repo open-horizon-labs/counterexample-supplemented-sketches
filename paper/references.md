@@ -1,6 +1,6 @@
 # References
 
-These references bound the related-work claims in `sketch-counterexample-coding-agent.md`.
+These references bound the related-work claims in `paper/main.tex` and the companion note `sketch-counterexample-coding-agent.md`.
 
 1. Armando Solar-Lezama, “The Sketching Approach to Program Synthesis.”  
    https://people.csail.mit.edu/asolar/papers/Solar-Lezama09.pdf

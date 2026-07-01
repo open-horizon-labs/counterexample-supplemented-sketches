@@ -293,13 +293,13 @@ def render_paper(graph: dict[str, object]) -> str:
     scenario = json.loads(read(SOURCE / "scenarios" / "roster.kiosk_double_booking.v1.json"))
     manifest = json.loads(read(SOURCE / "scenarios" / "manifest.json"))
     parts: list[str] = []
-    parts.append("# Agentic Synthesis against Counterexample-Supplemented Sketches")
+    parts.append("# RosterSynth Kiosk Evidence Appendix")
     parts.append("")
-    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. RosterSynth kiosk is the worked example for the process; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
+    parts.append("> Generated from repo-local RosterSynth source snapshots and graph selectors. This appendix is companion evidence for `paper/main.tex`; regenerate with `tools/extract_rostersynth_example.py --write --paper`.")
     parts.append("")
-    parts.append("## Abstract")
+    parts.append("## Claim Boundary")
     parts.append("")
-    parts.append("This example shows the full RosterSynth process on one counterexample: a kiosk double-tap creates twin 40-hour active bookings, and the tempting append repair closes the hours math while violating duplicate policy. The sketch clause, corpus case, Oracle A implementation, Oracle B prompt/cassette path, replay check, semantic compare, promotion step, negative cassette, full-gate evidence, and verification tests are all linked by graph nodes with source selectors.")
+    parts.append("This worked example supports the paper's finite-corpus claim: for the promoted corpus E, the kiosk counterexample is traceable from sketch clause to replay/compare gates, Oracle A code, Oracle B prompt/cassette behavior, and verification tests.")
     parts.append("")
     parts.append("## Method Claim")
     parts.append("")
@@ -388,7 +388,7 @@ def render_paper(graph: dict[str, object]) -> str:
     parts.append("")
     parts.append("## Bounded Claim")
     parts.append("")
-    parts.append("This extracted example supports the claim that the kiosk counterexample is inspectable end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The evidence covers the referenced RosterSynth corpus and the public companion artifact.")
+    parts.append("This extracted example supports finite-corpus soundness over the referenced RosterSynth corpus E. It shows the kiosk counterexample end to end from sketch clause to corpus case, promotion trigger, Oracle A implementation, Oracle B prompt/cassette path, replay/compare checks, negative check, and tests. The claim boundary is finite: the evidence applies to the promoted corpus and companion artifact.")
     parts.append("")
     parts.append("## Regenerate")
     parts.append("")
@@ -403,18 +403,18 @@ def render_paper(graph: dict[str, object]) -> str:
 def write_readme() -> None:
     text = """# RosterSynth Kiosk Worked Example
 
-This directory is the worked example supporting `paper/main.tex`.
+This directory is companion evidence for `paper/main.tex`. It shows one promoted RosterSynth counterexample moving through the method: sketch clause, corpus case, Oracle A rule code, Oracle B prompt/cassette path, replay/compare gates, and verification tests.
 
-It is generated from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compiled into:
+The generated files come from a local RosterSynth source checkout into repo-local snapshots under `source/`, then compile into:
 
 - `../../build/rostersynth-kiosk-graph.json` — graph nodes and edges for the example.
 - `../../paper/extracted-rostersynth-kiosk-paper.md` — generated evidence appendix.
 - `../../.oh/knowledge/rostersynth-kiosk/*.md` — repo-native node files.
 
-The example demonstrates the full loop:
+The worked loop:
 
 ```text
-sketch Op 2 + corpus counterexample
+sketch Op 2 + promoted corpus counterexample
 → historical append failure
 → Oracle A duplicate-cancel implementation
 → replay check + semantic compare

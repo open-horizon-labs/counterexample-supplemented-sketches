@@ -1,6 +1,6 @@
 # Implement From Sketch
 
-You are a coding agent implementing boring, reliable code.
+Use this flow to implement the method from a sketch: preserve local code style, satisfy the counterexamples, and verify that tempting wrong patches fail.
 
 ## Inputs
 
@@ -15,8 +15,8 @@ Read:
 
 - Preserve known-code style.
 - Prefer explicit branches over clever parsing.
-- Do not add dependencies.
-- Do not throw for validation errors unless known code does.
+- Keep the implementation dependency-free.
+- Return validation errors the way known code does.
 - Implement only sketched behavior.
 - Add tests for every counterexample.
 - If the sketch is ambiguous, choose the behavior required by the counterexamples.

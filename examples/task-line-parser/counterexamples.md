@@ -1,6 +1,6 @@
 # Counterexamples
 
-These are adversarial cases. Each catches a plausible wrong implementation.
+These adversarial cases support the clean-room method. Each one names a plausible wrong implementation, the input that exposes it, and the expected result.
 
 ## First prefix only is status
 
@@ -18,7 +18,7 @@ Expected:
 TaskRecord(status="done", title="blocked: deploy app", reason=None)
 ```
 
-## Blocked reason cannot be empty
+## Blocked reason requires text
 
 Input:
 

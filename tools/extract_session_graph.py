@@ -34,7 +34,7 @@ MAPPINGS = [
     ),
     CeMapping(
         slug="blocked-reason-cannot-be-empty",
-        title="Blocked reason cannot be empty",
+        title="Blocked reason requires text",
         test_selector="examples/task-line-parser/tests/test_parse_task_line.py:82-90",
         execution_selectors=["examples/task-line-parser/generated/parse_task_line.py:46-55"],
         tempting_patch="accept a blank blocked reason after `|`",

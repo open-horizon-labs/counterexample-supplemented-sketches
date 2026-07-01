@@ -4,28 +4,26 @@
 **Bibliography:** [`paper/references.bib`](paper/references.bib)  
 **Companion artifact:** runnable examples, fixtures, and provenance for the paper's claims.
 
-This repository supports the paper. The code lets readers inspect and run the examples behind the argument; the paper carries the claim.
+**Agentic synthesis against counterexample-supplemented sketches** makes coding-agent work checkable against a finite promoted corpus. A human writes a partial program-like sketch; failures become counterexamples; an agent edits code and prompts; replay/compare gates check the current artifact against the promoted cases.
 
-The paper argues for **agentic synthesis against counterexample-supplemented sketches**: a process for programming with coding agents under checkable rules. A human writes a partial program-like sketch, failures are promoted into a counterexample corpus, an agent edits code and prompts, and a replay/compare gate establishes finite-corpus correctness for the current promoted cases.
+The paper is the primary artifact. It names the method, gives the formal model, places the work against sketching, CEGIS, programming by example, tests-as-prompts, and coding-agent benchmarks, and states the finite-corpus correctness claim. This repository is companion evidence: runnable examples, fixtures, provenance, and tests for the paper's worked claims.
 
-## Read first
+## Read by path
 
-Start with the paper:
+- **Academics:** start with [`paper/main.tex`](paper/main.tex), then inspect [`paper/references.bib`](paper/references.bib) and the executable evidence below. The claim boundary is finite-corpus soundness over the promoted corpus `E`.
+- **Developers:** read the RosterSynth kiosk path, then run the commands in [Reproduce the paper artifact](#reproduce-the-paper-artifact). The examples show how to turn sketch clauses, failures, replay checks, and compare checks into an agent loop.
 
-- [`paper/main.tex`](paper/main.tex) — process paper with references, formal model, synthesis loop, and finite-corpus correctness theorem.
-- [`paper/references.bib`](paper/references.bib) — references for sketching, CEGIS, program synthesis, programming-by-example, SWE-bench, and tests-as-prompts.
-
-The RosterSynth kiosk material is a worked example inside the paper. The process name is **agentic synthesis against counterexample-supplemented sketches**.
+The RosterSynth kiosk material is the paper's worked example. It supports the method; the paper carries the claim.
 
 ## Originating setting
 
-The method came from a proprietary enterprise harness. The original deployment used a custom Cursor extension, `cursor://`-style commands, and an embedded web app so subject-matter experts could load production examples, provide corrections, and have those corrections converted with LLM assistance into input/output specs. Selected failures were promoted into a golden corpus for a counterexample loop that constrained code and prompt implementations of a heterogeneous data-cleansing pipeline for multiple downstream clients.
+The method originated in a proprietary enterprise deployment for a heterogeneous data-cleansing pipeline operated by non-developers. That deployment used a custom Cursor extension, `cursor://`-style commands, an embedded SME web app, SME corrections converted with LLM assistance into input/output specs, a counterexample loop, and a promoted golden corpus for multiple downstream clients.
 
 This public companion contains the publishable slice: the paper, clean fixtures, runnable examples, tests, and provenance. Production data, client-specific rules, proprietary extension code, and private SME workflows stay outside the repo.
 
 ## What this companion artifact supports
 
-The paper's central executable claim is bounded:
+The paper's executable claim is bounded:
 
 > If the replay/compare gate passes every case in the promoted counterexample corpus `E`, then the current agent-produced artifact is correct for `E` under the repository's executable replay and compare semantics.
 
@@ -60,7 +58,7 @@ roster.kiosk_double_booking.v1
 → gate passes after sketch/code/prompt alignment
 ```
 
-That path supplies evidence for the paper's method.
+That path is evidence for the paper's method.
 
 ## Reproduce the paper artifact
 
@@ -88,7 +86,7 @@ The checks exercise the paper's worked-example obligations:
 - Oracle B prompt includes decision order, Op 2, higher-bookingId rule, and payload.
 - Full corpus gates match deterministic, hybrid cassette, and llm-only cassette evidence.
 
-## For programmers
+## For developers
 
 Use the companion artifact as an implementation appendix. The adaptable pattern is:
 
@@ -99,13 +97,13 @@ Use the companion artifact as an implementation appendix. The adaptable pattern 
 5. Require a compare check for semantic fields replay under-specifies.
 6. Promote every failure into the corpus and sketch before rerunning the agent.
 
-A tiny didactic parser slice remains under [`examples/task-line-parser/`](examples/task-line-parser/) for readers who want the smallest possible version of the loop.
+A tiny didactic parser slice remains under [`examples/task-line-parser/`](examples/task-line-parser/) for readers who want the smallest version of the loop.
 
 ## For academics
 
 Treat the repository as supplementary material for evaluating the paper's claims:
 
-- the method is named and argued in [`paper/main.tex`](paper/main.tex);
+- [`paper/main.tex`](paper/main.tex) names and argues the method;
 - the correctness result is finite-corpus soundness over the promoted corpus `E`;
 - the RosterSynth kiosk case is the concrete witness;
 - the tests and graph show how source artifacts back the paper's claims.

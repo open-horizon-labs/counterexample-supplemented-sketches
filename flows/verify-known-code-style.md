@@ -1,6 +1,6 @@
 # Verify Known-Code Style
 
-Check whether the implementation follows the known-code anchors.
+Use this flow after implementation to check the method contract: local result shape, pure-function behavior, counterexample coverage, and a failing naive parser.
 
 ## Verify
 
