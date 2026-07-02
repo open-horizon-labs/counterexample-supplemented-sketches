@@ -95,11 +95,12 @@ This paper describes that artifact and the loop around it.  The ingredients are:
   \item a \textbf{gate} $\gate$: replay plus semantic comparison over every promoted case.
 \end{enumerate}
 
-\begin{figure}[t]
 \begin{center}
 \setlength{\fboxsep}{6pt}
 \fbox{%
 \begin{tabular}{c}
+\textbf{Method at a glance} \\
+\midrule
 Human sketch $\sketch$ names strategy and holes \\
 $\Downarrow$ \\
 Agent edits code and prompt surfaces under anchors $\anchors$ \\
@@ -110,10 +111,9 @@ Semantic compare checks policy-bearing fields \\
 $\Downarrow$ \\
 Failure promotes a counterexample into $\corpus$ and sharpens $\sketch$
 \end{tabular}}
+
+{\small\emph{The loop turns a tempting wrong repair into durable repository guidance.}}
 \end{center}
-\caption{The repository loop that turns a tempting wrong repair into durable guidance.}
-\label{fig:loop}
-\end{figure}
 
 The sketch records the human's current strategy: which repairs are permitted, prioritized, or
 forbidden.  The corpus records cases that have earned specification authority through
@@ -330,6 +330,40 @@ executable checks to steer agents.  The method here is compatible with that dire
 adds a specific artifact boundary for policy-heavy repairs: every promoted counterexample
 should say which sketch clause changed, which tempting repair is rejected, which code or prompt
 surface handled the rule, and which gate check enforces it.
+
+\subsection{Prompt engineering, specs, and natural-language coding}
+
+Prompt engineering belongs beside agentic coding, not as a replacement for sketching or
+CEGIS.  Prompt programming and prompt-based learning treat natural-language prompts as a
+control surface for language models~\cite{reynolds2021promptprogramming,liu2023pretrainpromptpredict}.
+More recent software-engineering language makes the claim stronger.  Natural
+Language-Oriented Programming frames natural language as a way to lower barriers for non-experts
+who contribute to software projects~\cite{beheshti2024nlop}.  Promptware engineering treats
+prompts as first-class software artifacts that need requirements, testing, debugging, evolution,
+and monitoring~\cite{chen2025promptware}.  Industry tooling uses similar language: Copilot
+Workspace describes a flow from idea to code to software in natural
+language~\cite{dohmke2024copilotworkspace}.  The older end-user software engineering literature
+also matters here because it studies domain experts who create or maintain computational
+artifacts without being professional software developers~\cite{ko2011enduser}.
+
+The current spec-driven tooling wave makes a related promise.  Kiro presents specs as a way to
+move agentic development beyond ad hoc prompting, using structured requirements, design, and
+tasks to make model assumptions visible~\cite{swaminathan2025kiro}.  GitHub Spec Kit similarly
+centers AI-assisted development on a Spec--Plan--Tasks--Implement sequence and describes
+specifications as executable artifacts that give agents structured context instead of ad hoc
+prompts~\cite{github2026speckit}.  Those tools make ``spec'' productive as a workflow object,
+but the term is still broad.  The premise in this paper is narrower and more checkable: a spec
+for this setting is a sketch plus promoted counterexamples plus a concrete replay/compare
+harness.  That boundary connects the modern spec-driven-agent promise to older specification by
+example work, where concrete examples become executable specifications and living
+documentation~\cite{adzic2011specification}.
+
+This paper should not inherit the strongest form of the ``anyone can write code'' claim.  The
+claim needed here is narrower: non-developer experts can contribute specification pressure
+through examples, corrections, and promptable policy text; maintainers still own promotion,
+gate design, prompt review, and final repository shape.  Prompt engineering therefore explains
+why prompt text belongs in the synthesis surface, but the sketch, promoted corpus, anchors, and
+gate are what keep that surface from becoming unreviewed chat.
 
 \subsection{Positioning boundary}
 
@@ -850,13 +884,6 @@ case rejects, which sketch clause should change, which field the comparer must c
 which failure message will guide a future repair.  That extra work is the price of turning a
 single failure into reusable specification pressure.
 
-\subsection{Keep generated evidence subordinate}
-
-Graphs, node files, cassettes, and extracted papers help readers inspect evidence.  They
-support the claim after the technique is clear.  The main paper should lead with the method,
-the theorem, and the example at sketch level; generated artifacts then answer provenance and
-reproducibility questions for readers who want to audit the path.
-
 % ---------------------------------------------------------------------------
 \section{Companion artifact}
 \label{sec:artifact}
@@ -913,13 +940,6 @@ Promotion quality is a central scaling constraint.  A large pile of examples giv
 guidance when the examples leave rules ambiguous.  A smaller corpus of sharp counterexamples
 may be more useful than a larger ambiguous corpus because each case rejects a specific
 tempting patch.  Promotion should therefore ask: what tempting patch does this case reject?
-
-\subsection{Generated provenance helps after the claim is clear}
-
-Graph extraction and node files help audit the path from sketch to check.  They remain
-supporting evidence.  The paper should state the method and claim boundary before relying on
-generated provenance as supporting evidence.  Provenance then answers the follow-up question:
-where is this claim grounded?
 
 % ---------------------------------------------------------------------------
 \section{Limitations}
