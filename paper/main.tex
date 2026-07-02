@@ -29,11 +29,10 @@
 \maketitle
 
 \begin{abstract}
-In the RosterSynth worked example, the bad repair is easy to write: append $-40$ hours and the
-roster balances.  The gate has to reject it anyway.  The correct repair cancels duplicate
-booking 1802, because the operation matters, not only the final hour total.  The method puts
-that distinction in the repository---sketch, corpus, code, prompt, and gate---instead of
-leaving it in a prompt, chat transcript, or subject-matter expert's memory.
+Coding agents make plausible repairs cheap.  Teams still need a durable way to carry domain
+corrections into future runs.  A correction should leave more than a passing test or a chat
+note: it should name the rejected repair, the rule that rejects it, and the code or prompt
+surface that must preserve it.
 
 We use the term \emph{counterexample-supplemented sketch} for the repository artifact and
 \emph{agentic synthesis} for the loop that edits against it.  A human writes a partial
@@ -61,25 +60,21 @@ to inspect the disclosed loop.
 \section{Introduction}
 \label{sec:introduction}
 
-Start with booking 1802.  The roster has twin active 40-hour bookings on the pay-window end
-date.  A naive repair can append $-40$ hours and make the hours math come out.  Replay
-passes because the hours gap closed.  The repair is still wrong: duplicate policy says cancel
-the higher duplicate booking.  Compare has to check the booking ID and operation, not only the
-arithmetic.
+Coding agents change the cost of repair.  A developer can ask for a patch before the team has
+encoded every domain rule the patch must respect.  The agent then optimizes against the signal
+it can execute: a failing test, a state delta, a prompt instruction, or a reviewer note.  If the
+rule behind a rejected repair stays in conversation, the next agent run can make the same
+plausible mistake.
 
-The same shape shows up outside rosters.  A parser can pass the easy cases while treating every
-colon as syntax.  A data-cleaning rule can pass a local fixture while erasing a client-specific
-exception.  The agent followed the signal it was given and missed the rule the repository had
-not yet made durable.
+A rejected output should become a repository constraint.  The repository should capture the
+input/output case, the rejected repair, the sketch clause that changed, and the replay/compare
+gate that protects the rule.
 
-Tests still matter.  They catch shape errors, exceptions, bad deltas, and regressions.  The
-missing piece is the rule behind the promoted failure: why this tempting repair was wrong,
-which sketch clause changed, and what a future agent must preserve.  Run-local prompts have the
-opposite weakness.  They can carry intent quickly, but they fork, drift, and escape the
-repository's checks.
+Tests still matter.  They catch shape errors, exceptions, bad deltas, and regressions.  Prompts
+can explain intent for the current run.  A promoted case has a different job: keep the
+correction available to later agents under repository checks.
 
-The repository needs an artifact that records both the human strategy and the examples that
-sharpen it.  The ingredients are:
+That path has these ingredients:
 
 \begin{enumerate}[leftmargin=*]
   \item a \textbf{sketch} $\sketch$: a partial program in prose and code-shaped structure;
@@ -155,13 +150,13 @@ promoted case moves from SME correction into sketch, code or prompt, replay, and
 \section{Originating setting}
 \label{sec:originating-setting}
 
-The enterprise deployment supplied the problem, not the finished method.  Production failures
-could be loaded into a review surface; SMEs could correct concrete outputs; agents could repair
-code and prompts.  Looking for a way to make those failures reusable led us back to CEGIS.  The
-work here adapts that loop to agentic repair: load true failures from production, promote them
-into a golden set, and rerun the harness for each new scenario.
+The enterprise deployment was the proving ground.  Production failures could be loaded into a
+review surface.  SMEs corrected concrete outputs.  Agents repaired code and prompts.  CEGIS
+gave us the loop for making failures reusable; this version adapts it to agentic repair: load
+true failures from production, promote them into a golden set, and rerun the harness for each
+new scenario.
 
-The deployed system joined eight pieces:
+The deployed system had eight pieces:
 
 \begin{enumerate}[leftmargin=*]
   \item a custom Cursor extension for invoking repository actions from the IDE;
@@ -224,23 +219,20 @@ repair is forbidden for this reason, and future repairs must satisfy this rule.'
 artifact, the team has learned something in conversation while leaving the repository nearly
 unchanged.
 
-\subsection{Tests need intent memory}
+\subsection{Tests need the rule they protect}
 
-A test is a predicate over behavior.  A counterexample-supplemented sketch adds a memory of
-intent.  The distinction matters when several outputs satisfy a visible predicate.  A replay
-check can show that a proposed row closes a state delta.  A semantic compare check can show
-that the row used the expected operation, target, date, or status.  The sketch explains why
-those semantic fields matter.
+A test checks behavior.  A promoted counterexample records the rule behind the expected output.
+That matters when two repairs close the same state delta.  Replay can show that a row fixes the
+arithmetic.  Semantic compare can show whether it used the required operation, target, date, or
+status.  The sketch explains why those fields matter.
 
-The issue is the gap between what many tests encode and what a policy-heavy repair needs to
-preserve.  Tests work well when the expected behavior is already explicit.  A
-counterexample-supplemented sketch helps at the moment when the
-failure exposes a rule that had been implicit: it gives the rule a name, links it to the
-fixture that exposed it, and tells the next repair which tempting path to avoid.
+Policy-heavy repairs fail when the test says what output to expect but not which rule the
+repair must preserve.  A counterexample-supplemented sketch gives the rule a name, links it to
+the fixture that exposed it, and tells the next repair which tempting path to avoid.
 
-Tests can also lose policy context when the failure is not linked to the rule it protects.  A
-future maintainer or agent run may see only the failing assertion and patch around it.  A sketch
-clause linked to the test records the policy ordering a later repair should preserve.
+When the test is detached from the rule, a future maintainer or agent may patch around the
+failing assertion.  A sketch clause linked to the test records the policy ordering a later
+repair should preserve.
 
 \subsection{Prompts need repository anchoring}
 
@@ -372,10 +364,8 @@ Result boundary & Solver-relative result & DSL/example consistency & Finite-corp
 \end{tabular}
 \end{center}
 
-Read the table as a positioning map, not a taxonomy of synthesis or agentic coding.  Each
-column names one family resemblance: partial programs, example-driven constraints, repository
-repair, and executable validation.  The contribution is the repository join: sketch clause,
-promoted counterexample, code or prompt surface, and gate check in one inspectable path.
+Use the last column as a checklist for each promoted case: a sketch clause, a counterexample,
+the edited code or prompt surface, and the gate check that fails the known bad repair.
 
 % ---------------------------------------------------------------------------
 \section{Artifacts}
@@ -783,9 +773,8 @@ Cancel duplicate & hours delta closed & duplicate removed & replay accepts; comp
 
 The tempting repair adds an adjustment that closes the hours balance.  Replay accepts the
 state change because the arithmetic gap disappears.  Semantic compare rejects the repair
-because the selected operation is wrong.  The method retains this failure because the patch
-succeeds under one visible predicate while violating the policy-bearing
-field.
+because the selected operation is wrong.  The promoted case keeps that near miss in the corpus:
+the patch closed the hours gap and still chose the wrong operation.
 
 \subsection{Sketch rule}
 
@@ -957,11 +946,11 @@ mistakes into promoted cases.  The agent repairs code or prompts under those cas
 then reports the exact boundary of the current repository: replay and semantic comparison pass
 for the promoted corpus.
 
-The enterprise setting supplied the pressure: domain knowledge lived with SMEs while agents
-controlled the edit surface.  The reusable move joins them in the repository.  Each promoted
-counterexample adds an executable check against a known wrong repair.  Each passing gate states
-the bounded claim: the current strategy satisfies the encoded replay and semantic-comparison
-predicates for the current promoted corpus.
+The enterprise setting supplied the pressure: SMEs knew the domain rule while agents controlled
+the edit surface.  Each SME correction enters the repository as a promoted case.
+Each promoted counterexample adds an executable check against a known wrong repair.  Each
+passing gate states the bounded claim: the current strategy satisfies the encoded replay and
+semantic-comparison predicates for the current promoted corpus.
 
 \bibliographystyle{plain}
 \bibliography{references}
