@@ -268,8 +268,8 @@ the rule can be checked by SMEs against a sketch and promoted counterexamples.  
 data-cleaning is one of several settings where this technique has promise: the common condition
 is SME-verifiable behavior before fully formalized rules.  Some rules become deterministic
 code.  Others stay in prompts while the team gathers enough counterexamples to encode them.
-Oracle~B is not exempt from validation: prompt-mediated output is replayed and compared against
-the same promoted expectations.
+Oracle~B gets the same validation: prompt-mediated output is replayed and compared against the
+same promoted expectations.
 
 This is a weaker result than formal synthesis.  The trade is SME-verifiable evidence: sketch
 clauses, corrected examples, prompts, code anchors, checker fields, and generated provenance
@@ -923,9 +923,9 @@ out?
   \item \textbf{Checker quality.}  Replay and compare inherit the limits of their encoded
         semantics.  A buggy checker can certify the wrong behavior until a maintainer repairs
         the checker and replays the promoted corpus.
-  \item \textbf{Golden quality.}  A wrong golden row makes the gate enforce the wrong behavior.
-        Promotion needs review by someone who understands the domain rule and can distinguish a
-        corrected answer from a corrected specification.
+  \item \textbf{Golden dataset quality.}  A wrong row in the golden dataset makes the gate
+        enforce the wrong behavior.  Promotion needs review by someone who understands the
+        domain rule and can distinguish a corrected answer from a corrected specification.
   \item \textbf{Promotion quality.}  A promoted case should distinguish a rule from a recorded
         answer.  Weak promotion gives future agents examples to memorize; strong promotion
         gives them rules to preserve.
@@ -948,20 +948,20 @@ private deployment claims.
 \section{Conclusion}
 \label{sec:conclusion}
 
-The useful part is not that a coding agent can write a patch.  The useful part is the trail it
-has to leave before anyone trusts the patch: the sketch clause, the promoted case, the code or
-prompt surface, the replay check, and the semantic compare check.
+A coding agent can write a patch.  This method asks for the trail that makes the patch
+inspectable: the sketch clause, the promoted case, the code or prompt surface, the replay
+check, and the semantic compare check.
 
-Agentic synthesis against counterexample-supplemented sketches treats the agent as a
-synthesizer inside that constraint environment.  A human writes the sketch and promotes
-failures.  The SME corrects concrete outputs.  The agent edits code and prompts.  The gate
-states the bounded result for the current corpus.
+The loop gives the agent a narrower job.  The human writes the sketch.  SMEs turn concrete
+mistakes into promoted cases.  The agent repairs code or prompts under those cases.  The gate
+then reports the exact boundary of the current repository: replay and semantic comparison pass
+for the promoted corpus.
 
-That loop came from an enterprise setting where SMEs had the domain knowledge and agents had
-the editing surface.  The reusable technique is the repository join between them.  Each
-promoted counterexample adds an executable check against a known wrong repair, and each passing
-gate says only what it can honestly say: the current strategy satisfies the encoded replay and
-semantic-comparison predicates for the current promoted corpus.
+The enterprise setting supplied the pressure: domain knowledge lived with SMEs while agents
+controlled the edit surface.  The reusable move joins them in the repository.  Each promoted
+counterexample adds an executable check against a known wrong repair.  Each passing gate states
+the bounded claim: the current strategy satisfies the encoded replay and semantic-comparison
+predicates for the current promoted corpus.
 
 \bibliographystyle{plain}
 \bibliography{references}
