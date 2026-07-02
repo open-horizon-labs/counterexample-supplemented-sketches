@@ -29,60 +29,60 @@
 \maketitle
 
 \begin{abstract}
-Coding agents can synthesize useful patches while their outputs diverge from unstated policy.
-A prompt can describe what to build and still leave the disallowed near miss implicit: which
-plausible implementation would satisfy the visible check while violating the domain rule.  We
-use the term \emph{agentic synthesis against counterexample-supplemented sketches} for a
-repository-native workflow that makes those near misses part of the specification.
+A coding agent can make a patch that satisfies the visible check and still violates the rule
+that mattered.  In the worked roster example, posting an hours adjustment closes the state
+gap; the correct repair cancels the duplicate booking.  Replay says the state was repaired.
+Semantic compare says the policy-bearing field is wrong.  That near miss is the object of this
+paper.
 
-The workflow has five parts.  A human writes a partial program-like sketch that fixes strategy
-and names holes.  A finite corpus stores observations and promoted counterexamples.  Subject-
-matter experts correct concrete outputs.  A coding agent edits deterministic code and prompt
-surfaces under known-code anchors.  The workflow treats completion as blocked unless a gate
-reports replay and semantic-comparison success for every promoted case.
+We use the term \emph{counterexample-supplemented sketch} for the repository artifact and
+\emph{agentic synthesis} for the loop that edits against it.  A human writes a partial
+program-like sketch.  A finite corpus stores observations and promoted counterexamples.
+Subject-matter experts correct concrete outputs.  A coding agent edits deterministic code and
+prompt surfaces under known-code anchors.  A gate blocks completion until replay and semantic
+comparison pass for every promoted case.
 
-The method borrows the loop grammar of sketching and counterexample-guided inductive
-synthesis (CEGIS) for a different execution surface.  Classical sketching and CEGIS keep
-stronger claims when the search space, specification, and checker can be formalized.  Here,
-the synthesizer is an IDE-shaped coding agent whose edits span ordinary source code and LLM
-prompt surfaces.  The bounded claim is finite-corpus gate satisfaction: when the gate passes,
-the current strategy satisfies the repository's encoded replay and comparison predicates for
-every promoted case.
+The loop borrows from sketching and counterexample-guided inductive synthesis (CEGIS), but the
+execution surface is different.  Classical sketching and CEGIS can make formal claims when the
+search space, specification, and checker are formal.  Here, the synthesizer is an IDE-shaped
+coding agent whose edits span ordinary source code and LLM prompt surfaces.  The claim stays
+bounded: when the gate passes, the current strategy satisfies the repository's encoded replay
+and comparison predicates for the promoted corpus.
 
-In the authors' proprietary deployment, this loop ran inside an enterprise harness: a custom
-Cursor extension, \texttt{cursor://}-style commands, and an embedded web application through
-which subject-matter experts loaded production examples, corrected outputs, and helped turn
-those corrections into input/output specifications.  The public companion repository provides
-a sanitized RosterSynth worked example that implements the paper's disclosed control
-structure.  The paper develops the technique; the repository supplies runnable evidence for
-the worked example and finite-corpus gate claim.
+The originating deployment ran inside a proprietary enterprise harness: a custom Cursor
+extension, \texttt{cursor://}-style commands, and an embedded web application where
+subject-matter experts loaded production examples, corrected outputs, and helped turn those
+corrections into input/output specifications.  The public companion repository provides the
+sanitized RosterSynth slice: the sketch, fixtures, cassettes, code, tests, and generated
+evidence needed to inspect the disclosed loop.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
 \section{Introduction}
 \label{sec:introduction}
 
-A coding agent can produce a plausible patch before the domain rule has been made explicit.
-That is the risk this paper addresses.  Given a task, a codebase, a prompt, and a visible
-signal to satisfy, an agent may produce a local change that turns the signal green while
-missing the policy that made a different local change unacceptable.
+Start with the run that looked green.  A roster repair had two available moves: append an
+hours adjustment, or cancel a duplicate booking.  The append closes the coverage delta, so
+replay passes.  But the domain rule says duplicate cancellation has priority, so semantic
+compare fails.  The patch worked against the visible signal and failed the rule.
+
+That is the failure mode.  Given a task, a codebase, a prompt, and a
+visible signal to satisfy, an agent may produce a local change that looks acceptable while
+missing the policy that made a different local change necessary.  A parser has the same shape
+when it treats every colon as syntax instead of only the first one.  A data-cleaning pipeline
+has the same shape when a client-specific exception looks like an ordinary edge case from the
+agent's local view.
 
 The human question is more specific than ``did the code run?''  It is: did this patch preserve
-the rule the prompt failed to spell out?  In policy-heavy workflows, the answer often depends
-on information that lives outside the code path the agent just edited.  A roster remediation may
-need to choose cancellation before adjustment.  A parser may need to treat only the first
-prefix as status.  A data-cleaning pipeline may need to preserve a client-specific exception
-that looks like an ordinary edge case from the agent's local view.
+the rule the prompt failed to spell out?  Conventional tests catch many failures.  They can say
+that output shape is valid, an exception disappeared, or a state delta closed.  Unless someone
+designs them to do so, they do not record why a nearby repair was tempting and wrong, which
+rule the failure exposed, or what future repairs must preserve.  Run-local prompts have the
+other weakness: they can describe ambiguous intent, but they fork easily and drift away from
+the repository's tested behavior.
 
-Conventional tests catch many failures.  They can say that output shape is valid, an exception
-disappeared, or a state delta closed.  Unless designed to do so, a test may omit the reason a
-nearby repair would have been tempting and wrong, the rule the failure exposed, and the path a
-future repair should follow.  Natural-language prompts have the complementary weakness.
-Run-local or unversioned prompts can describe ambiguous intent, but they fork easily and may
-diverge from the repository's tested behavior.  For this class of workflow, the repository
-needs a stable artifact that records both the human strategy and the examples that sharpen it.
-
-This paper describes that artifact and the loop around it.  The ingredients are:
+The repository needs an artifact that records both the human strategy and the examples that
+sharpen it.  The ingredients are:
 
 \begin{enumerate}[leftmargin=*]
   \item a \textbf{sketch} $\sketch$: a partial program in prose and code-shaped structure;
@@ -122,43 +122,37 @@ valuable when it changes the sketch and the corpus so future agent passes inheri
 instead of rediscovering the same local trap.
 
 \paragraph{Central claim.}
-We call a coding-agent workflow inspectable when every promoted counterexample connects four
-things: the sketch clause it supplements, the implementation or prompt surface that handles
-it, the replay check that verifies state repair, and the semantic compare check that rejects
-the tempting wrong repair.  This is an artifact-level definition of inspectability.  It gives
-maintainers a bounded gate invariant for the current promoted corpus and a promotion procedure
-for adding new failures.
+A workflow is inspectable when every promoted counterexample connects four things: the sketch
+clause it supplements, the implementation or prompt surface that handles it, the replay check
+that verifies state repair, and the semantic compare check that rejects the tempting wrong
+repair.  That gives maintainers a bounded gate invariant for the current promoted corpus and a
+promotion procedure for new failures.
 
 \paragraph{Positioning.}
 The comparison target is bounded.  Existing agentic workflows can make tests and prompts
-durable, and conventional CEGIS already has counterexample discipline when its formal
-assumptions hold.  This paper addresses a narrower repository setting where three things often
-live apart: the human strategy, the promoted counterexample, and the executable check that
-rejects the tempting repair.
+durable.  Classical CEGIS already has counterexample discipline when its formal assumptions
+hold.  The repository setting here is smaller and messier: the human strategy, the promoted
+counterexample, and the executable check often live in separate artifacts.  The work is to join
+them without pretending the result is a solver-backed proof.
 
 \paragraph{Contributions.}
-This paper contributes a formulation and worked artifact.
+The contribution is a formulation plus a worked artifact.
 
 \begin{enumerate}[leftmargin=*]
-  \item It formulates counterexample-supplemented sketches as a repository-native artifact for
-        agentic coding.
-  \item It gives a process model for subject-matter expert corrections becoming input/output
-        specs, counterexamples, and golden data.
-  \item It separates two hole-filling roles: Oracle~A, deterministic code the agent maintains,
-        and Oracle~B, prompt/LLM/cassette behavior for sketch-declared narrative holes.
-  \item It states a finite-corpus gate-satisfaction theorem for replay/compare gates and gives
-        the short proof obligation.
-  \item It gives a sketch-level RosterSynth example and a companion repository for runnable
-        inspection.
+  \item a repository-native artifact: the counterexample-supplemented sketch;
+  \item a process model that turns subject-matter expert corrections into input/output specs,
+        counterexamples, and golden data;
+  \item two hole-filling roles: Oracle~A, deterministic code the agent maintains, and
+        Oracle~B, prompt, LLM, and cassette behavior for sketch-declared narrative holes;
+  \item a finite-corpus theorem for replay/compare gates and the proof obligation it leaves
+        behind;
+  \item a sketch-level RosterSynth example and companion repository for runnable inspection.
 \end{enumerate}
 
-The paper proceeds from origin and problem statement through lineage, artifacts, lifecycle,
-gate semantics, bounded proof, worked example, adoption workflow, companion artifact,
-discussion, and limitations.  The order matters for the argument.  The enterprise origin
-explains why ordinary tests and prompts were insufficient.  The lineage shows which pieces
-come from sketching, CEGIS, programming by example, and agent benchmarks.  The formal section
-then states exactly which predicate a passing gate establishes and which obligations remain
-human work.
+The rest of the paper follows the path a reader needs to inspect the claim: where the loop came
+from, what failure it addresses, which older lines of work it borrows from, which artifacts it
+adds, what the gate proves, what the worked example shows, and where human judgment still owns
+the result.  The order keeps the reader near the artifact before the theorem asks for trust.
 
 % ---------------------------------------------------------------------------
 \section{Originating setting}
@@ -166,11 +160,11 @@ human work.
 
 The method came from a proprietary enterprise deployment.  The work involved heterogeneous
 operational data, multiple downstream clients with their own rules, and subject-matter experts
-who held domain knowledge that was only partly captured in code.  The harness let those
-experts operate the counterexample loop through a review interface; agents edited code and
-prompts under repository-local checks.
+who held domain knowledge that was only partly captured in code.  Developers supplied the
+runtime, harness, and test framework.  SMEs used that harness to operate the rule loop: inspect
+examples, correct outputs, and push those corrections into the sketch/corpus path.
 
-The deployed system joined six pieces:
+The deployed system joined eight pieces:
 
 \begin{enumerate}[leftmargin=*]
   \item a custom Cursor extension for invoking repository actions from the IDE;
@@ -178,6 +172,10 @@ The deployed system joined six pieces:
         workflows;
   \item an embedded web application where SMEs loaded production examples, inspected
         proposed remediations, and supplied corrections;
+  \item an execution runtime: AWS Lambda invoked through SQS, with model calls through the
+        Bedrock Converse API;
+  \item a harness and test framework for fixtures, cassettes, replay, semantic compare, golden
+        corpus promotion, and provenance;
   \item LLM-assisted conversion from SME corrections into input/output specifications;
   \item a counterexample loop that promoted selected failures into a golden dataset;
   \item non-developer operation of the loop for code and prompt implementations of a complex
@@ -192,9 +190,9 @@ into the repository.
 
 The private harness itself remains outside the public artifact.  Production data,
 proprietary extension code, client-specific rules, and private SME workflows are unavailable
-for public inspection.  We therefore use the enterprise setting as author-reported motivation
-and use the public companion repository as executable evidence for the disclosed control
-structure.  The reusable loop is:
+for public inspection.  The enterprise setting is author-reported motivation; the public
+companion repository is executable evidence for the disclosed control structure.  The reusable
+loop is:
 
 \begin{center}
 \begin{tabular}{c}
@@ -268,27 +266,23 @@ the check meet.
 
 \subsection{A repository-native version of the loop}
 
-Formal synthesis and CEGIS already cover a large design space.  When the program template, the
-specification, and the checker can be written in a formal language, solver-backed synthesis can
-search a constrained space and return results with stronger semantic force than the repository
-gate in this paper.  Those systems also have well-known variations: counterexamples may come
-from a verifier, examples may guide inductive search, and oracles may help steer component
-selection or specification refinement~\cite{solar2006combinatorial,jha2010oracle}.
+Formal synthesis and CEGIS already cover a large design space.  When the template,
+specification, and checker fit inside a formal language, a solver can search a constrained
+space and return a result with more semantic force than the repository gate used here.
+Counterexamples may come from a verifier, examples may guide inductive search, and oracles may
+steer component selection or specification refinement~\cite{solar2006combinatorial,jha2010oracle}.
 
-The setting here gives up some of that formal strength in exchange for a different kind of
-coverage.  Enterprise data-cleaning work often mixes deterministic constraints with prose
-conventions, client-specific policies, ambiguous notes, historical exceptions, and output
-formats.  Some rules can become deterministic code.  Others remain prompt-mediated narrative
-criteria until the team has enough counterexamples to encode them.  The method therefore
-targets a repository-native loop: generate or edit a candidate, run the current gate, promote a
-counterexample when the gate exposes missing policy, and repair the sketch, code, prompt, or
-checker that carried the gap.
+The repository setting buys a different kind of evidence.  Lower formality is acceptable when
+the rule can be checked by SMEs against a sketch and promoted counterexamples.  Enterprise
+data-cleaning is one example of that setting, not the point of the method.  Some rules become
+deterministic code.  Others stay in prompts while the team gathers enough counterexamples to
+encode them.  Oracle~B is not exempt from validation: prompt-mediated output is replayed,
+compared against the same promoted expectations, and frozen in cassettes when the CI path needs
+reproducible model output.
 
-That choice trades formal strength for operational traceability.  The method inherits the
-CEGIS habit of using counterexamples to constrain the next candidate, while accepting a weaker
-result: finite-corpus predicate satisfaction under the repository's current semantics.  Its
-value is the explicit join across artifacts that often sit outside one formal specification:
-comments, prompts, cassettes, fixture names, code anchors, and generated provenance.
+This is a weaker result than formal synthesis.  The trade is SME-verifiable evidence:
+sketch clauses, corrected examples, prompts, cassettes, code anchors, checker fields, and
+generated provenance all point back to the rule the last tempting repair violated.
 
 % ---------------------------------------------------------------------------
 \section{Lineage}
@@ -333,59 +327,52 @@ surface handled the rule, and which gate check enforces it.
 
 \subsection{Prompt engineering, specs, and natural-language coding}
 
-Prompt engineering belongs beside agentic coding, not as a replacement for sketching or
-CEGIS.  Prompt programming and prompt-based learning treat natural-language prompts as a
-control surface for language models~\cite{reynolds2021promptprogramming,liu2023pretrainpromptpredict}.
-More recent software-engineering language makes the claim stronger.  Natural
-Language-Oriented Programming frames natural language as a way to lower barriers for non-experts
-who contribute to software projects~\cite{beheshti2024nlop}.  Promptware engineering treats
-prompts as first-class software artifacts that need requirements, testing, debugging, evolution,
-and monitoring~\cite{chen2025promptware}.  Industry tooling uses similar language: Copilot
-Workspace describes a flow from idea to code to software in natural
-language~\cite{dohmke2024copilotworkspace}.  The older end-user software engineering literature
-also matters here because it studies domain experts who create or maintain computational
-artifacts without being professional software developers~\cite{ko2011enduser}.
+Prompt text is one of the surfaces the agent can change, so it belongs in the lineage.  Prompt
+programming and prompt-based learning treat natural-language prompts as a control surface for
+language models~\cite{reynolds2021promptprogramming,liu2023pretrainpromptpredict}.  Natural
+Language-Oriented Programming makes the software claim: natural language can lower the
+barrier for non-experts who contribute to software projects~\cite{beheshti2024nlop}.
+Promptware engineering then asks teams to treat prompts like software artifacts with
+requirements, tests, debugging, evolution, and monitoring~\cite{chen2025promptware}.  Copilot
+Workspace puts the same promise into product language: idea to code to software in natural
+language~\cite{dohmke2024copilotworkspace}.  End-user software engineering is the older version
+of the same concern: domain experts often create or maintain computational artifacts without
+being professional software developers~\cite{ko2011enduser}.
 
-The current spec-driven tooling wave makes a related promise.  Kiro presents specs as a way to
-move agentic development beyond ad hoc prompting, using structured requirements, design, and
-tasks to make model assumptions visible~\cite{swaminathan2025kiro}.  GitHub Spec Kit similarly
-centers AI-assisted development on a Spec--Plan--Tasks--Implement sequence and describes
-specifications as executable artifacts that give agents structured context instead of ad hoc
-prompts~\cite{github2026speckit}.  Those tools make ``spec'' productive as a workflow object,
-but the term is still broad.  The premise in this paper is narrower and more checkable: a spec
-for this setting is a sketch plus promoted counterexamples plus a concrete replay/compare
-harness.  That boundary connects the modern spec-driven-agent promise to older specification by
-example work, where concrete examples become executable specifications and living
-documentation~\cite{adzic2011specification}.
+Spec-driven agent tools make a related move.  Kiro uses requirements, design, and tasks to make
+model assumptions visible before implementation~\cite{swaminathan2025kiro}.  GitHub Spec Kit
+centers agentic development on a Spec--Plan--Tasks--Implement sequence and treats specs as
+structured context for agents~\cite{github2026speckit}.  That is useful language, but
+``spec'' can still hide too much.  Here, a spec means three things together: a sketch, promoted
+counterexamples, and a replay/compare harness.  Specification by Example supplies the older
+lesson: concrete examples become living documentation only when they are executable enough to
+constrain future work~\cite{adzic2011specification}.
 
-This paper should not inherit the strongest form of the ``anyone can write code'' claim.  The
-claim needed here is narrower: non-developer experts can contribute specification pressure
-through examples, corrections, and promptable policy text; maintainers still own promotion,
-gate design, prompt review, and final repository shape.  Prompt engineering therefore explains
-why prompt text belongs in the synthesis surface, but the sketch, promoted corpus, anchors, and
-gate are what keep that surface from becoming unreviewed chat.
+Prompt text belongs in the paper because it is one mutable implementation surface in the loop.
+If a rule lives in a prompt today, the prompt needs the same pressure as
+code: a sketch clause, promoted examples, replay, semantic compare, and an owner.  The sketch,
+corpus, anchors, and gate keep that surface reviewable.
 
 \subsection{Positioning boundary}
 
-Agentic synthesis against counterexample-supplemented sketches therefore borrows from several
-traditions and treats them as live comparators.  The sketch resembles a partial
-program.  The corpus resembles the growing example set in CEGIS and programming by example.
-The gate resembles a bounded validator.  The synthesizer is a coding agent with permission to
-edit source and prompts.  The paper's specific claim begins where those pieces meet in an
-ordinary repository.
+Agentic synthesis against counterexample-supplemented sketches borrows from several traditions
+without treating any of them as a straw target.  The sketch resembles a partial program.  The
+corpus resembles the growing example set in CEGIS and programming by example.  The gate
+resembles a bounded validator.  The synthesizer is a coding agent with permission to edit source
+and prompts.  The thing to inspect is the join among those artifacts.
 
-The difference is the shape of the hole.  In classical Sketch, the hole is usually inside a
-formal program and the solver searches a formal space.  In a repository with code, fixtures,
-prompts, cassettes, review comments, and generated evidence, the hole can be split across
-artifacts.  A rule may need one deterministic branch, one prompt instruction, one fixture, and
-one semantic compare field.  The method in this paper treats those artifacts as the synthesis
-surface and uses counterexamples to keep the surface aligned.
+The hole is shaped differently in an ordinary repository.  In classical Sketch, the hole is
+usually inside a formal program and the solver searches a formal space.  Here, the hole can be
+split across code, fixtures, prompts, cassettes, review comments, and generated evidence.  A
+rule may need one deterministic branch, one prompt instruction, one fixture, and one semantic
+compare field.  Counterexamples keep those pieces tied to the rule they are supposed to
+preserve.
 
 \begin{center}
 \scriptsize
 \begin{tabular}{p{0.18\linewidth}p{0.22\linewidth}p{0.22\linewidth}p{0.27\linewidth}}
 \toprule
- & Sketch / CEGIS & Programming by example & This work \\
+ & Sketch / CEGIS & Programming by example & Repository loop \\
 \midrule
 Human input & Partial program with holes & Examples inside a DSL & Sketch, SME corrections, counterexamples, anchors \\
 Synthesizer & Solver-backed search & DSL learner & Coding agent editing code and prompts \\
@@ -396,11 +383,10 @@ Result boundary & Solver-relative result & DSL/example consistency & Finite-corp
 \end{tabular}
 \end{center}
 
-Read this table as a positioning map rather than a complete taxonomy of synthesis or agentic
-coding approaches.  Each column stands for a family resemblance that matters to this paper:
-partial programs, example-driven constraints, repository repair, and executable validation.
-The method's contribution is the artifact join between those resemblances: how a repository
-links sketch clauses, promoted counterexamples, code or prompt surfaces, and gate checks.
+Read the table as a positioning map, not a taxonomy of synthesis or agentic coding.  Each
+column names one family resemblance: partial programs, example-driven constraints, repository
+repair, and executable validation.  The contribution is the repository join: sketch clause,
+promoted counterexample, code or prompt surface, and gate check in one inspectable path.
 
 % ---------------------------------------------------------------------------
 \section{Artifacts}
@@ -519,16 +505,19 @@ The explanation matters because it seeds the sketch update and directs repair to
 general rule the fixture exemplifies.  A corrected row alone can invite memorization.  A
 corrected row plus a reason tells the next agent why the row matters.
 
-\subsection{Developer or maintainer}
+\subsection{Developer or platform maintainer}
 
-The developer curates promotion.  They decide which SME corrections join $\corpus$, which
-sketch clauses change, and which checks enforce the new rule.  They also preserve known-code
-anchors so the agent keeps the existing output shape.
+The developer supplies the rails: runtime, review UI, extraction path, fixtures, cassettes,
+replay, semantic compare, tests, and provenance.  In the originating harness, that meant Lambda
+invoked through SQS, Bedrock Converse for model calls, repository-local commands, and gates that
+could be run again after promotion.
 
-This role is deliberately conservative.  Promotion changes the specification, so it requires
-ownership.  A mature harness can assist with extraction, candidate tests, and provenance, but
-the maintainer still decides whether the promoted case distinguishes a rule, encodes the right
-fields, and belongs in the gate.
+The developer does not hand-author every domain rule.  SMEs and the harness control the rule
+flow: corrections enter through the review interface, the harness turns them into candidate
+specification artifacts, and promoted cases become part of $\corpus$.  Developer ownership is
+over the machinery and anchors: whether the runtime runs, whether the gate checks the right
+fields, whether the output shape stays compatible, and whether a promoted rule remains
+inspectable.
 
 \subsection{Coding agent}
 
@@ -559,8 +548,9 @@ encode.
 
 Oracle~B handles narrative or under-encoded policy: ambiguous notes, human descriptions,
 client-specific language, or judgment that belongs in a model prompt for the current stage of
-the system.  Oracle~B remains constrained by the sketch and checked by the same gate.  A
-cassette can freeze its output for continuous integration paths that depend on model output.
+the system.  Oracle~B remains constrained by the sketch and checked by the same replay/compare
+gate.  Its output cross-validates the prompt surface against the SME-approved corpus, and a
+cassette can freeze that output for continuous integration paths that depend on model output.
 
 \subsection{Hybrid resolver}
 
@@ -698,9 +688,9 @@ Good gates have these properties:
 \end{enumerate}
 
 These rules are design constraints rather than formal assurances.  A gate that omits a field
-cannot enforce that field.  A comparer with a bug can certify the wrong behavior.  The method
-therefore treats gate design as specification work and puts checker quality in the limitations
-rather than hiding it behind the word correctness.
+cannot enforce that field.  A comparer with a bug can certify the wrong behavior.  Gate design
+is specification work, and checker quality belongs in the limitations rather than behind the
+word correctness.
 
 % ---------------------------------------------------------------------------
 \section{Finite-corpus correctness}
@@ -726,9 +716,8 @@ replay for $x$.
 
 \begin{proof}
 Replay is the executable definition of state repair for the gate.  It evaluates the candidate
-output against the input state and returns true exactly when the encoded state-repair
-predicate holds.  Therefore a true replay result entails the state-repair condition the gate
-implements.
+output against the input state and returns true exactly when the encoded state-repair predicate
+holds.  A true replay result entails the state-repair condition the gate implements.
 \end{proof}
 
 \begin{lemma}[Compare soundness relative to the corpus]
@@ -737,9 +726,8 @@ agrees with $y$ on every policy-bearing field encoded by the comparer.
 \end{lemma}
 
 \begin{proof}
-The comparer enumerates the checked policy-bearing fields and fails on mismatch.  Therefore
-a true compare result means every encoded policy-bearing field matched the promoted
-expectation.
+The comparer enumerates the checked policy-bearing fields and fails on mismatch.  A true
+compare result means every encoded policy-bearing field matched the promoted expectation.
 \end{proof}
 
 \begin{theorem}[Finite-corpus gate soundness]
@@ -888,25 +876,22 @@ single failure into reusable specification pressure.
 \section{Companion artifact}
 \label{sec:artifact}
 
-The companion repository provides an example-first entry point.  It contains a sanitized
-RosterSynth slice, generated provenance, recorded model outputs, and tests that exercise the
-sketch-level story.  The repository README gives the run commands and file map.  The paper
-keeps implementation details in the companion artifact so the main argument stays portable
-across domains.
+Open the companion repository before trusting the argument too much.  It contains the sanitized
+RosterSynth slice, recorded model outputs, generated provenance, and tests that exercise the
+sketch-level story.  The README points to the PDF, the source, the evidence appendix, the
+sketch, the promoted corpus, Oracle~A code, hybrid resolver, llm-only cassette path, and tests.
 
 The artifact has three jobs:
 
 \begin{enumerate}[leftmargin=*]
-  \item let developers run the example and inspect the gate fail or pass;
-  \item let academics inspect how the finite-corpus claim maps to code;
-  \item show future users what would need to change to adapt the workflow to another domain.
+  \item let developers run the example and watch the gate pass or fail;
+  \item let academics trace the finite-corpus claim into code;
+  \item show future users which files would change in another domain.
 \end{enumerate}
 
-The artifact also demonstrates a practical documentation boundary.  The main paper explains
-the technique.  The README routes readers.  Example docs show the concrete flow.  Generated
-appendices expose provenance for readers who want to audit the evidence.  Keeping those jobs
-separate prevents the implementation appendix from becoming the argument and prevents the
-paper from turning into a command transcript.
+That boundary keeps the paper from pretending to be the repo.  The paper explains the method.
+The README routes readers.  Example docs show the concrete flow.  Generated appendices expose
+provenance for readers who want to audit the path from sketch to check.
 
 % ---------------------------------------------------------------------------
 \section{Discussion}
@@ -914,32 +899,31 @@ paper from turning into a command transcript.
 
 \subsection{Tests name behavior; sketches name intent}
 
-Tests can verify behavior.  Counterexample-supplemented sketches add the rule the failure
-exposed.  The failing case joins $\corpus$, and the sketch records what future agent passes
-must preserve.  The useful distinction is temporal: a test tells the current run what passed or
-failed; a sketch clause tells the next repair why the failure mattered.
+Tests tell the current run what passed.  A sketch clause tells the next repair why the failure
+mattered.  When a failing case joins $\corpus$, the sketch records the rule future agent passes
+must preserve.  That is the useful temporal distinction: behavior now, intent next time.
 
 \subsection{Prompts implement one surface of the contract}
 
-The method uses prompts for narrative holes, ambiguous notes, and policy text awaiting full
-encoding.  The sketch and corpus constrain those prompts.  The gate checks their outputs.
-Prompting becomes one implementation surface inside the larger contract, alongside ordinary
-source code and fixtures.
+Prompts handle narrative holes, ambiguous notes, and policy text that has not yet become code.
+They are not outside the method.  The sketch and corpus constrain them, and the gate checks
+their outputs.  In this loop, prompting is one implementation surface beside source code,
+fixtures, and cassettes.
 
 \subsection{SME corrections become specification inputs}
 
-In the originating harness, SMEs could submit corrections through the review interface rather
-than routing every specification change through developers first.  The harness converted those
-corrections into specs and candidate counterexamples, moving domain knowledge closer to the
-artifact that constrained future agent runs.  Maintainers still curated promotion; SME input
-created the pressure that made the missing rule visible.
+In the originating harness, SMEs corrected outputs through the review interface instead of
+opening tickets for every specification change.  The harness turned those corrections into
+candidate specs and counterexamples.  Maintainers still decided what entered $\corpus$.  The
+SME contribution was the pressure: ``this output is wrong, and here is the domain rule it
+missed.''
 
 \subsection{Promotion quality is a scaling constraint}
 
-Promotion quality is a central scaling constraint.  A large pile of examples gives weak
-guidance when the examples leave rules ambiguous.  A smaller corpus of sharp counterexamples
-may be more useful than a larger ambiguous corpus because each case rejects a specific
-tempting patch.  Promotion should therefore ask: what tempting patch does this case reject?
+A large pile of examples is weak guidance when the rule stays ambiguous.  A smaller corpus of
+sharp counterexamples can be more useful because each case rejects a specific tempting patch.
+The promotion question is concrete: what wrong repair would this case still allow if we left it
+out?
 
 % ---------------------------------------------------------------------------
 \section{Limitations}
@@ -953,8 +937,8 @@ tempting patch.  Promotion should therefore ask: what tempting patch does this c
         semantics.  A buggy checker can certify the wrong behavior until a maintainer repairs
         the checker and replays the promoted corpus.
   \item \textbf{Golden quality.}  A wrong golden row makes the gate enforce the wrong behavior.
-        Promotion therefore needs review by someone who understands the domain rule and can
-        distinguish a corrected answer from a corrected specification.
+        Promotion needs review by someone who understands the domain rule and can distinguish a
+        corrected answer from a corrected specification.
   \item \textbf{Promotion quality.}  A promoted case should distinguish a rule from a recorded
         answer.  Weak promotion gives future agents examples to memorize; strong promotion
         gives them rules to preserve.
@@ -970,26 +954,28 @@ tempting patch.  Promotion should therefore ask: what tempting patch does this c
         the enterprise deployment boundary.
 \end{enumerate}
 
-These limitations are part of the method rather than cleanup after it.  They tell a maintainer
-where the proof stops and where judgment starts: promotion, checker design, golden review,
-prompt review, and private deployment claims remain human responsibilities.
+The limitations are not cleanup after the method.  They mark where the proof stops and where a
+person still owns the result: promotion, checker design, golden review, prompt review, and
+private deployment claims.
 
 % ---------------------------------------------------------------------------
 \section{Conclusion}
 \label{sec:conclusion}
 
-Agentic synthesis against counterexample-supplemented sketches treats a coding agent as a
-synthesizer inside a constraint environment.  The human writes the sketch, curates the corpus,
-and promotes failures.  The SME corrects concrete outputs.  The agent edits code and prompts.
-The gate supplies the finite-corpus predicate boundary.
+The useful part is not that a coding agent can write a patch.  The useful part is the trail it
+has to leave before anyone trusts the patch: the sketch clause, the promoted case, the code or
+prompt surface, the replay check, and the semantic compare check.
 
-The method turns agentic coding from a chat-centered activity into a repository-centered loop:
-sketch, example, correction, promotion, repair, replay, compare.  That loop came from an
-enterprise setting where SMEs had the domain knowledge and agents had the editing surface.
-The reusable technique is the bridge between them.  Each promoted counterexample adds an
-executable check against a known wrong repair, and each passing gate states the bounded
-result: the current strategy satisfies the encoded replay and semantic-comparison predicates
-for the current promoted corpus.
+Agentic synthesis against counterexample-supplemented sketches treats the agent as a
+synthesizer inside that constraint environment.  A human writes the sketch and promotes
+failures.  The SME corrects concrete outputs.  The agent edits code and prompts.  The gate
+states the bounded result for the current corpus.
+
+That loop came from an enterprise setting where SMEs had the domain knowledge and agents had
+the editing surface.  The reusable technique is the repository join between them.  Each
+promoted counterexample adds an executable check against a known wrong repair, and each passing
+gate says only what it can honestly say: the current strategy satisfies the encoded replay and
+semantic-comparison predicates for the current promoted corpus.
 
 \bibliographystyle{plain}
 \bibliography{references}
