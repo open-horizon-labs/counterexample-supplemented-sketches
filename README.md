@@ -7,6 +7,20 @@
 
 Hold a sketch, a growing corpus `E`, and the code/prompt surfaces accountable through gates, not chat history. When validation fails, promote the failure into `E`, edit the sketch, code, or prompts, and rerun until green. Solar-Lezama sketching and CEGIS are lineage; the contribution here is the agentic loop with dual oracles and replay/compare validation. This repository is a reference implementation only. The roster domain is a worked example.
 
+## Method at a glance
+
+```mermaid
+flowchart LR
+    Sketch["Sketch: permitted strategy"] --> Agent["Agent edits sketch/code/prompts"]
+    Corpus["Corpus E: promoted examples"] --> Replay["Replay: did state repair?"]
+    Agent --> Replay
+    Replay --> Compare["Compare: did policy field match?"]
+    Corpus --> Compare
+    Compare -->|pass| Done["Current artifact satisfies E"]
+    Compare -->|fail| Counterexample["Promote counterexample"]
+    Counterexample --> Sketch
+```
+
 ## The idea
 
 You want a coding agent, or yourself in Cursor, to implement policy-heavy fixes: post this adjustment, cancel that duplicate, pick the right date. Free-form chat is too weak for that job. The rule has to live somewhere the repository can check.
