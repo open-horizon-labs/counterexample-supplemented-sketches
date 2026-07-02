@@ -31,6 +31,26 @@ flowchart LR
 
 The RosterSynth kiosk material is the paper's worked example. It supports the method; the paper carries the claim.
 
+## Where the worked example lives
+
+No agent key is required to reproduce the public artifact. The repo does **not** regenerate code by calling a live coding agent; it publishes the sketch, promoted examples, code surfaces, prompts, cassettes, gates, and tests needed to inspect the loop without private credentials. Live Bedrock is an optional Oracle B backend; the checked evidence uses JSON cassettes.
+
+Start with the stitched evidence doc:
+
+- [`paper/extracted-rostersynth-kiosk-paper.md`](paper/extracted-rostersynth-kiosk-paper.md) — traces the kiosk counterexample from sketch clause to corpus case, historical failure, Oracle A code, Oracle B prompt/cassette behavior, replay/compare gates, hybrid behavior, llm-only behavior, and tests.
+
+Then inspect the source artifacts directly:
+
+| Question | Artifact |
+|---|---|
+| What is the sketch? | [`examples/rostersynth-kiosk/source/docs/sketch.md`](examples/rostersynth-kiosk/source/docs/sketch.md) |
+| What examples are in the promoted corpus `E`? | [`examples/rostersynth-kiosk/source/scenarios/manifest.json`](examples/rostersynth-kiosk/source/scenarios/manifest.json) |
+| What is the focal counterexample? | [`examples/rostersynth-kiosk/source/scenarios/roster.kiosk_double_booking.v1.json`](examples/rostersynth-kiosk/source/scenarios/roster.kiosk_double_booking.v1.json) |
+| What generated/maintained code handles Oracle A? | [`examples/rostersynth-kiosk/source/rostersynth/playbook.py`](examples/rostersynth-kiosk/source/rostersynth/playbook.py) and [`resolver/deterministic.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/deterministic.py) |
+| What is the hybrid path? | [`examples/rostersynth-kiosk/source/rostersynth/resolver/hybrid.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/hybrid.py) |
+| What is the llm-only path? | [`examples/rostersynth-kiosk/source/rostersynth/resolver/llm.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/llm.py), [`oracle/prompt.py`](examples/rostersynth-kiosk/source/rostersynth/oracle/prompt.py), and [`source/cassettes/`](examples/rostersynth-kiosk/source/cassettes/) |
+| What proves deterministic, hybrid, and llm-only behavior? | [`examples/rostersynth-kiosk/tests/test_extracted_rostersynth.py`](examples/rostersynth-kiosk/tests/test_extracted_rostersynth.py) |
+
 ## Originating setting
 
 The method originated in a proprietary enterprise deployment for a heterogeneous data-cleansing pipeline operated by non-developers. That deployment used a custom Cursor extension, `cursor://`-style commands, an embedded SME web app, SME corrections converted with LLM assistance into input/output specs, a counterexample loop, and a promoted golden corpus for multiple downstream clients.
