@@ -1,7 +1,8 @@
 # Agentic Synthesis against Counterexample-Supplemented Sketches
 
-**Paper:** [`paper/main.tex`](paper/main.tex)  
-**Bibliography:** [`paper/references.bib`](paper/references.bib)  
+**Paper PDF:** [`paper/main.pdf`](paper/main.pdf)  
+**Paper source:** [`paper/main.tex`](paper/main.tex)  
+**Bibliography source:** [`paper/references.bib`](paper/references.bib)  
 **Companion artifact:** runnable examples, fixtures, and provenance for the paper's claims.
 
 **Agentic synthesis against counterexample-supplemented sketches** makes coding-agent work checkable against a finite promoted corpus. A human writes a partial program-like sketch; failures become counterexamples; an agent edits code and prompts; replay/compare gates check the current artifact against the promoted cases.
@@ -142,8 +143,24 @@ flows/                                   # reusable agent flow prompts
 build/rostersynth-kiosk-graph.json       # extracted provenance graph
 ```
 
-## Citation
+## References
 
-> Castle, M. and Rubeck, E. *Agentic Synthesis against Counterexample-Supplemented Sketches.* 2026.
+The paper's canonical BibTeX is [`paper/references.bib`](paper/references.bib). The current reference set is:
 
-Private companion repo for now: `open-horizon-labs/sketch-counterexample-agent`.
+- Solar-Lezama, Armando. 2008. *Program Synthesis by Sketching.* EECS Department, University of California, Berkeley, technical report UCB/EECS-2008-177. <http://www2.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-177.html>
+- Solar-Lezama, Armando. 2013. *Program Sketching.* *International Journal on Software Tools for Technology Transfer* 15(5-6), 475-495. <https://doi.org/10.1007/s10009-012-0249-7>
+- Solar-Lezama, Armando, Liviu Tancau, Rastislav Bodik, Sanjit A. Seshia, and Vijay A. Saraswat. 2006. *Combinatorial Sketching for Finite Programs.* ASPLOS 2006, 404-415. <https://doi.org/10.1145/1168857.1168907>
+- Jha, Susmit, Sumit Gulwani, Sanjit A. Seshia, and Ashish Tiwari. 2010. *Oracle-Guided Component-Based Program Synthesis.* ICSE 2010, 215-224. <https://doi.org/10.1145/1806799.1806833>
+- Gulwani, Sumit, Oleksandr Polozov, and Rishabh Singh. 2017. *Program Synthesis.* *Foundations and Trends in Programming Languages* 4(1-2), 1-119. <https://doi.org/10.1561/2500000010>
+- Polozov, Oleksandr, and Sumit Gulwani. 2015. *FlashMeta: A Framework for Inductive Program Synthesis.* OOPSLA 2015, 107-126. <https://doi.org/10.1145/2814270.2814310>
+- Jimenez, Carlos E., John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik R. Narasimhan. 2024. *SWE-bench: Can Language Models Resolve Real-world GitHub Issues?* ICLR 2024. <https://openreview.net/forum?id=VTF8yNQM66>
+- Cui, Yi. 2025. *Tests as Prompt: A Test-Driven-Development Benchmark for LLM Code Generation.* arXiv:2505.09027. <https://arxiv.org/abs/2505.09027>
+- Reynolds, Laria, and Kyle McDonell. 2021. *Prompt Programming for Large Language Models: Beyond the Few-Shot Paradigm.* arXiv:2102.07350. <https://arxiv.org/abs/2102.07350>
+- Liu, Pengfei, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Graham Neubig. 2023. *Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Methods in Natural Language Processing.* *ACM Computing Surveys* 55(9), article 195, 1-35. <https://doi.org/10.1145/3560815>
+- Beheshti, Amin. 2024. *Natural Language-Oriented Programming (NLOP): Towards Democratizing Software Creation.* IEEE SSE 2024, 258-267. <https://doi.org/10.1109/SSE62657.2024.00047>
+- Ko, Andrew J., Robin Abraham, Laura Beckwith, Alan Blackwell, Margaret Burnett, Martin Erwig, Chris Scaffidi, Joseph Lawrance, Henry Lieberman, Brad Myers, Mary Beth Rosson, Gregg Rothermel, Mary Shaw, and Susan Wiedenbeck. 2011. *The State of the Art in End-User Software Engineering.* *ACM Computing Surveys* 43(3), article 21. <https://doi.org/10.1145/1922649.1922658>
+- Chen, Zhenpeng, Chong Wang, Weisong Sun, Xuanzhe Liu, Jie M. Zhang, and Yang Liu. 2025. *Promptware Engineering: Software Engineering for Prompt-Enabled Systems.* arXiv:2503.02400. <https://arxiv.org/abs/2503.02400>
+- Dohmke, Thomas. 2024. *GitHub Copilot Workspace: Welcome to the Copilot-native Developer Environment.* GitHub Blog. <https://github.blog/news-insights/product-news/github-copilot-workspace/>
+- Swaminathan, Nikhil, and Deepak Singh. 2025. *Introducing Kiro.* Kiro Blog. <https://kiro.dev/blog/introducing-kiro/>
+- GitHub. 2026. *What is Spec-Driven Development?* GitHub Spec Kit Documentation. <https://github.github.io/spec-kit/concepts/sdd.html>
+- Adzic, Gojko. 2011. *Specification by Example: How Successful Teams Deliver the Right Software.* Manning Publications.
