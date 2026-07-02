@@ -29,11 +29,11 @@
 \maketitle
 
 \begin{abstract}
-A coding agent can make a patch that satisfies the visible check and still violates the rule
-that mattered.  In the worked roster example, posting an hours adjustment closes the state
-gap; the correct repair cancels the duplicate booking.  Replay says the state was repaired.
-Semantic compare says the policy-bearing field is wrong.  That near miss is the object of this
-paper.
+In the RosterSynth worked example, the bad repair is easy to write: append $-40$ hours and the
+roster balances.  The gate has to reject it anyway.  The correct repair cancels duplicate
+booking 1802, because the operation matters, not only the final hour total.  The method puts
+that distinction in the repository---sketch, corpus, code, prompt, and gate---instead of
+leaving it in a prompt, chat transcript, or subject-matter expert's memory.
 
 We use the term \emph{counterexample-supplemented sketch} for the repository artifact and
 \emph{agentic synthesis} for the loop that edits against it.  A human writes a partial
@@ -53,33 +53,30 @@ The originating deployment ran inside a proprietary enterprise harness: a custom
 extension, \texttt{cursor://}-style commands, and an embedded web application where
 subject-matter experts loaded production examples, corrected outputs, and helped turn those
 corrections into input/output specifications.  The public companion repository provides the
-sanitized RosterSynth slice: the sketch, fixtures, cassettes, code, tests, and generated
-evidence needed to inspect the disclosed loop.
+sanitized RosterSynth slice: the sketch, fixtures, code, tests, and generated evidence needed
+to inspect the disclosed loop.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
 \section{Introduction}
 \label{sec:introduction}
 
-Start with the run that looked green.  A roster repair had two available moves: append an
-hours adjustment, or cancel a duplicate booking.  The append closes the coverage delta, so
-replay passes.  But the domain rule says duplicate cancellation has priority, so semantic
-compare fails.  The patch worked against the visible signal and failed the rule.
+Start with booking 1802.  The roster has twin active 40-hour bookings on the pay-window end
+date.  A naive repair can append $-40$ hours and make the hours math come out.  Replay
+passes because the hours gap closed.  The repair is still wrong: duplicate policy says cancel
+the higher duplicate booking.  Compare has to check the booking ID and operation, not only the
+arithmetic.
 
-That is the failure mode.  Given a task, a codebase, a prompt, and a
-visible signal to satisfy, an agent may produce a local change that looks acceptable while
-missing the policy that made a different local change necessary.  A parser has the same shape
-when it treats every colon as syntax instead of only the first one.  A data-cleaning pipeline
-has the same shape when a client-specific exception looks like an ordinary edge case from the
-agent's local view.
+The same shape shows up outside rosters.  A parser can pass the easy cases while treating every
+colon as syntax.  A data-cleaning rule can pass a local fixture while erasing a client-specific
+exception.  The agent followed the signal it was given and missed the rule the repository had
+not yet made durable.
 
-The human question is more specific than ``did the code run?''  It is: did this patch preserve
-the rule the prompt failed to spell out?  Conventional tests catch many failures.  They can say
-that output shape is valid, an exception disappeared, or a state delta closed.  Unless someone
-designs them to do so, they do not record why a nearby repair was tempting and wrong, which
-rule the failure exposed, or what future repairs must preserve.  Run-local prompts have the
-other weakness: they can describe ambiguous intent, but they fork easily and drift away from
-the repository's tested behavior.
+Tests still matter.  They catch shape errors, exceptions, bad deltas, and regressions.  The
+missing piece is the rule behind the promoted failure: why this tempting repair was wrong,
+which sketch clause changed, and what a future agent must preserve.  Run-local prompts have the
+opposite weakness.  They can carry intent quickly, but they fork, drift, and escape the
+repository's checks.
 
 The repository needs an artifact that records both the human strategy and the examples that
 sharpen it.  The ingredients are:
@@ -143,26 +140,26 @@ The contribution is a formulation plus a worked artifact.
   \item a process model that turns subject-matter expert corrections into input/output specs,
         counterexamples, and golden data;
   \item two hole-filling roles: Oracle~A, deterministic code the agent maintains, and
-        Oracle~B, prompt, LLM, and cassette behavior for sketch-declared narrative holes;
+        Oracle~B, prompt-mediated completion for sketch-declared narrative holes;
   \item a finite-corpus theorem for replay/compare gates and the proof obligation it leaves
         behind;
   \item a sketch-level RosterSynth example and companion repository for runnable inspection.
 \end{enumerate}
 
-The rest of the paper follows the path a reader needs to inspect the claim: where the loop came
-from, what failure it addresses, which older lines of work it borrows from, which artifacts it
-adds, what the gate proves, what the worked example shows, and where human judgment still owns
-the result.  The order keeps the reader near the artifact before the theorem asks for trust.
+The rest of the paper keeps that inspection path visible.  Section~\ref{sec:originating-setting}
+describes the setting that forced the problem and the harness we built.  Section~\ref{sec:problem}
+names the failure.  The lineage, artifact, role, lifecycle, and gate sections explain how a
+promoted case moves from SME correction into sketch, code or prompt, replay, and compare.
 
 % ---------------------------------------------------------------------------
 \section{Originating setting}
 \label{sec:originating-setting}
 
-The method came from a proprietary enterprise deployment.  The work involved heterogeneous
-operational data, multiple downstream clients with their own rules, and subject-matter experts
-who held domain knowledge that was only partly captured in code.  Developers supplied the
-runtime, harness, and test framework.  SMEs used that harness to operate the rule loop: inspect
-examples, correct outputs, and push those corrections into the sketch/corpus path.
+The enterprise deployment supplied the problem, not the finished method.  Production failures
+could be loaded into a review surface; SMEs could correct concrete outputs; agents could repair
+code and prompts.  Looking for a way to make those failures reusable led us back to CEGIS.  The
+work here adapts that loop to agentic repair: load true failures from production, promote them
+into a golden set, and rerun the harness for each new scenario.
 
 The deployed system joined eight pieces:
 
@@ -174,25 +171,22 @@ The deployed system joined eight pieces:
         proposed remediations, and supplied corrections;
   \item an execution runtime: AWS Lambda invoked through SQS, with model calls through the
         Bedrock Converse API;
-  \item a harness and test framework for fixtures, cassettes, replay, semantic compare, golden
-        corpus promotion, and provenance;
+  \item a harness and test framework for fixtures, replay, semantic compare, golden corpus
+        promotion, and provenance;
   \item LLM-assisted conversion from SME corrections into input/output specifications;
   \item a counterexample loop that promoted selected failures into a golden dataset;
   \item non-developer operation of the loop for code and prompt implementations of a complex
         data-cleansing pipeline.
 \end{enumerate}
 
-Those details matter because they fix the intended problem scale.  The method targets teams
-where the domain rule lives with an expert, the implementation lives in code and prompts, and
-correctness requires a durable bridge between them.  In that setting, an expert correction is
-more than feedback on a single row.  It is a candidate specification change that needs a path
-into the repository.
+Lower formality was acceptable because the check stayed close to the people and artifacts that
+could verify it.  SMEs inspected concrete outputs.  The harness replayed each promoted
+scenario.  The golden set made regressions visible.  A correction was more than feedback on one
+row; it was a candidate specification change with a path into the repository.
 
-The private harness itself remains outside the public artifact.  Production data,
-proprietary extension code, client-specific rules, and private SME workflows are unavailable
-for public inspection.  The enterprise setting is author-reported motivation; the public
-companion repository is executable evidence for the disclosed control structure.  The reusable
-loop is:
+The public artifact is a real but not real-world example for illustration.  It keeps the shape
+of the work without exposing production data or client rules: a paper, fixtures, tests,
+provenance, and a small roster remediation case.  The reusable loop is:
 
 \begin{center}
 \begin{tabular}{c}
@@ -201,11 +195,8 @@ $\rightarrow$ sketch update $\rightarrow$ agent repair $\rightarrow$ replay/comp
 \end{tabular}
 \end{center}
 
-The public repository strips the setting down to a sanitized example: a paper, fixtures,
-tests, provenance, recorded model outputs, and a small roster remediation case.  That example
-does not validate the private deployment.  It gives readers a concrete artifact for inspecting
-how the method represents policy, encodes a promoted counterexample, and checks a repaired
-strategy.
+The RosterSynth case gives readers a concrete artifact for inspecting how the method represents
+policy, encodes a promoted counterexample, and checks a repaired strategy.
 
 % ---------------------------------------------------------------------------
 \section{Problem}
@@ -217,7 +208,7 @@ under incomplete specifications.  That combination makes the specification bound
 important than the synthesis engine.  Cheap patch generation helps only when the surrounding
 artifacts say which patch should be generated.
 
-The failure mode has a recognizable shape:
+The sequence is recognizable:
 
 \begin{enumerate}[leftmargin=*]
   \item A user gives an agent a domain task.
@@ -274,15 +265,15 @@ steer component selection or specification refinement~\cite{solar2006combinatori
 
 The repository setting buys a different kind of evidence.  Lower formality is acceptable when
 the rule can be checked by SMEs against a sketch and promoted counterexamples.  Enterprise
-data-cleaning is one example of that setting, not the point of the method.  Some rules become
-deterministic code.  Others stay in prompts while the team gathers enough counterexamples to
-encode them.  Oracle~B is not exempt from validation: prompt-mediated output is replayed,
-compared against the same promoted expectations, and frozen in cassettes when the CI path needs
-reproducible model output.
+data-cleaning is one of several settings where this technique has promise: the common condition
+is SME-verifiable behavior before fully formalized rules.  Some rules become deterministic
+code.  Others stay in prompts while the team gathers enough counterexamples to encode them.
+Oracle~B is not exempt from validation: prompt-mediated output is replayed and compared against
+the same promoted expectations.
 
-This is a weaker result than formal synthesis.  The trade is SME-verifiable evidence:
-sketch clauses, corrected examples, prompts, cassettes, code anchors, checker fields, and
-generated provenance all point back to the rule the last tempting repair violated.
+This is a weaker result than formal synthesis.  The trade is SME-verifiable evidence: sketch
+clauses, corrected examples, prompts, code anchors, checker fields, and generated provenance
+all point back to the rule the last tempting repair violated.
 
 % ---------------------------------------------------------------------------
 \section{Lineage}
@@ -327,9 +318,8 @@ surface handled the rule, and which gate check enforces it.
 
 \subsection{Prompt engineering, specs, and natural-language coding}
 
-Prompt text is one of the surfaces the agent can change, so it belongs in the lineage.  Prompt
-programming and prompt-based learning treat natural-language prompts as a control surface for
-language models~\cite{reynolds2021promptprogramming,liu2023pretrainpromptpredict}.  Natural
+Prompt programming and prompt-based learning treat natural-language prompts as a control
+surface for language models~\cite{reynolds2021promptprogramming,liu2023pretrainpromptpredict}.
 Language-Oriented Programming makes the software claim: natural language can lower the
 barrier for non-experts who contribute to software projects~\cite{beheshti2024nlop}.
 Promptware engineering then asks teams to treat prompts like software artifacts with
@@ -363,10 +353,9 @@ and prompts.  The thing to inspect is the join among those artifacts.
 
 The hole is shaped differently in an ordinary repository.  In classical Sketch, the hole is
 usually inside a formal program and the solver searches a formal space.  Here, the hole can be
-split across code, fixtures, prompts, cassettes, review comments, and generated evidence.  A
-rule may need one deterministic branch, one prompt instruction, one fixture, and one semantic
-compare field.  Counterexamples keep those pieces tied to the rule they are supposed to
-preserve.
+split across code, fixtures, prompts, review comments, and generated evidence.  A rule may need
+one deterministic branch, one prompt instruction, one fixture, and one semantic compare field.
+Counterexamples keep those pieces tied to the rule they are supposed to preserve.
 
 \begin{center}
 \scriptsize
@@ -507,10 +496,10 @@ corrected row plus a reason tells the next agent why the row matters.
 
 \subsection{Developer or platform maintainer}
 
-The developer supplies the rails: runtime, review UI, extraction path, fixtures, cassettes,
-replay, semantic compare, tests, and provenance.  In the originating harness, that meant Lambda
-invoked through SQS, Bedrock Converse for model calls, repository-local commands, and gates that
-could be run again after promotion.
+The developer supplies the rails: runtime, review UI, extraction path, fixtures, replay,
+semantic compare, tests, and provenance.  In the originating harness, that meant Lambda invoked
+through SQS, Bedrock Converse for model calls, repository-local commands, and gates that could
+be run again after promotion.
 
 The developer does not hand-author every domain rule.  SMEs and the harness control the rule
 flow: corrections enter through the review interface, the harness turns them into candidate
@@ -549,8 +538,7 @@ encode.
 Oracle~B handles narrative or under-encoded policy: ambiguous notes, human descriptions,
 client-specific language, or judgment that belongs in a model prompt for the current stage of
 the system.  Oracle~B remains constrained by the sketch and checked by the same replay/compare
-gate.  Its output cross-validates the prompt surface against the SME-approved corpus, and a
-cassette can freeze that output for continuous integration paths that depend on model output.
+gate.  Its output is judged against the SME-approved corpus instead of treated as authority.
 
 \subsection{Hybrid resolver}
 
@@ -575,10 +563,9 @@ or corrects it.  At this stage the case is evidence, not yet specification.
 
 \subsection{Correction}
 
-A correction names the desired output and the rule behind it.  The correction should also name
-the tempting wrong repair when possible.  This is the moment where tacit domain knowledge
-becomes explicit: an expert says which nearby output would have fooled the visible check and
-why the policy rejects it.
+A correction names the desired output and the rule behind it.  When possible, it also names the
+tempting wrong repair.  That is where tacit domain knowledge becomes actionable: an expert says
+which nearby output would have passed replay, and why policy still rejects it.
 
 \subsection{Spec extraction}
 
@@ -591,7 +578,7 @@ translation step, not an automatic source of truth.
 
 Promotion makes the case part of $\corpus$.  Promotion is a specification change.  The
 promoted case must contain enough information to reject the tempting wrong repair.  A case
-that only records the correct answer can still leave the failure mode ambiguous.
+that only records the correct answer can still leave the rule ambiguous.
 
 Promotion also creates maintenance work.  The sketch may need a new clause, the comparer may
 need a new field, the fixture may need a clearer name, and the failure message may need to tell
@@ -616,7 +603,7 @@ case while preserving earlier promoted cases.  Otherwise the loop has only moved
 
 The gate runs replay and semantic compare over all promoted cases.  A passing gate establishes
 the Section~\ref{sec:correctness} result for the current strategy, corpus, checkers, fixtures,
-cassettes, and golden rows.  If any of those change, the gate must run again.
+and golden rows.  If any of those change, the gate must run again.
 
 % ---------------------------------------------------------------------------
 \section{Gate semantics}
@@ -680,8 +667,8 @@ Good gates have these properties:
 \begin{enumerate}[leftmargin=*]
   \item \textbf{Promoted corpus coverage.}  Every promoted case runs.
   \item \textbf{Failure specificity.}  Replay and compare failures are reported separately.
-  \item \textbf{Stable fixtures.}  Live model calls are replaced with cassettes or recorded
-        outputs for CI paths that depend on model output.
+  \item \textbf{Deterministic CI path.}  Gate-critical checks do not depend on a live model
+        call.
   \item \textbf{Source links.}  Each failure can be traced to sketch clause, scenario, and check.
   \item \textbf{Tempting-patch rejection.}  The gate includes at least one check that fails the
         previously plausible wrong repair.
@@ -697,8 +684,8 @@ word correctness.
 \label{sec:correctness}
 
 The proof obligation is intentionally bounded.  A passing gate establishes $\corpus$-
-correctness relative to the current replay function, semantic comparer, fixtures, cassettes,
-and golden rows.  When a new failure is promoted into $\corpus$, it creates a larger proof
+correctness relative to the current replay function, semantic comparer, fixtures, and golden
+rows.  When a new failure is promoted into $\corpus$, it creates a larger proof
 obligation; after the gate passes again, the same bounded result applies to the expanded
 corpus.
 
@@ -759,8 +746,8 @@ can see which predicate passed, which corpus it covered, and which boundary rema
 
 RosterSynth is the paper's sketch-level worked example.  It illustrates the loop through one
 roster remediation case.  The companion repository contains the implementation details for
-running the example, including source, fixtures, tests, recorded model outputs, and generated
-provenance.  The paper stays at sketch level so the reader can see the method before tracing
+running the example, including source, fixtures, tests, and generated provenance.  The paper
+stays at sketch level so the reader can see the method before tracing
 file paths.
 
 \subsection{Scenario}
@@ -818,8 +805,8 @@ state-valid repair can still be a policy violation.
 \subsection{Artifact boundary}
 
 The paper stops at sketch level.  The companion repository supplies source, fixtures, tests,
-recorded model outputs, and provenance for concrete-path inspection.  This split lets the
-paper focus on the technique while the repository carries implementation evidence.  A reader
+and provenance for concrete-path inspection.  This split lets the paper focus on the technique
+while the repository carries implementation evidence.  A reader
 who wants the exact command path can follow the README; a reader who wants the claim boundary
 can stay with the theorem and the sketch-level example.
 
@@ -877,9 +864,9 @@ single failure into reusable specification pressure.
 \label{sec:artifact}
 
 Open the companion repository before trusting the argument too much.  It contains the sanitized
-RosterSynth slice, recorded model outputs, generated provenance, and tests that exercise the
-sketch-level story.  The README points to the PDF, the source, the evidence appendix, the
-sketch, the promoted corpus, Oracle~A code, hybrid resolver, llm-only cassette path, and tests.
+RosterSynth slice, generated provenance, and tests that exercise the sketch-level story.  The
+README points to the PDF, the source, the evidence appendix, the sketch, the promoted corpus,
+Oracle~A code, hybrid resolver, Oracle~B prompt path, and tests.
 
 The artifact has three jobs:
 
@@ -908,7 +895,7 @@ must preserve.  That is the useful temporal distinction: behavior now, intent ne
 Prompts handle narrative holes, ambiguous notes, and policy text that has not yet become code.
 They are not outside the method.  The sketch and corpus constrain them, and the gate checks
 their outputs.  In this loop, prompting is one implementation surface beside source code,
-fixtures, and cassettes.
+fixtures, and tests.
 
 \subsection{SME corrections become specification inputs}
 
@@ -945,9 +932,8 @@ out?
   \item \textbf{Sketch quality.}  Hidden prose rules still require human review.  The method
         gives those rules a repository home, then relies on maintainers to keep that home
         current as new counterexamples arrive.
-  \item \textbf{Prompt drift.}  Live model behavior can drift.  Cassettes make
-        model-output-dependent CI paths reproducible; live behavior still needs review before
-        a team trusts a new model response.
+  \item \textbf{Prompt drift.}  Live model behavior can drift.  The method treats live output
+        as something to review and promote, not as a stable proof artifact.
   \item \textbf{Enterprise evidence boundary.}  The public companion demonstrates the control
         structure on sanitized fixtures.  The proprietary harness motivates the method and
         remains outside the public artifact; the public evidence supports the loop and states
