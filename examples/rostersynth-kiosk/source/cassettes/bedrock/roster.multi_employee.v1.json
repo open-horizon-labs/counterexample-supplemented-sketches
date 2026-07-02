@@ -1,0 +1,33 @@
+{
+  "scenarioId": "roster.multi_employee.v1",
+  "mode": "llm-only",
+  "generatedBy": "bedrock-record",
+  "suggestions": [
+    {
+      "employeeId": "E-A",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "suggestion": "Employee E-A has positive coverageDelta of 4.0 hours (badgeHours 40.0 > scheduledHours 36.0). No active bookings exist, so workDate defaults to windowEnd. Append overtime adjustment (shiftKind 8) for 4.0 hours.",
+      "generatedBy": "bedrock",
+      "adjustment": {
+        "shiftKind": 8,
+        "hours": 4.0,
+        "workDate": "2024-08-15",
+        "status": 1
+      }
+    },
+    {
+      "employeeId": "E-B",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "suggestion": "Employee E-B has negative coverageDelta of -8.0 hours (badgeHours 32.0 < scheduledHours 40.0). No active bookings exist, so workDate defaults to windowEnd. Append underschedule adjustment (shiftKind 51) for -8.0 hours.",
+      "generatedBy": "bedrock",
+      "adjustment": {
+        "shiftKind": 51,
+        "hours": -8.0,
+        "workDate": "2024-08-15",
+        "status": 1
+      }
+    }
+  ]
+}

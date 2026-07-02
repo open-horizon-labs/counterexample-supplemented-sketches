@@ -1,0 +1,43 @@
+{
+  "id": "roster.fractional_hours.v1",
+  "title": "Fractional hour coverage delta",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 4,
+        "employees": [
+          {
+            "employeeId": "E-9009",
+            "roleCode": "PHLEB",
+            "deptId": 4,
+            "windowEnd": "2024-04-10",
+            "priorWindowEnd": "2024-04-09",
+            "badgeHours": 37.5,
+            "scheduledHours": 40.0,
+            "coverageDelta": -2.5,
+            "bookings": []
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-9009",
+          "issueType": "coverage-hour-gap",
+          "op": "append",
+          "adjustment": {
+            "shiftKind": 51,
+            "hours": -2.5,
+            "workDate": "2024-04-10",
+            "status": 1
+          },
+          "suggestion": "Post Underschedule adjustment for -2.5 hours for PHLEB (E-9009, dept 4, work date 2024-04-10) \u2014 roster is over-scheduled vs badge by 2.5 hours (coverageDelta -2.5)."
+        }
+      ]
+    }
+  }
+}

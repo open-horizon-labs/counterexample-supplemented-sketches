@@ -1,0 +1,51 @@
+{
+  "id": "roster.short_with_history.v1",
+  "title": "Under-scheduled with prior booking history",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 2,
+        "employees": [
+          {
+            "employeeId": "E-6006",
+            "roleCode": "PT",
+            "deptId": 2,
+            "windowEnd": "2024-05-20",
+            "priorWindowEnd": null,
+            "badgeHours": 20.0,
+            "scheduledHours": 28.0,
+            "coverageDelta": -8.0,
+            "bookings": [
+              {
+                "bookingId": 701,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 28.0,
+                "workDate": "2024-05-20"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-6006",
+          "issueType": "coverage-hour-gap",
+          "op": "append",
+          "adjustment": {
+            "shiftKind": 51,
+            "hours": -8.0,
+            "workDate": "2024-05-20",
+            "status": 1
+          },
+          "suggestion": "Post Underschedule adjustment for -8.0 hours for PT (E-6006, dept 2, work date 2024-05-20) \u2014 roster is over-scheduled vs badge by 8.0 hours (coverageDelta -8.0)."
+        }
+      ]
+    }
+  }
+}

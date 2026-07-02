@@ -1,0 +1,297 @@
+{
+  "graph": "sketch-counterexample-agent-session",
+  "nodes": [
+    {
+      "id": "session.task-line-parser",
+      "kind": "agent_session",
+      "name": "Task-line parser clean-room session",
+      "selector": "examples/task-line-parser"
+    },
+    {
+      "id": "sketch.task-line-parser",
+      "kind": "sketch",
+      "name": "Task line parser sketch",
+      "selector": "examples/task-line-parser/sketch.md"
+    },
+    {
+      "id": "known-code.result",
+      "kind": "known_code_anchor",
+      "name": "Ok/Err result shape",
+      "selector": "examples/task-line-parser/known_code/result.py"
+    },
+    {
+      "id": "implementation.parse-task-line",
+      "kind": "generated_artifact",
+      "name": "parse_task_line implementation",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py"
+    },
+    {
+      "id": "ce.task-line-parser.first-prefix-only-is-status",
+      "kind": "counterexample",
+      "name": "First prefix only is status",
+      "selector": "examples/task-line-parser/counterexamples.md:5-20",
+      "tempting_patch": "split on every colon and treat a later status-looking prefix as a second status"
+    },
+    {
+      "id": "test.task-line-parser.first-prefix-only-is-status",
+      "kind": "verification_check",
+      "name": "First prefix only is status",
+      "selector": "examples/task-line-parser/tests/test_parse_task_line.py:61-66"
+    },
+    {
+      "id": "execution.task-line-parser.first-prefix-only-is-status.1",
+      "kind": "execution_point",
+      "name": "First prefix only is status handler 1",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:31-37",
+      "handling": "`str.partition(':')` selects only the first colon; non-blocked bodies remain title text."
+    },
+    {
+      "id": "execution.task-line-parser.first-prefix-only-is-status.2",
+      "kind": "execution_point",
+      "name": "First prefix only is status handler 2",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:43-44",
+      "handling": "`str.partition(':')` selects only the first colon; non-blocked bodies remain title text."
+    },
+    {
+      "id": "ce.task-line-parser.blocked-reason-cannot-be-empty",
+      "kind": "counterexample",
+      "name": "Blocked reason requires text",
+      "selector": "examples/task-line-parser/counterexamples.md:21-32",
+      "tempting_patch": "accept a blank blocked reason after `|`"
+    },
+    {
+      "id": "test.task-line-parser.blocked-reason-cannot-be-empty",
+      "kind": "verification_check",
+      "name": "Blocked reason requires text",
+      "selector": "examples/task-line-parser/tests/test_parse_task_line.py:82-90"
+    },
+    {
+      "id": "execution.task-line-parser.blocked-reason-cannot-be-empty.1",
+      "kind": "execution_point",
+      "name": "Blocked reason requires text handler 1",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:46-55",
+      "handling": "Blocked tasks partition on `|`, trim reason, and return `Err(empty_reason)` when it is blank."
+    },
+    {
+      "id": "ce.task-line-parser.empty-title-rejects",
+      "kind": "counterexample",
+      "name": "Empty title rejects",
+      "selector": "examples/task-line-parser/counterexamples.md:33-44",
+      "tempting_patch": "return an empty task title as a valid record"
+    },
+    {
+      "id": "test.task-line-parser.empty-title-rejects",
+      "kind": "verification_check",
+      "name": "Empty title rejects",
+      "selector": "examples/task-line-parser/tests/test_parse_task_line.py:103-112"
+    },
+    {
+      "id": "execution.task-line-parser.empty-title-rejects.1",
+      "kind": "execution_point",
+      "name": "Empty title rejects handler 1",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:39-41",
+      "handling": "The parser rejects blank body text before status-specific handling and rejects blank blocked titles after `|` splitting."
+    },
+    {
+      "id": "execution.task-line-parser.empty-title-rejects.2",
+      "kind": "execution_point",
+      "name": "Empty title rejects handler 2",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:50-53",
+      "handling": "The parser rejects blank body text before status-specific handling and rejects blank blocked titles after `|` splitting."
+    },
+    {
+      "id": "ce.task-line-parser.pipe-is-only-special-for-blocked",
+      "kind": "counterexample",
+      "name": "Pipe is only special for blocked",
+      "selector": "examples/task-line-parser/counterexamples.md:45-59",
+      "tempting_patch": "parse `|` as a reason for todo/done statuses"
+    },
+    {
+      "id": "test.task-line-parser.pipe-is-only-special-for-blocked",
+      "kind": "verification_check",
+      "name": "Pipe is only special for blocked",
+      "selector": "examples/task-line-parser/tests/test_parse_task_line.py:68-80"
+    },
+    {
+      "id": "execution.task-line-parser.pipe-is-only-special-for-blocked.1",
+      "kind": "execution_point",
+      "name": "Pipe is only special for blocked handler 1",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:43-44",
+      "handling": "The parser returns todo/done body text before pipe parsing; only blocked enters the pipe/reason branch."
+    },
+    {
+      "id": "execution.task-line-parser.pipe-is-only-special-for-blocked.2",
+      "kind": "execution_point",
+      "name": "Pipe is only special for blocked handler 2",
+      "selector": "examples/task-line-parser/generated/parse_task_line.py:46-57",
+      "handling": "The parser returns todo/done body text before pipe parsing; only blocked enters the pipe/reason branch."
+    }
+  ],
+  "edges": [
+    {
+      "source": "session.task-line-parser",
+      "relation": "contains",
+      "target": "sketch.task-line-parser"
+    },
+    {
+      "source": "sketch.task-line-parser",
+      "relation": "anchors",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "known-code.result",
+      "relation": "constrains",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "session.task-line-parser",
+      "relation": "contains",
+      "target": "ce.task-line-parser.first-prefix-only-is-status"
+    },
+    {
+      "source": "ce.task-line-parser.first-prefix-only-is-status",
+      "relation": "tests_tempting_patch",
+      "target": "split on every colon and treat a later status-looking prefix as a second status"
+    },
+    {
+      "source": "ce.task-line-parser.first-prefix-only-is-status",
+      "relation": "verified_by",
+      "target": "test.task-line-parser.first-prefix-only-is-status"
+    },
+    {
+      "source": "test.task-line-parser.first-prefix-only-is-status",
+      "relation": "verifies",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.first-prefix-only-is-status",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.first-prefix-only-is-status.1"
+    },
+    {
+      "source": "execution.task-line-parser.first-prefix-only-is-status.1",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.first-prefix-only-is-status",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.first-prefix-only-is-status.2"
+    },
+    {
+      "source": "execution.task-line-parser.first-prefix-only-is-status.2",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "session.task-line-parser",
+      "relation": "contains",
+      "target": "ce.task-line-parser.blocked-reason-cannot-be-empty"
+    },
+    {
+      "source": "ce.task-line-parser.blocked-reason-cannot-be-empty",
+      "relation": "tests_tempting_patch",
+      "target": "accept a blank blocked reason after `|`"
+    },
+    {
+      "source": "ce.task-line-parser.blocked-reason-cannot-be-empty",
+      "relation": "verified_by",
+      "target": "test.task-line-parser.blocked-reason-cannot-be-empty"
+    },
+    {
+      "source": "test.task-line-parser.blocked-reason-cannot-be-empty",
+      "relation": "verifies",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.blocked-reason-cannot-be-empty",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.blocked-reason-cannot-be-empty.1"
+    },
+    {
+      "source": "execution.task-line-parser.blocked-reason-cannot-be-empty.1",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "session.task-line-parser",
+      "relation": "contains",
+      "target": "ce.task-line-parser.empty-title-rejects"
+    },
+    {
+      "source": "ce.task-line-parser.empty-title-rejects",
+      "relation": "tests_tempting_patch",
+      "target": "return an empty task title as a valid record"
+    },
+    {
+      "source": "ce.task-line-parser.empty-title-rejects",
+      "relation": "verified_by",
+      "target": "test.task-line-parser.empty-title-rejects"
+    },
+    {
+      "source": "test.task-line-parser.empty-title-rejects",
+      "relation": "verifies",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.empty-title-rejects",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.empty-title-rejects.1"
+    },
+    {
+      "source": "execution.task-line-parser.empty-title-rejects.1",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.empty-title-rejects",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.empty-title-rejects.2"
+    },
+    {
+      "source": "execution.task-line-parser.empty-title-rejects.2",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "session.task-line-parser",
+      "relation": "contains",
+      "target": "ce.task-line-parser.pipe-is-only-special-for-blocked"
+    },
+    {
+      "source": "ce.task-line-parser.pipe-is-only-special-for-blocked",
+      "relation": "tests_tempting_patch",
+      "target": "parse `|` as a reason for todo/done statuses"
+    },
+    {
+      "source": "ce.task-line-parser.pipe-is-only-special-for-blocked",
+      "relation": "verified_by",
+      "target": "test.task-line-parser.pipe-is-only-special-for-blocked"
+    },
+    {
+      "source": "test.task-line-parser.pipe-is-only-special-for-blocked",
+      "relation": "verifies",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.pipe-is-only-special-for-blocked",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.pipe-is-only-special-for-blocked.1"
+    },
+    {
+      "source": "execution.task-line-parser.pipe-is-only-special-for-blocked.1",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    },
+    {
+      "source": "ce.task-line-parser.pipe-is-only-special-for-blocked",
+      "relation": "handled_by",
+      "target": "execution.task-line-parser.pipe-is-only-special-for-blocked.2"
+    },
+    {
+      "source": "execution.task-line-parser.pipe-is-only-special-for-blocked.2",
+      "relation": "implemented_in",
+      "target": "implementation.parse-task-line"
+    }
+  ]
+}

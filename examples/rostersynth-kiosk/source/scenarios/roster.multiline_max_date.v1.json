@@ -1,0 +1,58 @@
+{
+  "id": "roster.multiline_max_date.v1",
+  "title": "Multiple bookings: anchor on max active work date",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 6,
+        "employees": [
+          {
+            "employeeId": "E-8008",
+            "roleCode": "RN",
+            "deptId": 6,
+            "windowEnd": "2024-06-15",
+            "priorWindowEnd": "2024-06-14",
+            "badgeHours": 38.0,
+            "scheduledHours": 42.0,
+            "coverageDelta": -4.0,
+            "bookings": [
+              {
+                "bookingId": 801,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 20.0,
+                "workDate": "2024-06-08"
+              },
+              {
+                "bookingId": 802,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 22.0,
+                "workDate": "2024-06-10"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-8008",
+          "issueType": "coverage-hour-gap",
+          "op": "append",
+          "adjustment": {
+            "shiftKind": 51,
+            "hours": -4.0,
+            "workDate": "2024-06-10",
+            "status": 1
+          },
+          "suggestion": "Post Underschedule adjustment for -4.0 hours for RN (E-8008, dept 6, work date 2024-06-10) \u2014 roster is over-scheduled vs badge by 4.0 hours (coverageDelta -4.0)."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "id": "roster.empty_history.v1",
+  "title": "No bookings: underschedule adjustment on window end",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 1,
+        "employees": [
+          {
+            "employeeId": "E-7007",
+            "roleCode": "ADMIN",
+            "deptId": 1,
+            "windowEnd": "2024-03-15",
+            "priorWindowEnd": null,
+            "badgeHours": 0.0,
+            "scheduledHours": 8.0,
+            "coverageDelta": -8.0,
+            "bookings": []
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-7007",
+          "issueType": "coverage-hour-gap",
+          "op": "append",
+          "adjustment": {
+            "shiftKind": 51,
+            "hours": -8.0,
+            "workDate": "2024-03-15",
+            "status": 1
+          },
+          "suggestion": "Post Underschedule adjustment for -8.0 hours for ADMIN (E-7007, dept 1, work date 2024-03-15) \u2014 roster is over-scheduled vs badge by 8.0 hours (coverageDelta -8.0)."
+        }
+      ]
+    }
+  }
+}

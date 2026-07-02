@@ -1,0 +1,20 @@
+{
+  "scenarioId": "roster.inactive_booking_ignored.v1",
+  "mode": "llm-only",
+  "generatedBy": "bedrock-record",
+  "suggestions": [
+    {
+      "employeeId": "E-5005",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "suggestion": "Employee E-5005 is underscheduled by 8 hours (badgeHours 32.0 vs scheduledHours 40.0). Append underschedule adjustment of -8.0 hours on windowEnd 2024-06-25.",
+      "generatedBy": "bedrock",
+      "adjustment": {
+        "shiftKind": 51,
+        "hours": -8.0,
+        "workDate": "2024-06-25",
+        "status": 1
+      }
+    }
+  ]
+}

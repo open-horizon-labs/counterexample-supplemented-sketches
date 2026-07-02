@@ -1,0 +1,21 @@
+{
+  "scenarioId": "roster.new_period.undersched.v1",
+  "mode": "llm-only",
+  "generatedBy": "sync-from-golden",
+  "notes": "Golden-aligned — new pay period workDate uses windowEnd",
+  "suggestions": [
+    {
+      "employeeId": "E-1001",
+      "issueType": "coverage-hour-gap",
+      "op": "append",
+      "generatedBy": "cassette-from-golden",
+      "adjustment": {
+        "shiftKind": 51,
+        "hours": -5.0,
+        "workDate": "2024-06-25",
+        "status": 1
+      },
+      "suggestion": "Post Underschedule adjustment for -5.0 hours for RN (E-1001, dept 42, work date 2024-06-25) — roster is over-scheduled vs badge by 5.0 hours (coverageDelta -5.0)."
+    }
+  ]
+}

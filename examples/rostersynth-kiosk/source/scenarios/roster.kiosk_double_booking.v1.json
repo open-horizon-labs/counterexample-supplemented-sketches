@@ -1,0 +1,54 @@
+{
+  "id": "roster.kiosk_double_booking.v1",
+  "title": "Kiosk double-tap: cancel higher duplicate booking",
+  "outcomeKind": "fix",
+  "inputPayload": {
+    "departments": [
+      {
+        "deptId": 18,
+        "employees": [
+          {
+            "employeeId": "E-1800",
+            "roleCode": "CNA",
+            "deptId": 18,
+            "windowEnd": "2024-05-14",
+            "priorWindowEnd": "2024-05-13",
+            "badgeHours": 40.0,
+            "scheduledHours": 80.0,
+            "coverageDelta": -40.0,
+            "bookings": [
+              {
+                "bookingId": 1801,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 40.0,
+                "workDate": "2024-05-14"
+              },
+              {
+                "bookingId": 1802,
+                "shiftKind": 10,
+                "status": 1,
+                "hours": 40.0,
+                "workDate": "2024-05-14"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expectations": {
+    "resolver": {
+      "suggestions": [
+        {
+          "employeeId": "E-1800",
+          "issueType": "cancel-duplicate-booking",
+          "op": "modify",
+          "bookingId": 1802,
+          "fields": { "status": 4 },
+          "suggestion": "Cancel duplicate booking 1802 (status 1 → 4) on pay window end date."
+        }
+      ]
+    }
+  }
+}
