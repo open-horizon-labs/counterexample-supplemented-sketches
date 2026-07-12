@@ -64,9 +64,16 @@ async function loadScenarios() {
     const li = el("li");
     li.dataset.id = s.scenario_id;
     li.innerHTML = `<span class="sid">${esc(s.scenario_id)}</span>
-      ${s.promoted ? '<span class="badge promoted">promoted</span>' : ""}
+      ${s.promoted ? `<span class="badge promoted" role="button" tabindex="0"
+        title="A counterexample for this scenario is in corpus E — click to view it">promoted ↗</span>` : ""}
       <span class="slabel">${esc(s.label)}</span>`;
     li.addEventListener("click", () => selectScenario(s.scenario_id));
+    const badge = li.querySelector(".badge.promoted");
+    if (badge) {
+      const jump = (e) => { e.stopPropagation(); showCorpusForScenario(s.scenario_id); };
+      badge.addEventListener("click", jump);
+      badge.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") jump(e); });
+    }
     list.appendChild(li);
   });
 }
@@ -233,7 +240,7 @@ async function loadGateRuns() {
 async function loadCorpus() {
   const corpus = await api("/api/corpus");
   $("#corpus-list").innerHTML = corpus.map((c) => `
-    <div class="card">
+    <div class="card" data-scenario="${esc(c.scenario_id)}">
       <div class="card-head">
         <h3><span class="sid" style="color:var(--accent)">${esc(c.scenario_id)}</span>
           <span class="chip">${esc(c.sketch_clause)}</span></h3>
@@ -249,6 +256,22 @@ async function loadCorpus() {
     </div>`).join("") || '<p class="muted">Corpus is empty.</p>';
   $("#corpus-list").querySelectorAll("[data-del]").forEach((btn) =>
     btn.addEventListener("click", () => confirmDeleteCorpus(Number(btn.dataset.del), btn.dataset.label)));
+}
+
+// Switch to the Corpus tab and highlight the entry(ies) for one scenario.
+async function showCorpusForScenario(scenarioId) {
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === "corpus"));
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "corpus"));
+  await loadCorpus();
+  const cards = Array.from($("#corpus-list").querySelectorAll(`.card[data-scenario="${scenarioId}"]`));
+  if (!cards.length) { toast(`No corpus entry found for ${scenarioId}.`); return; }
+  cards.forEach((card) => {
+    card.classList.remove("flash");
+    void card.offsetWidth;  // restart the animation if it was already applied
+    card.classList.add("flash");
+    setTimeout(() => card.classList.remove("flash"), 1600);
+  });
+  cards[0].scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function confirmDeleteCorpus(id, label) {

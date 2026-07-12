@@ -69,7 +69,14 @@ code { font-family: var(--mono); background: var(--panel-2); padding: 1px 6px; b
 .scenario-list .sid { font-family: var(--mono); font-size: 12px; color: var(--accent); }
 .scenario-list .slabel { display: block; margin-top: 3px; }
 .badge { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; text-transform: uppercase; letter-spacing: .4px; }
-.badge.promoted { background: rgba(62,207,142,.15); color: var(--pass); border: 1px solid rgba(62,207,142,.35); }
+.badge.promoted { background: rgba(62,207,142,.15); color: var(--pass); border: 1px solid rgba(62,207,142,.35); cursor: pointer; }
+.badge.promoted:hover, .badge.promoted:focus-visible { background: rgba(62,207,142,.3); border-color: var(--pass); outline: none; }
+
+@keyframes cardflash {
+  0%   { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(110,168,254,.55); }
+  100% { border-color: var(--border); box-shadow: none; }
+}
+.card.flash { animation: cardflash 1.6s ease-out; }
 
 .mode-toggle { text-align: right; }
 .switch-label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }

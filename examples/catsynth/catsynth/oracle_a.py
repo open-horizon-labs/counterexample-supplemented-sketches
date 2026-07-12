@@ -122,10 +122,13 @@ def resolve(owner: OwnerProfile, breeds: list[Breed], rules: list[dict],
         pen = sum(1 for r in soft if breed_targeted(r, b))
         return pref, pen
 
-    ranked = sorted(survivors, key=lambda b: (-(score_breed(b)[0] - score_breed(b)[1]),
-                                              score_breed(b)[1], b.name))
+    # Score each survivor once, then reuse for ranking, selection, and trace.
+    scores = {b.name: score_breed(b) for b in survivors}
+
+    ranked = sorted(survivors, key=lambda b: (-(scores[b.name][0] - scores[b.name][1]),
+                                              scores[b.name][1], b.name))
     best = ranked[0]
-    pref, pen = score_breed(best)
+    pref, pen = scores[best.name]
     soft_hits = sorted(r["id"] for r in soft if breed_targeted(r, best))
     return Recommendation(
         operation=Operation.RECOMMEND, breed=best.name, cited_rules=cited_hard,
@@ -138,7 +141,7 @@ def resolve(owner: OwnerProfile, breeds: list[Breed], rules: list[dict],
             "soft_rules_in_force": sorted(r["id"] for r in soft),
             "soft_hits_on_choice": soft_hits,
             "ranking": [
-                {"breed": b.name, "pref": score_breed(b)[0], "soft_penalty": score_breed(b)[1]}
+                {"breed": b.name, "pref": scores[b.name][0], "soft_penalty": scores[b.name][1]}
                 for b in ranked
             ],
         },
