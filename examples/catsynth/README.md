@@ -99,12 +99,13 @@ are reproducible. Ollama is opt-in from the Playground only.
 ## Tests
 
 ```bash
-python -m pytest -q
+python -m unittest discover -s tests
 ```
 
-The tests are model-free (Oracle B uses the deterministic mock) and assert that
-policy mode is E-correct while the naive resolver is caught by semantic compare
-on the allergy counterexample.
+The tests use the standard library only (no third-party runner) and are
+model-free (Oracle B uses the deterministic mock). They assert that policy mode
+is E-correct while the naive resolver is caught by semantic compare on the
+allergy counterexample.
 
 ## Extending the loop (another domain)
 
