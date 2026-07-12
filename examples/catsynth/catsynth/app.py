@@ -139,6 +139,17 @@ def api_promote(body: PromoteIn):
         conn.close()
 
 
+@app.delete("/api/corpus/{entry_id}")
+def api_delete_corpus(entry_id: int):
+    conn = _conn()
+    try:
+        if not db.delete_corpus_entry(conn, entry_id):
+            raise HTTPException(404, f"corpus entry {entry_id} not found")
+        return {"id": entry_id, "status": "deleted"}
+    finally:
+        conn.close()
+
+
 @app.post("/api/gate/run")
 def api_gate_run(mode: str = "policy"):
     conn = _conn()

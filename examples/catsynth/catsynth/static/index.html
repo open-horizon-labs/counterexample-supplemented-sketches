@@ -16,7 +16,8 @@
       </div>
     </div>
     <nav class="tabs">
-      <button class="tab active" data-tab="review">Review</button>
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="review">Review</button>
       <button class="tab" data-tab="playground">Playground</button>
       <button class="tab" data-tab="gate">Gate</button>
       <button class="tab" data-tab="corpus">Corpus (E)</button>
@@ -26,8 +27,100 @@
   </header>
 
   <main>
+    <!-- HOME -->
+    <section id="home" class="panel active">
+      <div class="home-hero">
+        <h2>Agentic synthesis against counterexample-supplemented sketches</h2>
+        <p class="home-lede">Coding agents fail when a broad prompt hides a constraint the human already
+          knows. This harness makes the constraint explicit: a <strong>sketch</strong> names the intended
+          shape, <strong>counterexamples</strong> name the tempting wrong output, deterministic
+          <strong>anchors</strong> keep results on-policy, and an adversarial <strong>gate</strong> proves
+          the wrong repair fails.</p>
+        <p class="home-sub">Below is one real case followed end-to-end through the loop. Each step links to
+          the live tab that runs it — read top to bottom, then click through.</p>
+      </div>
+
+      <div class="home-case">
+        <span class="chip">Worked case · FR-1</span>
+        An owner has <strong>allergies</strong> and wants a <em>“big, fluffy, affectionate lap cat.”</em>
+        The tempting answer is <strong>Persian</strong> — it fits every preference. The correct answer is
+        <strong>Siberian</strong>: equally big, fluffy, and affectionate, but hypoallergenic. Watch the loop
+        catch the difference.
+      </div>
+
+      <ol class="home-steps">
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">1</span>
+            <h3>Sketch (S) — state the intended shape</h3>
+            <span class="paper-ref">paper §2.1</span></div>
+          <p>The sketch is a <strong>partial solution shape</strong>, not full code: which operations the
+            resolver may return (<code>recommend</code> / <code>abstain</code> / <code>escalate</code>),
+            their priority order, which fields are policy-bearing, and the repairs it must
+            <em>not</em> make. For FR-1 the load-bearing clause is “preference match never overrides a hard
+            rule,” so a non-hypoallergenic breed is a forbidden repair for an allergic owner.</p>
+          <button class="btn btn-sm" data-goto="sketch">Open the Sketch →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">2</span>
+            <h3>Anchors (K) — bind the result to known code</h3>
+            <span class="paper-ref">paper §2.3</span></div>
+          <p>Known-code anchors are the conventions the resolver must reuse instead of inventing: the
+            <code>Recommendation</code> output shape <code>{operation, breed, cited_rules}</code> and the
+            local <strong>rule tables</strong> evaluated by one generic rule engine. A <code>forbid</code>
+            rule removes a breed (hard); a <code>discourage</code> rule only penalizes it in ranking (soft).
+            FR-1's hard rule is <code>allergy_requires_hypoallergenic</code>.</p>
+          <button class="btn btn-sm" data-goto="rules">Open the Rules →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">3</span>
+            <h3>Resolve — the coding-agent flow fills the holes</h3>
+            <span class="paper-ref">paper §2.4</span></div>
+          <p>The resolver executes the sketch's holes: <strong>Oracle A</strong> (deterministic code) applies
+            the hard/soft rules and ranks by preference; <strong>Oracle B</strong> turns a free-text note
+            into <em>soft</em> constraints only and can never relax a hard rule. Toggle
+            <strong>policy</strong> vs <strong>naive</strong>: policy obeys the rules and returns Siberian;
+            naive ignores them and returns the tempting Persian — the wrong implementation the loop exists to
+            catch.</p>
+          <button class="btn btn-sm" data-goto="review">Open Review →</button>
+          <button class="btn btn-sm" data-goto="playground">Try the Playground →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">4</span>
+            <h3>Counterexample → Corpus (E) — name the wrong repair</h3>
+            <span class="paper-ref">paper §2.2</span></div>
+          <p>A counterexample is an adversarial case that names a <strong>plausible wrong implementation</strong>
+            and becomes a permanent test. When a reviewer corrects Persian → Siberian, the case is promoted
+            into the golden corpus: the expected output, the tempting repair (Persian), and the violated rule.
+            The corpus is the growing record of mistakes the harness must never repeat.</p>
+          <button class="btn btn-sm" data-goto="corpus">Open Corpus (E) →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">5</span>
+            <h3>Verify — the gate must fail the tempting patch</h3>
+            <span class="paper-ref">paper §2.5</span></div>
+          <p>Verification is adversarial: a useful check passes the intended behavior <em>and</em> fails the
+            tempting wrong patch. The gate runs two checks over the corpus — <strong>replay</strong> (did we
+            close the owner's state gap?) and <strong>semantic compare</strong> (do the policy-bearing fields
+            match?). Run it in naive mode and watch replay <em>accept</em> Persian while compare
+            <em>rejects</em> it on the <code>breed</code> field.</p>
+          <button class="btn btn-sm" data-goto="gate">Open the Gate →</button>
+        </li>
+      </ol>
+
+      <div class="home-lesson">
+        <h3>The lesson in one line</h3>
+        <p>A state-valid repair can still be a policy violation. Replay and semantic compare fail differently,
+          and both are needed — that is why the counterexample and the gate, not the happy path, define
+          “correct.”</p>
+      </div>
+    </section>
+
     <!-- REVIEW -->
-    <section id="review" class="panel active">
+    <section id="review" class="panel">
       <div class="two-col">
         <aside class="sidebar">
           <div class="sidebar-head">

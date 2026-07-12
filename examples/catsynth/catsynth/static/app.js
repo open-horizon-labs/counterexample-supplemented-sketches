@@ -38,6 +38,11 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
+// Home guided-tour buttons jump straight to the live tab that runs the step.
+document.querySelectorAll("[data-goto]").forEach((btn) =>
+  btn.addEventListener("click", () =>
+    document.querySelector(`.tab[data-tab="${btn.dataset.goto}"]`)?.click()));
+
 // --- mode toggle ------------------------------------------------------------
 document.querySelectorAll("#mode-toggle .seg").forEach((seg) => {
   seg.addEventListener("click", () => {
@@ -229,8 +234,11 @@ async function loadCorpus() {
   const corpus = await api("/api/corpus");
   $("#corpus-list").innerHTML = corpus.map((c) => `
     <div class="card">
-      <h3><span class="sid" style="color:var(--accent)">${esc(c.scenario_id)}</span>
-        <span class="chip">${esc(c.sketch_clause)}</span></h3>
+      <div class="card-head">
+        <h3><span class="sid" style="color:var(--accent)">${esc(c.scenario_id)}</span>
+          <span class="chip">${esc(c.sketch_clause)}</span></h3>
+        <button class="btn btn-sm btn-danger" data-del="${c.id}" data-label="${esc(c.scenario_id)}">Delete</button>
+      </div>
       <div class="kv">
         <span class="k">expected</span><span><span class="op-pill">${esc(c.expected.operation)}</span> ${esc(c.expected.breed || "")}
           <span class="chips">${(c.expected.cited_rules || []).map((r) => `<span class="chip rule">${esc(r)}</span>`).join("")}</span></span>
@@ -239,6 +247,49 @@ async function loadCorpus() {
         <span class="k">note</span><span>${esc(c.note || "")}</span>
       </div>
     </div>`).join("") || '<p class="muted">Corpus is empty.</p>';
+  $("#corpus-list").querySelectorAll("[data-del]").forEach((btn) =>
+    btn.addEventListener("click", () => confirmDeleteCorpus(Number(btn.dataset.del), btn.dataset.label)));
+}
+
+function confirmDeleteCorpus(id, label) {
+  confirmModal({
+    title: "Delete corpus entry?",
+    body: `This permanently removes the counterexample <strong>${esc(label)}</strong> (id ${id}) from the golden corpus. This can't be undone.`,
+    confirmLabel: "Delete",
+    onConfirm: async () => {
+      try {
+        await api(`/api/corpus/${id}`, { method: "DELETE" });
+        toast(`Deleted corpus entry ${id}.`);
+        loadCorpus();
+      } catch (e) {
+        toast(`Delete failed: ${e.message}`);
+      }
+    },
+  });
+}
+
+function confirmModal({ title, body, confirmLabel = "Confirm", onConfirm }) {
+  const overlay = el("div", "modal-overlay");
+  overlay.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">${esc(title)}</h3>
+      <div class="modal-body">${body}</div>
+      <div class="modal-actions">
+        <button class="btn" data-act="cancel">Cancel</button>
+        <button class="btn btn-danger" data-act="confirm">${esc(confirmLabel)}</button>
+      </div>
+    </div>`;
+  const close = () => { overlay.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  overlay.querySelector('[data-act="cancel"]').addEventListener("click", close);
+  overlay.querySelector('[data-act="confirm"]').addEventListener("click", async () => {
+    close();
+    await onConfirm();
+  });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(overlay);
+  overlay.querySelector('[data-act="confirm"]').focus();
 }
 
 async function loadRules() {

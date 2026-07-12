@@ -215,6 +215,13 @@ def corpus_has_scenario(conn: sqlite3.Connection, scenario_id: str) -> bool:
     return r is not None
 
 
+def delete_corpus_entry(conn: sqlite3.Connection, entry_id: int) -> bool:
+    """Remove one promoted counterexample by id. Returns True if a row was deleted."""
+    cur = conn.execute("DELETE FROM golden_corpus WHERE id=?", (entry_id,))
+    conn.commit()
+    return cur.rowcount > 0
+
+
 # --- gate runs --------------------------------------------------------------
 
 def log_gate_run(conn: sqlite3.Connection, resolver_mode: str, passed: bool, summary: dict) -> int:
