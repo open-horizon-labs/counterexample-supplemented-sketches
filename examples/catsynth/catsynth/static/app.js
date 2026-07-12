@@ -260,25 +260,32 @@ async function loadSketch() {
 
 function renderMarkdown(md) {
   const lines = md.split("\n");
-  let html = "", inList = false, inCode = false;
+  let html = "", inCode = false;
+  let para = [], quote = [], items = null;  // buffers for the block currently open
   const inline = (t) => esc(t)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
-  const closeList = () => { if (inList) { html += "</ul>"; inList = false; } };
-  for (let raw of lines) {
-    if (raw.trim().startsWith("```")) { inCode = !inCode; html += inCode ? "<pre>" : "</pre>"; continue; }
+  const flushPara = () => { if (para.length) { html += `<p>${inline(para.join(" "))}</p>`; para = []; } };
+  const flushQuote = () => { if (quote.length) { html += `<blockquote>${inline(quote.join(" "))}</blockquote>`; quote = []; } };
+  const flushList = () => { if (items) { html += "<ul>" + items.map((t) => `<li>${inline(t)}</li>`).join("") + "</ul>"; items = null; } };
+  const flushAll = () => { flushPara(); flushQuote(); flushList(); };
+  for (const raw of lines) {
+    if (raw.trim().startsWith("```")) { flushAll(); inCode = !inCode; html += inCode ? "<pre>" : "</pre>"; continue; }
     if (inCode) { html += esc(raw) + "\n"; continue; }
-    if (/^### /.test(raw)) { closeList(); html += `<h3>${inline(raw.slice(4))}</h3>`; }
-    else if (/^## /.test(raw)) { closeList(); html += `<h2>${inline(raw.slice(3))}</h2>`; }
-    else if (/^# /.test(raw)) { closeList(); html += `<h1>${inline(raw.slice(2))}</h1>`; }
-    else if (/^> /.test(raw)) { closeList(); html += `<blockquote>${inline(raw.slice(2))}</blockquote>`; }
-    else if (/^\s*[-*] /.test(raw)) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${inline(raw.replace(/^\s*[-*] /, ""))}</li>`; }
-    else if (/^\s*\d+\. /.test(raw)) { if (!inList) { html += "<ul>"; inList = true; } html += `<li>${inline(raw.replace(/^\s*\d+\. /, ""))}</li>`; }
-    else if (raw.trim() === "") { closeList(); }
-    else { closeList(); html += `<p>${inline(raw)}</p>`; }
+    const heading = raw.match(/^(#{1,6}) /);
+    if (heading) { flushAll(); const lvl = heading[1].length; html += `<h${lvl}>${inline(raw.slice(lvl + 1))}</h${lvl}>`; }
+    else if (/^> /.test(raw)) { flushPara(); flushList(); quote.push(raw.slice(2)); }
+    else if (/^\s*[-*] /.test(raw)) { flushPara(); flushQuote(); (items = items || []).push(raw.replace(/^\s*[-*] /, "")); }
+    else if (/^\s*\d+\. /.test(raw)) { flushPara(); flushQuote(); (items = items || []).push(raw.replace(/^\s*\d+\. /, "")); }
+    else if (raw.trim() === "") { flushAll(); }
+    // A non-blank plain line continues whichever block is open (wrapped text),
+    // otherwise it starts a new paragraph.
+    else if (items) { items[items.length - 1] += " " + raw.trim(); }
+    else if (quote.length) { quote[quote.length - 1] += " " + raw.trim(); }
+    else { para.push(raw.trim()); }
   }
-  closeList();
+  flushAll();
   return html;
 }
 
