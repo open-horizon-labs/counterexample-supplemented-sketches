@@ -17,24 +17,24 @@ OLLAMA_HOST = os.environ.get("CATSYNTH_OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("CATSYNTH_OLLAMA_MODEL", "qwen2.5-coder:14b")
 
 # The controlled vocabulary Oracle B is allowed to emit. Each tag maps to one
-# soft (discourage) pseudo-rule that is merged into Oracle A's ranking.
+# soft (discourage) pseudo-rule merged into Oracle A's ranking. These are
+# already gated by the presence of a narrative note (see
+# derive_soft_constraints), so unlike the DB rules they carry no owner-trait
+# trigger: they are applied directly and only name the cat attribute to penalize.
 TAG_TO_SOFT_RULE = {
     "avoid_needy": {
-        "id": "nb_avoid_needy", "trait": "narrative_note", "trait_op": "is_true",
-        "trait_value": "", "kind": "discourage", "cat_attribute": "sociability",
-        "cat_op": "gte", "cat_value": "high",
+        "id": "nb_avoid_needy", "kind": "discourage",
+        "cat_attribute": "sociability", "cat_op": "gte", "cat_value": "high",
         "reason": "Narrative note: owner is frequently away; highly social breeds discouraged.",
     },
     "avoid_vocal": {
-        "id": "nb_avoid_vocal", "trait": "narrative_note", "trait_op": "is_true",
-        "trait_value": "", "kind": "discourage", "cat_attribute": "vocal",
-        "cat_op": "gte", "cat_value": "high",
+        "id": "nb_avoid_vocal", "kind": "discourage",
+        "cat_attribute": "vocal", "cat_op": "gte", "cat_value": "high",
         "reason": "Narrative note: owner wants a quiet home; very vocal breeds discouraged.",
     },
     "avoid_high_energy": {
-        "id": "nb_avoid_high_energy", "trait": "narrative_note", "trait_op": "is_true",
-        "trait_value": "", "kind": "discourage", "cat_attribute": "energy",
-        "cat_op": "gte", "cat_value": "high",
+        "id": "nb_avoid_high_energy", "kind": "discourage",
+        "cat_attribute": "energy", "cat_op": "gte", "cat_value": "high",
         "reason": "Narrative note: owner wants a low-key cat; high-energy breeds discouraged.",
     },
 }
