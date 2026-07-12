@@ -31,3 +31,6 @@ dist/
 *.log
 .tmp/
 tmp/
+
+# CatSynth example: generated SQLite database (rebuilt by `python cli.py seed`)
+examples/catsynth/catsynth.db

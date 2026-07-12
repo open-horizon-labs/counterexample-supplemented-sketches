@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatSynth — Agentic Synthesis Loop</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">🐈</span>
+      <div>
+        <h1>CatSynth</h1>
+        <p class="tag">Agentic synthesis against counterexample-supplemented sketches — a runnable slice</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="review">Review</button>
+      <button class="tab" data-tab="playground">Playground</button>
+      <button class="tab" data-tab="gate">Gate</button>
+      <button class="tab" data-tab="corpus">Corpus (E)</button>
+      <button class="tab" data-tab="rules">Rules</button>
+      <button class="tab" data-tab="sketch">Sketch (S)</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- REVIEW -->
+    <section id="review" class="panel active">
+      <div class="two-col">
+        <aside class="sidebar">
+          <div class="sidebar-head">
+            <h2>Scenarios (x)</h2>
+          </div>
+          <div class="toggle-group">
+            <div class="tg-label">Resolver strategy <span class="tg-tech">Oracle A · H(x)</span></div>
+            <div class="segmented stacked" id="mode-toggle">
+              <button data-mode="policy" class="seg active">
+                <span class="seg-main">policy</span>
+                <span class="seg-sub">obeys the owner-trait rules</span>
+              </button>
+              <button data-mode="naive" class="seg">
+                <span class="seg-main">naive</span>
+                <span class="seg-sub">ignores the rules · the tempting repair</span>
+              </button>
+            </div>
+            <p class="tg-caption">Both are deterministic code. The only difference is whether the rule
+              tables are applied. <strong>policy</strong> is the sketch's real strategy;
+              <strong>naive</strong> is the plausible-but-wrong repair the gate is built to catch.</p>
+          </div>
+          <ul id="scenario-list" class="scenario-list"></ul>
+        </aside>
+
+        <div class="detail" id="review-detail">
+          <p class="muted">Select a scenario to see the owner profile and the resolver's proposed recommendation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAYGROUND -->
+    <section id="playground" class="panel">
+      <h2>Playground — send a fake request</h2>
+      <p class="hint">Build an ad-hoc owner profile and see what the resolver returns. Add a free-text note to exercise <strong>Oracle B</strong> — backed by the deterministic mock or your local Ollama model.</p>
+      <div class="two-col pg-two-col">
+        <div class="detail">
+          <form id="pg-form" class="correction" style="margin-top:0;border-top:none;padding-top:0">
+            <div class="pg-grid">
+              <div><label>Allergies</label>
+                <select name="allergies"><option>none</option><option>mild</option><option>severe</option></select></div>
+              <div><label>Work hours</label>
+                <select name="work_hours"><option>home</option><option selected>normal</option><option>long</option></select></div>
+              <div><label>Home size</label>
+                <select name="home_size"><option selected>house</option><option>apartment</option></select></div>
+              <div><label>Activity level</label>
+                <select name="activity_level"><option>low</option><option selected>moderate</option><option>high</option></select></div>
+              <div><label>Noise tolerance</label>
+                <select name="noise_tolerance"><option selected>high</option><option>low</option></select></div>
+              <div><label>Experience</label>
+                <select name="experience"><option selected>experienced</option><option>novice</option></select></div>
+              <div><label>Wants size</label>
+                <select name="wants_size"><option value="">(no preference)</option><option>small</option><option>medium</option><option>large</option></select></div>
+              <div class="checks">
+                <label class="inline"><input type="checkbox" name="young_children" /> young children</label>
+                <label class="inline"><input type="checkbox" name="wants_affection" /> wants affectionate</label>
+                <label class="inline"><input type="checkbox" name="wants_fluffy" /> wants fluffy</label>
+              </div>
+            </div>
+            <label>Narrative note (free text → Oracle B)</label>
+            <textarea name="narrative_note" placeholder="e.g. I travel a lot and want a calm, quiet cat that won't get lonely."></textarea>
+
+            <div class="pg-controls">
+              <div class="toggle-group">
+                <div class="tg-label">Resolver strategy <span class="tg-tech">Oracle A · H(x)</span></div>
+                <div class="segmented stacked" id="pg-mode">
+                  <button type="button" data-mode="policy" class="seg active">
+                    <span class="seg-main">policy</span>
+                    <span class="seg-sub">obeys the owner-trait rules</span>
+                  </button>
+                  <button type="button" data-mode="naive" class="seg">
+                    <span class="seg-main">naive</span>
+                    <span class="seg-sub">ignores the rules · tempting repair</span>
+                  </button>
+                </div>
+                <p class="tg-caption">Deterministic either way. <strong>policy</strong> applies the hard
+                  <code>forbid</code> and soft <code>discourage</code> rules and can abstain;
+                  <strong>naive</strong> ranks purely on preference match, so it will happily return a
+                  forbidden breed — the case the gate rejects.</p>
+              </div>
+
+              <div class="toggle-group">
+                <div class="tg-label">Note interpreter <span class="tg-tech">Oracle B</span></div>
+                <div class="segmented stacked" id="pg-backend">
+                  <button type="button" data-backend="mock" class="seg active">
+                    <span class="seg-main">mock</span>
+                    <span class="seg-sub">deterministic keywords · no LLM</span>
+                  </button>
+                  <button type="button" data-backend="ollama" class="seg">
+                    <span class="seg-main">ollama</span>
+                    <span class="seg-sub">your local LLM reads the note</span>
+                  </button>
+                </div>
+                <p class="tg-caption">Turns the free-text note into <em>soft</em> preferences only — it can
+                  nudge ranking but never overrides a hard rule. The gate always uses <strong>mock</strong>
+                  so it stays reproducible.</p>
+              </div>
+
+              <div id="pg-model-wrap" style="display:none">
+                <label>Ollama model</label>
+                <select name="ollama_model" id="pg-model"></select>
+              </div>
+            </div>
+            <div class="row"><button class="btn primary" type="submit" id="pg-submit">Send request →</button>
+              <span id="pg-ollama-status" class="form-note"></span></div>
+          </form>
+        </div>
+        <div class="detail" id="pg-result">
+          <p class="muted">Fill in a profile and send it to see the recommendation, the rules in force, and the Oracle B trace.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GATE -->
+    <section id="gate" class="panel">
+      <div class="gate-controls">
+        <h2>Gate G — replay + semantic compare over the promoted corpus</h2>
+        <div class="row">
+          <button class="btn primary" id="run-gate-policy">Run gate (policy)</button>
+          <button class="btn" id="run-gate-naive">Run gate (naive / tempting)</button>
+        </div>
+        <p class="hint">Policy mode should pass. Naive mode ignores the owner-trait rules — watch the gate reject the tempting repair on the <code>breed</code> field while replay still accepts it.</p>
+      </div>
+      <div id="gate-results"></div>
+      <div class="runs">
+        <h3>Recent gate runs (provenance)</h3>
+        <div id="gate-runs"></div>
+      </div>
+    </section>
+
+    <!-- CORPUS -->
+    <section id="corpus" class="panel">
+      <h2>Golden corpus (E) — promoted counterexamples</h2>
+      <p class="hint">Each promoted case names the expected output, the tempting wrong repair, the violated rule, and the sketch clause it supplements.</p>
+      <div id="corpus-list"></div>
+    </section>
+
+    <!-- RULES -->
+    <section id="rules" class="panel">
+      <h2>Owner-trait rulesets (local policy tables)</h2>
+      <p class="hint"><strong>forbid</strong> = hard rule (removes the breed). <strong>discourage</strong> = soft rule (penalizes it in ranking).</p>
+      <div id="rules-list"></div>
+    </section>
+
+    <!-- SKETCH -->
+    <section id="sketch" class="panel">
+      <h2>Sketch (S)</h2>
+      <div id="sketch-body" class="markdown"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
