@@ -295,6 +295,23 @@ structured context for agents~\cite{github2026speckit}.  Specification by Exampl
 older discipline: concrete examples become living documentation when they are executable enough
 to constrain future work~\cite{adzic2011specification}.
 
+Sketch-CE makes the destination of counterexample feedback explicit.  A failure can lead the
+Developer to repair code or prompts under the current sketch, leaving the governing rule
+unchanged.  It can also expose a missing or mistaken rule, leading a maintainer to approve a
+sketch revision and require the implementation to satisfy the revised rule.  In Argyris's terms,
+the first path is a single-loop correction; the second is double-loop learning because the
+correction reaches the governing policy or objective~\cite{argyris1977doubleloop}.  The gate
+preserves the executable result of either path across later repairs, while the versioned sketch
+records the revised rule.
+
+Living-specification workflows can support the same kind of learning.  The narrower distinction
+is procedural: Sketch-CE places reviewed sketch revision inside the counterexample repair protocol
+instead of treating it as an exceptional upstream process.  The Developer may propose a revision,
+but the SME or maintainer decides whether the counterexample is valid, which rule it exposes,
+whether the sketch should change, which expected result is authoritative, and what the gate must
+enforce.  If the Developer rewrites the sketch merely to justify its patch, the protocol has
+failed.
+
 The boundary is that natural language is one mutable surface among several.  In this loop, a spec
 means the sketch, promoted counterexamples, and replay/compare harness together.  If a rule lives
 in a prompt, the prompt gets the same review pressure as code: a sketch clause, promoted examples,
