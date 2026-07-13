@@ -1,0 +1,69 @@
+[
+  {
+    "id": "ce-001-allergy-override",
+    "scenario_id": "allergy_lapcat",
+    "policy": "For this synthetic fixture, mild or severe allergies forbid every breed whose hypoallergenic attribute is false. Hard policy filters candidates before preference ranking.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siberian",
+      "cited_rules": ["allergy_requires_hypoallergenic"],
+      "oracle_tags": []
+    },
+    "rule_ids": ["allergy_requires_hypoallergenic"],
+    "sketch_rule": "FR-1: A forbid rule applies when the profile trait matches its trigger. For trait_op=in, trait_value is a comma-separated set. A matching cat predicate identifies a violation to remove; cat_op=is_false matches false. Filter violations before preference ranking and cite the applicable hard rule."
+  },
+  {
+    "id": "ce-002-over-constrained-abstention",
+    "scenario_id": "over_constrained",
+    "policy": "Hard rules compose. When no breed survives all applicable forbid rules, abstain and cite every applicable hard rule instead of relaxing policy to force a recommendation.",
+    "expected": {
+      "operation": "abstain",
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "oracle_tags": []
+    },
+    "rule_ids": [
+      "allergy_requires_hypoallergenic",
+      "apartment_no_high_energy",
+      "children_require_good_with_children",
+      "long_hours_no_high_sociability",
+      "severe_allergy_low_shedding"
+    ],
+    "sketch_rule": "FR-2: Hard forbid rules compose. Support profile triggers eq and is_true, and cat predicates is_false and gte on low < moderate < high. If filtering leaves no breed, ABSTAIN and cite every applicable hard rule. Never relax a hard rule to force a recommendation."
+  },
+  {
+    "id": "ce-003-narrative-travel-tag",
+    "scenario_id": "narrative_travel",
+    "policy": "Oracle B maps the owner's note only to controlled soft tags. A note about frequent travel, absence, or a lonely cat must produce exactly the tag avoid_needy. This counterexample promotes only the prompt-mediated classification; it does not yet define how deterministic ranking consumes the tag. The prompt may not invent unrelated tags or relax hard rules.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Persian",
+      "cited_rules": [],
+      "oracle_tags": ["avoid_needy"]
+    },
+    "checked_fields": ["oracle_tags"],
+    "rule_ids": [],
+    "oracle_tag_ids": [],
+    "sketch_rule": "FR-3: Prompt-mediated narrative interpretation emits only controlled soft tags. Travel, frequent absence, or concern about a lonely cat maps to exactly avoid_needy. The prompt must classify only the supplied note rather than its own instructions. The deterministic meaning of avoid_needy remains an open hole."
+  },
+  {
+    "id": "ce-004-narrative-soft-constraint",
+    "scenario_id": "narrative_travel",
+    "policy": "The controlled tag avoid_needy is a one-point soft penalty for breeds whose sociability is high or greater. Base ranking remains the initial sketch formula: only wants_size, wants_affection, and wants_fluffy add preference score. Default profile traits such as activity_level, noise_tolerance, and experience add no score unless a promoted rule or tag explicitly gives them semantics. The tag changes ranking but may not filter candidates or relax hard rules.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Persian",
+      "cited_rules": [],
+      "oracle_tags": ["avoid_needy"]
+    },
+    "rule_ids": [],
+    "oracle_tag_ids": ["avoid_needy"],
+    "sketch_rule": "FR-4: Base preference ranking uses only wants_size, wants_affection, and wants_fluffy; default activity_level, noise_tolerance, experience, and other profile traits add no preference score without a promoted clause. During deterministic ranking, avoid_needy applies a one-point soft penalty to breeds with sociability >= high. It never filters candidates or relaxes hard rules."
+  }
+]

@@ -1,12 +1,5 @@
 # CatSynth Sketch (S)
 
-> The sketch is the human's current *strategy*: which operations exist, which
-> repair wins when several close the same gap, which fields are policy-bearing,
-> which decisions are deterministic code (Oracle A) vs. prompt-mediated
-> narrative completion (Oracle B), and which cases force abstention. It is
-> deliberately less formal than a full specification. It changes when a promoted
-> counterexample reveals missing policy.
-
 ## Task
 
 Given an **owner profile** (traits + preferences, and sometimes a free-text
