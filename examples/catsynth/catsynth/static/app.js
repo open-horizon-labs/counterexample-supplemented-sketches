@@ -83,7 +83,7 @@ async function loadScenarios() {
     li.tabIndex = 0;
     li.innerHTML = `<span class="sid">${esc(s.scenario_id)}</span>
       ${s.promoted ? `<span class="badge promoted" role="button" tabindex="0"
-        title="A counterexample for this scenario is in corpus E — click to view it">promoted ↗</span>` : ""}
+        title="An operator-approved CE for this scenario is in archive A and regression set R — click to view it">approved CE ↗</span>` : ""}
       <span class="slabel">${esc(s.label)}</span>`;
     li.addEventListener("click", () => selectScenario(s.scenario_id));
     li.addEventListener("keydown", (e) => {
@@ -160,8 +160,8 @@ function correctionForm(sc, rec) {
       <input type="checkbox" style="width:auto" name="cited" value="${esc(r.id)}"
         ${(rec.cited_rules || []).includes(r.id) ? "checked" : ""}/> ${esc(r.id)}</label>`).join("");
   return `<div class="correction">
-    <h3>SME correction → promote to corpus (E)</h3>
-    <p class="form-note">Record the corrected output, the tempting wrong repair, and the rule it violates.</p>
+    <h3>SME correction → operator approval</h3>
+    <p class="form-note">Review the corrected output, tempting wrong repair, and missing sketch rule. This teaching action adds a local A = R row; it does not invoke Developer or revise SKETCH.md.</p>
     <label for="c-op">Expected operation</label>
     <select id="c-op">
       <option value="recommend"${rec.operation === "recommend" ? " selected" : ""}>recommend</option>
@@ -180,7 +180,7 @@ function correctionForm(sc, rec) {
     <input id="c-clause" placeholder="e.g. FR-1 allergy override" />
     <label for="c-note">Note / reason</label>
     <textarea id="c-note" placeholder="Why is the tempting repair wrong?"></textarea>
-    <div class="row"><button class="btn primary" id="promote-btn">Promote counterexample</button></div>
+    <div class="row"><button class="btn primary" id="promote-btn">Approve local CE</button></div>
   </div>`;
 }
 
@@ -221,7 +221,7 @@ async function promote(scenario_id) {
   };
   try {
     await api("/api/corpus", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    toast("Promoted into golden corpus E");
+    toast("Local CE approved; Developer was not invoked");
     await loadScenarios();
     document.querySelectorAll("#scenario-list li").forEach((li) =>
       li.classList.toggle("selected", li.dataset.id === scenario_id));
@@ -287,16 +287,16 @@ async function loadCorpus() {
         <span class="k">violated</span><span>${esc(c.violated_rule || "—")}</span>
         <span class="k">note</span><span>${esc(c.note || "")}</span>
       </div>
-    </div>`).join("") || '<p class="muted">Corpus is empty.</p>';
+    </div>`).join("") || '<p class="muted">The CE archive and regression set are empty.</p>';
   $("#corpus-list").querySelectorAll("[data-del]").forEach((btn) =>
     btn.addEventListener("click", () => confirmDeleteCorpus(Number(btn.dataset.del), btn.dataset.label)));
 }
 
-// Switch to the Corpus tab and highlight the entry(ies) for one scenario.
+// Switch to the CE archive/regression tab and highlight the entry(ies) for one scenario.
 async function showCorpusForScenario(scenarioId) {
   await activateTab("corpus");
   const cards = Array.from($("#corpus-list").querySelectorAll(`.card[data-scenario="${scenarioId}"]`));
-  if (!cards.length) { toast(`No corpus entry found for ${scenarioId}.`); return; }
+  if (!cards.length) { toast(`No approved CE found for ${scenarioId}.`); return; }
   cards.forEach((card) => {
     card.classList.remove("flash");
     void card.offsetWidth;  // restart the animation if it was already applied
@@ -308,13 +308,13 @@ async function showCorpusForScenario(scenarioId) {
 
 function confirmDeleteCorpus(id, label) {
   confirmModal({
-    title: "Delete corpus entry?",
-    body: `This permanently removes the counterexample <strong>${esc(label)}</strong> (id ${id}) from the golden corpus. This can't be undone.`,
+    title: "Delete local CE?",
+    body: `This removes <strong>${esc(label)}</strong> (id ${id}) from the current SQLite projection of archive A and regression set R. Reseeding restores repository fixtures.`,
     confirmLabel: "Delete",
     onConfirm: async () => {
       try {
         await api(`/api/corpus/${id}`, { method: "DELETE" });
-        toast(`Deleted corpus entry ${id}.`);
+        toast(`Deleted local CE ${id}.`);
         loadCorpus();
       } catch (e) {
         toast(`Delete failed: ${e.message}`);

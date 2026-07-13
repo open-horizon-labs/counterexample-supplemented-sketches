@@ -1,8 +1,10 @@
 """FastAPI app: the local review surface + gate runner.
 
 Endpoints back a single-page UI where an SME can inspect a scenario, see the
-resolver's proposed recommendation (policy or naive), correct it, promote it
-into the golden corpus, and run the gate.
+resolver's proposed recommendation (policy or naive), correct it, explicitly
+approve it as an operator, add it to the local A = R projection, and run the
+regression gate. This teaching surface does not invoke Developer or revise the
+repository sketch; the experiment harness implements that loop.
 """
 
 from __future__ import annotations

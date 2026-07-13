@@ -20,7 +20,7 @@
       <button class="tab" data-tab="review" role="tab" aria-controls="review" aria-selected="false">Review</button>
       <button class="tab" data-tab="playground" role="tab" aria-controls="playground" aria-selected="false">Playground</button>
       <button class="tab" data-tab="gate" role="tab" aria-controls="gate" aria-selected="false">Gate</button>
-      <button class="tab" data-tab="corpus" role="tab" aria-controls="corpus" aria-selected="false">Corpus (E)</button>
+      <button class="tab" data-tab="corpus" role="tab" aria-controls="corpus" aria-selected="false">CEs (A = R)</button>
       <button class="tab" data-tab="rules" role="tab" aria-controls="rules" aria-selected="false">Rules</button>
       <button class="tab" data-tab="sketch" role="tab" aria-controls="sketch" aria-selected="false">Sketch (S)</button>
     </nav>
@@ -53,7 +53,7 @@
       <ol class="home-steps">
         <li class="home-step">
           <div class="step-head"><span class="step-num">1</span>
-            <h3>Sketch (S) — state the intended shape</h3>
+            <h3>Evolved sketch (S) — carry the learned policy</h3>
             <span class="paper-ref">Sketch S</span></div>
           <p>The sketch is a <strong>partial solution shape</strong>, not full code: which operations the
             resolver may return (<code>recommend</code> / <code>abstain</code> / <code>escalate</code>),
@@ -91,13 +91,14 @@
 
         <li class="home-step">
           <div class="step-head"><span class="step-num">4</span>
-            <h3>Counterexample → Corpus (E) — name the wrong repair</h3>
-            <span class="paper-ref">Corpus E</span></div>
-          <p>A counterexample is an adversarial case that names a <strong>plausible wrong implementation</strong>
-            and becomes a durable test when saved in the repository corpus source. This demo seeds that source
-            into local SQLite; extra UI promotions are local experiments. The seeded entry records the expected
-            output, the tempting repair (Persian), and the violated rule.</p>
-          <button class="btn btn-sm" data-goto="corpus">Open Corpus (E) →</button>
+            <h3>Operator approval → CE archive (A) — change the sketch</h3>
+            <span class="paper-ref">Archive A</span></div>
+          <p>A proposed counterexample names a <strong>plausible wrong implementation</strong> and becomes
+            authoritative only when an operator explicitly approves it. Every accepted CE must change the
+            evolved sketch. The archive preserves why; a curated regression set checks generated code. This
+            small demo uses the same seeded cases for both roles (<code>R = A</code>). The Review button records
+            only a local operator decision; it does not invoke Developer or edit repository files.</p>
+          <button class="btn btn-sm" data-goto="corpus">Open CEs (A = R) →</button>
         </li>
 
         <li class="home-step">
@@ -105,7 +106,7 @@
             <h3>Verify — the gate must fail the tempting patch</h3>
             <span class="paper-ref">Gate G</span></div>
           <p>Verification is adversarial: a useful check passes the intended behavior <em>and</em> fails the
-            tempting wrong patch. The gate runs two checks over the corpus — <strong>replay</strong> (did we
+            tempting wrong patch. The gate runs two checks over regression set R — <strong>replay</strong> (did we
             close the owner's state gap?) and <strong>semantic compare</strong> (do the policy-bearing fields
             match?). Run it in naive mode and watch replay <em>accept</em> Persian while compare
             <em>rejects</em> it on the <code>breed</code> field.</p>
@@ -238,7 +239,7 @@
     <!-- GATE -->
     <section id="gate" class="panel" role="tabpanel">
       <div class="gate-controls">
-        <h2>Gate G — replay + semantic compare over the promoted corpus</h2>
+        <h2>Gate G — replay + semantic compare over regression set R</h2>
         <div class="row">
           <button class="btn primary" id="run-gate-policy">Run gate (policy)</button>
           <button class="btn" id="run-gate-naive">Run gate (naive / tempting)</button>
@@ -254,8 +255,8 @@
 
     <!-- CORPUS -->
     <section id="corpus" class="panel" role="tabpanel">
-      <h2>Golden corpus (E) — promoted counterexamples</h2>
-      <p class="hint">Each promoted case names the expected output, the tempting wrong repair, the violated rule, and the sketch clause it supplements.</p>
+      <h2>CE archive A / regression set R</h2>
+      <p class="hint">Each operator-approved CE names the expected output, tempting wrong repair, violated rule, and sketch clause it changed. CatSynth uses every archived CE as a regression, so A = R here.</p>
       <div id="corpus-list"></div>
     </section>
 
@@ -268,7 +269,7 @@
 
     <!-- SKETCH -->
     <section id="sketch" class="panel" role="tabpanel">
-      <h2>Sketch (S)</h2>
+      <h2>Evolved sketch (S)</h2>
       <div id="sketch-body" class="markdown"></div>
     </section>
   </main>

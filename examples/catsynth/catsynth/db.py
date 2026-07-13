@@ -4,7 +4,8 @@ Tables:
   breeds         - cat facts (Wikipedia-sourced summary + curated attributes)
   rules          - owner-trait rulesets (the local policy tables)
   scenarios      - owner profiles (input scenarios x)
-  golden_corpus  - promoted counterexamples E (expected output + tempting repair)
+  golden_corpus  - legacy table name for CatSynth's A = R projection: approved
+                   CEs used as both archive and regression cases
   gate_runs      - provenance log of gate executions
 """
 
@@ -177,7 +178,7 @@ def get_scenario(conn: sqlite3.Connection, scenario_id: str) -> Optional[OwnerPr
     return OwnerProfile(**json.loads(r["profile_json"])) if r else None
 
 
-# --- golden corpus ----------------------------------------------------------
+# --- accepted CE archive / regression set ----------------------------------
 
 def promote_case(conn: sqlite3.Connection, scenario_id: str, expected: Recommendation,
                  tempting: Optional[Recommendation], violated_rule: str,

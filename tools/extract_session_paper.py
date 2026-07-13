@@ -61,15 +61,15 @@ def render() -> str:
     implementation = nodes["implementation.parse-task-line"]
 
     parts: list[str] = []
-    parts.append("# Extracted Session Evidence: Sketch + Counterexample + Coding Agent")
+    parts.append("# Extracted Session Evidence: Evolved Sketch + Accepted Counterexamples")
     parts.append("")
     parts.append("> Generated from the clean-room session graph and source selectors. This appendix is companion evidence for `paper/main.tex`; regenerate after `tools/extract_session_graph.py --write` and this extractor pass.")
     parts.append("")
     parts.append("## Claim Boundary")
     parts.append("")
-    parts.append("This artifact supports one finite-session claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence.")
+    parts.append("This compact example shows the durable end state of the method. The evolved sketch carries the policy learned from four operator-approved counterexamples; the archive explains why those rules exist; and the same four cases form the regression set (`R = A`). The generated graph answers `how is this accepted counterexample checked and handled?` from repository-local evidence. It does not reconstruct the live approval or generation history.")
     parts.append("")
-    parts.append("## Source Sketch")
+    parts.append("## Evolved Sketch")
     parts.append("")
     parts.append(f"Selector: `{sketch['selector']}`")
     parts.append("")
@@ -91,7 +91,7 @@ def render() -> str:
     parts.append("")
     parts.append("The implementation is referenced by selector; each counterexample below links to the execution selectors that handle it.")
     parts.append("")
-    parts.append("## Extracted Counterexample Handling")
+    parts.append("## Accepted Counterexamples and Regression Handling")
     parts.append("")
 
     for ce in counterexamples(graph):
@@ -122,7 +122,7 @@ def render() -> str:
 
     parts.append("## Extracted Claim")
     parts.append("")
-    parts.append("The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims should stay within that extracted evidence.")
+    parts.append("The graph supports a narrow claim: each archived CE has a source selector, a tempting implementation, one or more execution selectors, and a regression selector. The final sketch states the four learned rules. Archive membership records the example's asserted operator approval, but this end-state graph is not evidence of the live approval event or the intermediate code generations.")
     parts.append("")
     parts.append("## Verification")
     parts.append("")

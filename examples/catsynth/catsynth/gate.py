@@ -1,9 +1,12 @@
-"""The gate G: two layers over every promoted case.
+"""The gate G: two layers over regression set R.
+
+CatSynth uses every operator-approved CE as a regression, so R = A in this
+small teaching app. The general method may curate R as a subset of archive A.
 
 - Replay:  did the candidate repair the encoded *state* gap? (Owner ends up with
            a preference-satisfying suggestion, or a correct abstention.)
 - Compare: did the candidate use the encoded *policy-bearing* fields from the
-           promoted expectation? (operation, breed, cited_rules)
+           approved expectation? (operation, breed, cited_rules)
 
 Replay and compare fail differently on purpose. A preference-satisfying breed
 that violates a hard rule (e.g. Persian for an allergic owner) passes replay and
@@ -74,7 +77,7 @@ def _interpret(replay_ok: bool, compare_ok: bool) -> str:
         return "Candidate fails encoded state repair (replay reject)."
     if not compare_ok:
         return "Repairs state but violates a policy field (compare reject)."
-    return "Satisfies E under current repository semantics."
+    return "Satisfies the selected regression under current repository semantics."
 
 
 def run_gate(conn, mode: str = "policy", llm_client: Optional[LLMClient] = None) -> dict:

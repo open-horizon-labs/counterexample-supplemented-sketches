@@ -333,8 +333,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"Model: `{report['model']}` at `{report['inference']['effort']}` effort",
         "",
         f"Pre-registered candidates: {report['candidate_pool']['count']}  ",
-        f"Genuine failures promoted: {report['discovery']['promoted_count']}  ",
-        f"Passing coverage probes rejected: {report['discovery']['coverage_count']}",
+        f"Accepted counterexamples: {report['discovery']['promoted_count']}  ",
+        f"Passing coverage probes: {report['discovery']['coverage_count']}",
         "",
         "| Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |",
         "|---|---:|---:|---:|",
@@ -354,11 +354,11 @@ def markdown_report(report: dict[str, Any]) -> str:
         ("Final strategy LOC", [arm["quality"]["strategy_loc"] for arm in arms]),
         ("Final decision nodes", [arm["quality"]["decision_nodes"] for arm in arms]),
         ("Final changed lines from baseline", [arm["quality"]["changed_lines_from_baseline"] for arm in arms]),
-        ("Visible promoted cases", [
+        ("Visible accepted CEs", [
             f"{arm['evaluation']['visible_passed']}/{arm['evaluation']['visible_total']}"
             for arm in arms
         ]),
-        ("Hidden-suite pass rate", [
+        ("Withheld cases", [
             f"{arm['evaluation']['hidden_passed']}/{arm['evaluation']['hidden_total']}"
             for arm in arms
         ]),
@@ -367,21 +367,27 @@ def markdown_report(report: dict[str, Any]) -> str:
         lines.append(f"| {label} | {values[0]} | {values[1]} | {values[2]} |")
     lines.extend(["", "## Candidate disposition", "", "| Candidate | Result |", "|---|---|"])
     for item in report["discovery"]["candidates"]:
-        lines.append(f"| `{item['id']}` | {item['status']} |")
+        disposition = "accepted CE" if item["status"] == "promoted" else "coverage, not accepted"
+        lines.append(f"| `{item['id']}` | {disposition} |")
     lines.extend([
         "",
-        "The candidate cases were external inputs. Only failures were promoted or sent to a",
-        "Developer. Replay-all received the initial",
-        "sketch plus the cumulative promoted corpus. Evolved-sketch rebuild received only the",
-        "Sketch-CE sketch checkpoint. Hidden cases were evaluated after visible acceptance and",
-        "were never repair input.",
+        "The candidate cases and authoritative expected outputs were frozen before the run and",
+        "treated as a simulated operator-approved stream. This stands in for the live method's",
+        "approval boundary; the model cannot approve policy.",
+        "Only failures were accepted or sent to Developer, and every accepted CE changed the",
+        "Sketch-CE sketch. CatSynth uses every accepted CE as a regression (R = A). Replay-all",
+        "received the initial sketch plus the cumulative accepted archive. Evolved-sketch rebuild",
+        "received only the current evolved sketch checkpoint. Withheld cases were evaluated",
+        "after visible acceptance and were never repair input.",
         "Tokens through acceptance include Developer edits, Runtime Oracle checks, and",
         "Specification Oracle rule proposals. Post-acceptance evaluation is separate.",
         "Sketch-CE pays to evaluate the external candidates and propose rules for failures.",
         "The controls inherit the resulting promotion schedule, so their totals have a narrower",
         "boundary and are not end-to-end price alternatives.",
         "Lower cumulative churn measures less rework, not final maintainability. The final",
-        "Sketch-CE strategy is larger and has more decision nodes than either rebuild.",
+        "Sketch-CE strategy is larger and has more decision nodes than either rebuild. The",
+        "evolved-sketch control tests whether reviewed synthesis can carry policy without",
+        "replaying the CE archive as generation context.",
     ])
     return "\n".join(lines) + "\n"
 

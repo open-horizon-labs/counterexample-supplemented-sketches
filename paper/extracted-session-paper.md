@@ -1,19 +1,22 @@
-# Extracted Session Evidence: Sketch + Counterexample + Coding Agent
+# Extracted Session Evidence: Evolved Sketch + Accepted Counterexamples
 
 > Generated from the clean-room session graph and source selectors. This appendix is companion evidence for `paper/main.tex`; regenerate after `tools/extract_session_graph.py --write` and this extractor pass.
 
 ## Claim Boundary
 
-This artifact supports one finite-session claim: a coding-agent implementation is inspectable when every counterexample links to a source span, a verification check, and the execution point that handles it. The generated graph answers `how is this counterexample handled?` from repo-local evidence.
+This compact example shows the durable end state of the method. The evolved sketch carries the policy learned from four operator-approved counterexamples; the archive explains why those rules exist; and the same four cases form the regression set (`R = A`). The generated graph answers `how is this accepted counterexample checked and handled?` from repository-local evidence. It does not reconstruct the live approval or generation history.
 
-## Source Sketch
+## Evolved Sketch
 
 Selector: `examples/task-line-parser/sketch.md`
 
 ```md
 # Sketch: Task Line Parser
 
-This sketch is the method input for the clean-room parser example. It gives the coding agent the intended shape while the companion counterexamples name plausible wrong implementations.
+This is the evolved sketch for the clean-room parser example. Each accepted case in
+`counterexamples.md` contributed a rule now stated here. A coding agent should be able to discard
+the existing parser and regenerate it from this sketch plus the known-code result types. The
+counterexample archive explains why the rules exist; the tests check the regenerated code.
 
 Input shape:
 
@@ -87,11 +90,11 @@ Selector: `examples/task-line-parser/generated/parse_task_line.py`
 
 The implementation is referenced by selector; each counterexample below links to the execution selectors that handle it.
 
-## Extracted Counterexample Handling
+## Accepted Counterexamples and Regression Handling
 
 ### First prefix only is status
 
-Counterexample selector: `examples/task-line-parser/counterexamples.md:5-20`
+Counterexample selector: `examples/task-line-parser/counterexamples.md:16-31`
 
 ```md
 ## First prefix only is status
@@ -131,7 +134,7 @@ def test_only_first_colon_separates_status_from_title(self) -> None:
 
 ### Blocked reason requires text
 
-Counterexample selector: `examples/task-line-parser/counterexamples.md:21-32`
+Counterexample selector: `examples/task-line-parser/counterexamples.md:32-43`
 
 ```md
 ## Blocked reason requires text
@@ -169,7 +172,7 @@ def test_blocked_tasks_require_non_empty_reason_after_pipe(self) -> None:
 
 ### Empty title rejects
 
-Counterexample selector: `examples/task-line-parser/counterexamples.md:33-44`
+Counterexample selector: `examples/task-line-parser/counterexamples.md:44-55`
 
 ```md
 ## Empty title rejects
@@ -209,7 +212,7 @@ def test_rejects_empty_titles_before_accepting_status_specific_syntax(self) -> N
 
 ### Pipe is only special for blocked
 
-Counterexample selector: `examples/task-line-parser/counterexamples.md:45-59`
+Counterexample selector: `examples/task-line-parser/counterexamples.md:56-70`
 
 ```md
 ## Pipe is only special for blocked
@@ -256,7 +259,7 @@ def test_pipe_is_title_text_for_unblocked_statuses(self) -> None:
 
 ## Extracted Claim
 
-The graph supports a narrow claim: for this session, each counterexample has a source selector, a tempting patch, one or more execution selectors, and a verification selector. The paper's claims should stay within that extracted evidence.
+The graph supports a narrow claim: each archived CE has a source selector, a tempting implementation, one or more execution selectors, and a regression selector. The final sketch states the four learned rules. Archive membership records the example's asserted operator approval, but this end-state graph is not evidence of the live approval event or the intermediate code generations.
 
 ## Verification
 

@@ -8,11 +8,27 @@ one counterexample at a time.
 CatSynth uses synthetic breed attributes and policy rows selected to make the control loop easy
 to inspect. Nothing here is pet-selection or medical advice.
 
-## The implementation rule
+## The method boundary
 
-The iterative arm obeys one information boundary:
+The method has four separate responsibilities:
 
-> Developer sees one active failure. The gate sees the whole promoted corpus.
+- The **operator** decides whether a failing case is an authoritative counterexample to the
+  current sketch.
+- The **evolved sketch** carries the policy learned from every accepted counterexample.
+- The **CE archive** preserves every approved case and explains why the sketch changed.
+- The **regression set** checks selected consequences against generated code.
+
+The code and prompt are replaceable. A clean implementation should be regenerable from the
+evolved sketch and known-code anchors without replaying the CE archive as generation context.
+
+CatSynth makes one simplifying choice: its run is small, so every accepted CE is also a
+regression case (`R = A`). That is why its gate sees every promoted case. The general method does
+not require the full archive to remain in the executable regression set.
+
+The iterative arm also obeys one generation boundary:
+
+> Developer sees one active failure. It never receives the CE archive or regression set as a
+> bulk prompt.
 
 The run starts from an initial sketch and empty `strategy.py` and `oracle_prompt.txt` files.
 Developer returns complete replacements for all three evolving artifacts:
@@ -24,17 +40,22 @@ oracle_prompt.txt
 ```
 
 After the initial implementation passes its anchor, the harness reveals one proposed
-counterexample. It evaluates the case before promotion. A case that already passes is coverage,
+counterexample. It evaluates the case before approval. A case that already passes is coverage,
 not a counterexample; the harness records that result and continues to the next proposal without
 sending it to Developer.
 
-A failing case is promoted. Developer receives the current three files and that one failure.
-The full gate then runs the initial anchor and every promoted case. If an earlier case regresses,
-that failed regression becomes the next single Developer input. The harness reveals no new case
-until the full gate is green.
+A failing case becomes a CE only if it exposes missing sketch policy and the operator approves
+the corrected behavior. Developer then receives the current three files and that one failure. It
+must revise the sketch with the code or prompt. The gate runs the active case and current
+regressions. If an earlier case regresses, that failed regression becomes the next single
+Developer input. The harness reveals no new case until the gate is green.
 
-Developer may revise the sketch as well as the implementation. The restriction is informational:
-it cannot copy future counterexamples into the sketch because it never sees them.
+The captured run freezes candidate cases and authoritative expected outputs before execution,
+then treats them as a simulated operator-approved stream. That makes the experiment
+reproducible, but it simulates the live approval step rather than giving the model authority to
+approve policy. Every accepted CE in the captured run changes `SKETCH.md`. The informational
+restriction prevents Developer from copying future counterexamples into the sketch because it
+never sees them.
 
 ## Reproduce the run
 
@@ -93,7 +114,7 @@ preserved under `arms/sketch-ce/generations/000-initial-generation/`.
 The first profile describes an owner with mild allergies who wants a large, fluffy,
 affectionate cat. The current preference-only strategy returns Persian.
 
-The promoted counterexample requires:
+The approved counterexample requires:
 
 ```text
 operation:    recommend
@@ -106,7 +127,7 @@ breeds whose `hypoallergenic` field is false. The correction adds a general orde
 filter hard-policy violations before ranking the survivors.
 
 Developer receives only this failure and the current files. It revises the sketch and
-`strategy.py` to interpret the rule row generically. The full gate then passes the initial anchor
+`strategy.py` to interpret the rule row generically. CatSynth's `R = A` gate then passes the initial anchor
 and CE1:
 
 ```text
@@ -120,7 +141,7 @@ The browser presents the same near miss as a teaching surface:
 ![Naive resolver choosing the tempting Persian output](figures/catsynth/02-tempting-result.png)
 
 The point is the encoded ordering, not the cat claim. Persian closes the visible preference gap;
-Siberian also closes it while satisfying the promoted hard rule.
+Siberian also closes it while satisfying the approved hard rule.
 
 ## Generation 002: hard rules compose and may force abstention
 
@@ -128,7 +149,7 @@ The second counterexample activates five hard rules: severe allergies, apartment
 long work hours, and young children. The current implementation understands the first allergy
 operator but still returns Balinese and cites only that rule.
 
-The promoted expectation is:
+The approved expectation is:
 
 ```text
 operation: abstain
@@ -164,15 +185,15 @@ I travel for work every few weeks and my last cat seemed miserable and lonely
 whenever I was gone for days.
 ```
 
-Before promotion, the current prompt emits no tags and the deterministic strategy recommends
-Balinese. CE3 promotes one controlled narrative classification:
+Before approval, the current prompt emits no tags and the deterministic strategy recommends
+Balinese. CE3 adds one controlled narrative classification to the evolved sketch:
 
 - travel, repeated absence, or concern about loneliness maps to exactly `avoid_needy`;
 - the prompt classifies only the supplied note and may not invent unrelated tags;
 - the deterministic meaning of `avoid_needy` remains an open hole.
 
-This case compares only `oracle_tags`. Developer revises the prompt and sketch. The full gate
-passes 4/4 even though the strategy still chooses Balinese, because CE3 has not yet promoted a
+This case compares only `oracle_tags`. Developer revises the prompt and sketch. The gate
+passes 4/4 even though the strategy still chooses Balinese, because CE3 has not yet added a
 deterministic meaning for the tag.
 
 ```text
@@ -186,7 +207,7 @@ gate:           4/4
 ## Generation 004: a new counterexample closes the deterministic hole
 
 After CE3, the prompt emits `avoid_needy`, but the strategy still recommends Balinese. The
-harness evaluates the next proposed case before promotion. It fails on the breed field, so CE4
+harness evaluates the next proposed case before approval. It fails on the breed field, so CE4
 is a genuine new counterexample rather than another explanation pasted into CE3.
 
 CE4 adds two connected rules:
@@ -194,9 +215,9 @@ CE4 adds two connected rules:
 - `avoid_needy` applies a one-point soft penalty to breeds with high sociability;
 - base preference scoring continues to use only `wants_size`, `wants_affection`, and
   `wants_fluffy`. Default `activity_level`, `noise_tolerance`, and `experience` values do not add
-  score unless a promoted clause gives them semantics.
+  score unless an approved sketch clause gives them semantics.
 
-Developer revises the sketch and deterministic code. The prompt remains green. The full gate
+Developer revises the sketch and deterministic code. The prompt remains green. The gate
 passes 5/5:
 
 ```text
@@ -208,8 +229,8 @@ CE4 ranking:    PASS
 gate:           5/5
 ```
 
-The final retained Sketch-CE implementation has an 18/21 hidden-suite pass rate. It misses two multi-tag
-cases because no promoted discovery has yet defined `avoid_vocal`, and it misses one normalized
+The final retained Sketch-CE implementation passes 18/21 withheld cases. It misses two multi-tag
+cases because no accepted discovery has yet defined `avoid_vocal`, and it misses one normalized
 severe-allergy variant. Those failures show where another open-world counterexample could extend
 the current sketch.
 
@@ -222,7 +243,7 @@ Every generation directory under `arms/` contains:
 | `SKETCH.md` | Developer's complete revised strategy |
 | `strategy.py` | Complete deterministic implementation |
 | `oracle_prompt.txt` | Complete prompt implementation |
-| `metadata.json` | Active failure or failures, promoted corpus IDs, compact gate outcome, usage, and diffs |
+| `metadata.json` | Active failure or failures, accepted CE IDs, compact gate outcome, usage, and diffs |
 
 The Sketch-CE repair metadata identifies one active failure and no unrevealed case. The rebuild
 controls preserve each generated state and the visible failures returned after a failed gate.
@@ -232,14 +253,15 @@ A reader can therefore inspect the information boundary and code evolution direc
 
 The conceptual contrast remains spec-first versus Sketch-CE: a complete specification works when
 the problem is already known, while Sketch-CE changes the governing sketch as the world reveals
-new policy. The captured open-world experiment adds two controls to isolate the value of retained
-state.
+new policy. The captured open-world experiment adds two controls to identify what carries that
+policy forward.
 
-- Replay all rebuilds from the initial sketch and every promoted case known at the current
-  discovery epoch.
-- Evolved-sketch rebuild receives the current Sketch-CE sketch but never the full CE corpus. If
-  its gate fails, it receives the visible failure packets from that gate.
-- Sketch-CE keeps the current sketch, code, and prompt and repairs each newly promoted case.
+- **Replay all** rebuilds from the initial sketch and every accepted case known at the current
+  discovery epoch. It asks the model to infer policy again from raw examples.
+- **Evolved-sketch rebuild** discards code and prompt, then receives only the current evolved
+  sketch and known-code anchors. If its gate fails, it receives one visible failure at a time.
+  This is the method's clean-regeneration test.
+- **Sketch-CE** keeps the current sketch, code, and prompt and repairs each newly accepted case.
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
@@ -254,21 +276,24 @@ state.
 | Artifact churn lines | 2,394 | 2,326 | 719 |
 | Final strategy LOC | 224 | 228 | 298 |
 | Final decision nodes | 77 | 70 | 110 |
-| Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
+| Visible accepted CEs | 8/8 | 8/8 | 8/8 |
+| Withheld cases | 15/21 | 19/21 | 18/21 |
 
 Tokens through acceptance include Developer edits, prompt-mediated Runtime Oracle checks, and
-Specification Oracle rule proposals. The final visible and hidden evaluation is reported
+Specification Oracle rule proposals. The final visible and withheld evaluation is reported
 separately. The candidate cases were external inputs. Sketch-CE paid to classify them and propose
 general rules for the failures; the controls inherited the resulting promotion schedule without
 paying for candidate classification or rule proposal. The totals therefore have different
 boundaries and are not end-to-end price rankings. Retained Sketch-CE used less Developer work
-and produced less churn. Evolved-sketch rebuild had the highest hidden-suite pass rate.
-Sketch-CE's final strategy was the largest and had the most decision nodes, so this run shows
-less rework during evolution, not better final maintainability.
+and produced less churn. Evolved-sketch rebuild passed 19/21 withheld cases versus 15/21
+for replay all. In this run, the evolved synthesis of the accepted examples generalized better
+than asking the same model to re-infer policy from all examples at every epoch. Sketch-CE's final
+strategy was the largest and had the most decision nodes, so the retained path shows less rework
+during evolution, not better final maintainability.
 
-This is one model, one candidate order, and one sample per path. It supports a bounded claim about
-implementation continuity in this run, not universal cost or correctness superiority.
+This is one model, one candidate order, and one sample per path. It supports the hypothesis that
+reviewed policy synthesis can carry lessons better than raw example replay. It does not establish
+universal cost, correctness, or maintainability superiority.
 
 ## How the UI illustrates the finished artifacts
 
@@ -287,14 +312,19 @@ Open <http://127.0.0.1:8000>.
 The UI exposes the stable repository artifacts:
 
 1. **Sketch** — the strategy, policy order, holes, and abstention behavior.
-2. **Corpus** — promoted expected outputs, tempting outputs, violated rules, and sketch links.
+2. **CE archive / regression set** — approved expected outputs, tempting outputs, violated rules,
+   and sketch links. CatSynth shows the same cases in both roles because `R = A`.
 3. **Oracle A** — deterministic hard-rule filtering, ranking, and abstention.
 4. **Oracle B** — prompt-mediated narrative tags constrained to a controlled vocabulary.
-5. **Gate** — replay and semantic comparison over every promoted UI case.
+5. **Gate** — replay and semantic comparison over CatSynth's regression set.
 
-The promoted corpus page keeps both sides of the focal correction:
+The browser's Review button records only a local operator decision in SQLite. It does not invoke
+Developer or revise `SKETCH.md`. The experiment history, not that button, is the evidence for the
+complete CE-to-sketch-and-code loop.
 
-![Promoted CatSynth counterexample in corpus E](figures/catsynth/03-promoted-corpus.png)
+The CE archive / regression page keeps both sides of the focal correction:
+
+![Approved CatSynth counterexample in archive A and regression set R](figures/catsynth/03-promoted-corpus.png)
 
 An expected output records what should happen. The tempting output and violated rule record why a
 plausible alternative must continue to fail.
@@ -305,7 +335,7 @@ Replay asks whether the candidate closes the visible state gap. For the focal re
 checks the encoded size, affection, and fluffiness preferences. It deliberately does not decide
 the hard allergy policy.
 
-Semantic compare checks the promoted policy-bearing fields:
+Semantic compare checks the approved policy-bearing fields:
 
 ```text
 operation
@@ -318,7 +348,7 @@ The naive Persian result can therefore pass replay and fail semantic compare:
 ![Naive gate where replay passes and semantic compare fails](figures/catsynth/04-naive-gate.png)
 
 The split makes the failure actionable. The candidate repaired the visible preference state but
-did not follow the promoted policy.
+did not follow the approved policy.
 
 ## Source map
 
@@ -326,12 +356,14 @@ did not follow the promoted policy.
 |---|---|
 | Initial sketch | `examples/catsynth/experiment/initial_sketch.md` |
 | Counterexample reveal schedule | `examples/catsynth/experiment/cases.json` |
+| Accepted CE archive | `examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json` |
+| Regression set (`R = A`) | `examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json` |
 | Developer/Oracle/gate orchestration | `examples/catsynth/experiment/run_experiment.py` |
 | Codex App Server adapter | `examples/catsynth/catsynth/codex_app_server.py` |
 | OpenAI-compatible adapter | `examples/catsynth/catsynth/openai_compat.py` |
 | Reference Oracle A | `examples/catsynth/catsynth/oracle_a.py` |
 | Runtime Oracle B | `examples/catsynth/catsynth/oracle_b.py` |
-| UI corpus fixtures | `examples/catsynth/catsynth/seed.py` |
+| UI archive / regression fixtures | `examples/catsynth/catsynth/seed.py` |
 | UI replay and compare | `examples/catsynth/catsynth/gate.py` |
 | Browser inspection surface | `examples/catsynth/catsynth/app.py` and `static/` |
 | Adaptive comparison harness | `examples/catsynth/experiment/adaptive_open_world_experiment.py` |
@@ -339,8 +371,9 @@ did not follow the promoted policy.
 
 ## Claim boundary
 
-The successful iterative gate establishes finite-corpus correctness relative to these fixtures,
-expected outputs, and evaluator code. The hidden cases add limited evidence of generalization.
+The successful iterative gate establishes finite-regression correctness relative to these
+fixtures, expected outputs, and evaluator code. The withheld cases add limited evidence of
+generalization.
 Neither result establishes correctness for all owner profiles, real breed facts, incorrect golden
 rows, buggy checkers, unencoded policy, future model behavior, or other models and reveal orders.
 

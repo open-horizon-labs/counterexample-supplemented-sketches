@@ -5,7 +5,8 @@
   into SQLite so the demo runs fully offline afterward.
 - Rules: the owner-trait rulesets (local policy tables).
 - Scenarios: owner profiles (input scenarios x).
-- Golden corpus: promoted counterexamples (including the FR-1 allergy case).
+- CE archive / regression set: operator-approved counterexamples used in both
+  roles for this small demo (A = R), including the FR-1 allergy case.
 """
 
 from __future__ import annotations
@@ -298,7 +299,7 @@ def seed_all(conn, fetch_wiki_facts: bool = True, refresh_wiki: bool = False) ->
     for s in SCENARIOS:
         db.upsert_scenario(conn, s)
 
-    print("Seeding golden corpus...")
+    print("Seeding accepted CE archive / regression set...")
     _seed_corpus(conn)
     print("Done.")
 

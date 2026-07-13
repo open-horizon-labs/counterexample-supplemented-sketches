@@ -3,9 +3,10 @@
 
 The domain is deliberately small: recommend a cat breed for an owner profile.
 Cat facts come from Wikipedia (cached into SQLite). Local tables hold the
-owner-trait rulesets. A sketch fixes the strategy, a golden corpus stores
-promoted counterexamples, and a two-layer gate (replay + semantic compare)
-checks that the current resolver satisfies every promoted case.
+owner-trait rulesets. An evolved sketch carries learned policy. The SQLite
+table projects operator-approved counterexamples into both archive A and
+regression set R; this small demo uses A = R. A two-layer gate (replay +
+semantic compare) checks the current resolver against R.
 """
 
 __all__ = ["DB_PATH"]

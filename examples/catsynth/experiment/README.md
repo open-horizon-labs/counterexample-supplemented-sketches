@@ -8,7 +8,7 @@ techniques.
 The closed-world experiment starts with an immutable complete specification and
 empty implementation files. GPT-5.4-mini initially passed 11/21 gate cases. Three
 repair calls brought the full gate to 21/21. Post-acceptance evaluation passed
-20/20 visible cases and a 21/21 hidden-suite pass rate.
+20/20 visible cases and 21/21 withheld cases.
 
 | Measure | Spec-first |
 |---|---:|
@@ -20,7 +20,7 @@ repair calls brought the full gate to 21/21. Post-acceptance evaluation passed
 | Post-acceptance evaluation tokens | 239,929 |
 | Total recorded tokens, including evaluation | 851,448 |
 | Visible evaluation | 20/20 |
-| Hidden-suite pass rate | 21/21 |
+| Withheld cases | 21/21 |
 
 [Read every spec-first generation and the complete results.](results/gpt-5.4-mini-spec-first-20260712/README.md)
 
@@ -28,21 +28,27 @@ That is the preferred approach when the complete policy is truly available.
 
 ## If policy is discovered over time, use Sketch-CE
 
-The open-world experiment freezes 14 proposed cases, then evaluates them in
-order against the retained implementation. Eight fail and become promoted
-counterexamples. Six already pass and are recorded as coverage without a
-Developer call.
+The open-world experiment freezes 14 candidate cases and authoritative expected
+outputs, then treats them as a simulated operator-approved stream and evaluates
+them in order against the retained implementation. This is a reproducible
+stand-in for the live approval step: the model cannot approve its own policy
+change. Eight cases fail and
+become promoted counterexamples. Six already pass and are recorded as coverage
+without a Developer call.
 
-Sketch-CE gets the current sketch, code, prompt, and one active failure. After
-each repair, the gate sees the initial anchor and all promoted cases.
+Every accepted CE changes the sketch. Sketch-CE gets the current sketch, code,
+prompt, and one active failure; Developer returns a revised sketch with the
+implementation. CatSynth uses every accepted CE as a regression case because
+the run is small, so its regression corpus equals its CE archive (`R = A`).
 
 Two controls help explain what retained implementation state contributes:
 
 - **Replay all** rebuilds from the initial sketch and every promoted CE known at
   the current epoch.
-- **Evolved-sketch rebuild** rebuilds from the current Sketch-CE sketch. It never
-  receives the full CE corpus. If its gate fails, it receives the visible
-  failure packets from that gate with the current generated files.
+- **Evolved-sketch rebuild** discards code and prompt, then rebuilds from the
+  current evolved sketch alone. Its first Developer call receives no CE corpus.
+  If its gate fails, later repair calls receive visible failure packets with the
+  current generated files.
 
 All three paths use the same GPT-5.4-mini model and low-effort inference controls.
 
@@ -61,21 +67,29 @@ All three paths use the same GPT-5.4-mini model and low-effort inference control
 | Final strategy LOC | 224 | 228 | 298 |
 | Final decision nodes | 77 | 70 | 110 |
 | Final changed lines from baseline | 259 | 286 | 333 |
-| Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
+| Visible accepted CEs | 8/8 | 8/8 | 8/8 |
+| Withheld cases | 15/21 | 19/21 | 18/21 |
 
 Tokens through acceptance are the sum of Developer calls that edit the artifacts, Runtime Oracle
 calls that execute prompt-mediated policy during probes and gates, and Specification Oracle calls
 that propose rules from promoted failures. Post-acceptance evaluation is reported separately.
 
 The candidate cases came from outside the system. Sketch-CE paid to classify them and propose
-rules for the failures. Replay-all and evolved-sketch rebuild inherited the resulting promotion
-schedule, so their totals omit candidate classification and rule proposal. The totals are real
-consumption with different boundaries, not comparable end-to-end prices. Retained Sketch-CE used
-less Developer work and produced less churn. Evolved-sketch rebuild had the highest hidden-suite
-pass rate.
-Sketch-CE's final strategy was larger and had more decision nodes than either rebuild, so the
-experiment does not establish better final maintainability.
+sketch revisions. The controls inherited the resulting promotion schedule, so their totals omit
+that work and are not comparable end-to-end prices.
+
+Replay-all and evolved-sketch rebuild test what carries policy forward. Replay-all receives the
+initial sketch plus every accepted CE and must infer the rules again. Evolved-sketch rebuild
+receives only the reviewed synthesis of those CEs. In this run, the evolved sketch used fewer
+tokens through acceptance, ended with fewer decision nodes, and passed 19/21 withheld cases
+versus 15/21 for replay-all. Withheld cases run only after visible acceptance and are never repair
+input. Evolved-sketch rebuild also required more repair turns and cumulative churn. This
+single run supports a hypothesis about policy synthesis; it does not establish a general result.
+
+Retained Sketch-CE used less Developer work and produced less churn. Its final strategy was larger
+and had more decision nodes than either rebuild, so the experiment does not establish better final
+maintainability. Retaining code is an implementation choice; the evolved sketch, CE archive, and
+regression gate are the durable method artifacts.
 
 [Read every open-world generation and the complete results.](results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
 
@@ -90,7 +104,7 @@ Each generated state contains:
   gate results, Developer usage, and file diffs.
 
 The result directories also contain every discovery outcome, final visible and
-hidden-suite results, token ledgers, quality metrics, and inference settings.
+withheld-case results, token ledgers, quality metrics, and inference settings.
 
 Raw JSON-RPC transport transcripts remain local. They repeated the same source
 files and results several times without making the causal history easier to

@@ -67,7 +67,7 @@ def main():
     ps.add_argument("--refresh-wiki", action="store_true", help="re-fetch cached facts")
     ps.set_defaults(func=cmd_seed)
 
-    pg = sub.add_parser("gate", help="run the gate over the golden corpus")
+    pg = sub.add_parser("gate", help="run the gate over the regression set")
     pg.add_argument("--mode", choices=["policy", "naive"], default="policy")
     pg.set_defaults(func=cmd_gate)
 

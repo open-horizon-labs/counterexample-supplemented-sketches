@@ -3,7 +3,7 @@ rna:
   kind: counterexample
   id: ce.task-line-parser.first-prefix-only-is-status
   name: "First prefix only is status"
-  selector: "examples/task-line-parser/counterexamples.md:5-20"
+  selector: "examples/task-line-parser/counterexamples.md:16-31"
   relationships:
     - kind: tests_tempting_patch
       target: split on every colon and treat a later status-looking prefix as a second status

@@ -1,10 +1,12 @@
 """Run the paired coding-agent experiment and capture the complete evidence trail.
 
-Arm A reveals one counterexample at a time and lets the Developer repair until
-the promoted gate passes. Arm B gives the same model the initial sketch and full
-reviewed corpus once, then repairs every visible failure until the same gate
-passes. Both start from the byte-identical clean-room baseline and use the same
-provider, model, fixtures, inference settings, and final evaluator.
+Arm A reveals one operator-reviewed counterexample at a time, requires the
+Developer to evolve the sketch, and repairs until the regression gate passes.
+Arm B gives the same model the initial sketch and complete accepted archive in
+one call, then repairs every visible failure until the same gate passes. This
+experiment uses every accepted CE as a regression (R = A). Both arms start from
+the byte-identical clean-room baseline and use the same provider, model,
+fixtures, inference settings, and final evaluator.
 """
 
 from __future__ import annotations
@@ -925,6 +927,7 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
             write_json(cycle_root / "coverage.json", coverage)
             cycles.append(coverage)
             continue
+        sketch_before_ce = (workspace / "SKETCH.md").read_text(encoding="utf-8")
         promoted_case, oracle_record = call_oracle(
             case, introduced_failure["actual"], client, ledger,
         )
@@ -987,6 +990,11 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
         if not gate["passed"]:
             raise ExperimentError(
                 f"Developer did not close {promoted_case['id']} after {max_repairs} attempts"
+            )
+        sketch_after_ce = (workspace / "SKETCH.md").read_text(encoding="utf-8")
+        if sketch_after_ce == sketch_before_ce:
+            raise ExperimentError(
+                f"Developer closed {promoted_case['id']} without revising the sketch"
             )
     return {
         "workspace": str(workspace), "cycles": cycles,
@@ -1496,18 +1504,18 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"| Post-acceptance evaluation tokens | {post_acceptance[0]} | {post_acceptance[1]} |",
         f"| Total recorded tokens, including evaluation | {it['tokens']['overall']['total_tokens']} | {one_shot['tokens']['overall']['total_tokens']} |",
         f"| Visible reference cases | {it['evaluation']['visible_passed']}/{it['evaluation']['visible_total']} | {one_shot['evaluation']['visible_passed']}/{one_shot['evaluation']['visible_total']} |",
-        f"| Hidden-suite pass rate | {it['evaluation']['hidden_passed']}/{it['evaluation']['hidden_total']} | {one_shot['evaluation']['hidden_passed']}/{one_shot['evaluation']['hidden_total']} |",
+        f"| Withheld cases | {it['evaluation']['hidden_passed']}/{it['evaluation']['hidden_total']} | {one_shot['evaluation']['hidden_passed']}/{one_shot['evaluation']['hidden_total']} |",
         f"| Strategy LOC | {it['quality']['strategy_loc']} | {one_shot['quality']['strategy_loc']} |",
         f"| Decision nodes | {it['quality']['decision_nodes']} | {one_shot['quality']['decision_nodes']} |",
         f"| Changed lines | {it['quality']['changed_lines_from_baseline']} | {one_shot['quality']['changed_lines_from_baseline']} |",
         "",
-        "The iterative arm discovers the specification one counterexample at a time. The",
-        "one-shot arm receives the initial sketch and complete reviewed corpus in its first call. If",
+        "The iterative arm evolves the sketch one operator-reviewed counterexample at a time.",
+        "The one-shot arm receives the initial sketch and complete accepted archive in its first call. If",
         "the visible gate fails, each later Developer call receives the current files and all",
         "visible failures. Every repair is included in the call and token totals above.",
-        "Hidden cases are evaluated only after visible acceptance and are never repair input.",
+        "Withheld cases are evaluated only after visible acceptance and are never repair input.",
         "Tokens through acceptance include Developer, Runtime Oracle, and Specification Oracle",
-        "calls. Post-acceptance visible and hidden evaluation is reported separately.",
+        "calls. Post-acceptance visible and withheld evaluation is reported separately.",
         "Every request, response, reported reasoning field, usage record, diff, and gate result is retained",
         "under this run directory. `iterative/generations/` contains the complete readable",
         "implementation and result set for the baseline and every Developer attempt.",
@@ -1648,9 +1656,9 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
         f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
         f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
-        f"- Hidden-suite pass rate: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
+        f"- Withheld cases: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
         "",
-        "Hidden cases were evaluated after visible acceptance and were not supplied for repair.",
+        "Withheld cases were evaluated after visible acceptance and were not supplied for repair.",
     ]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(output)
@@ -1717,10 +1725,10 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
         f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
         f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
-        f"- Hidden-suite pass rate: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
+        f"- Withheld cases: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
         "",
         "The initial Developer request contained the immutable specification and empty files only.",
-        "Visible failures were supplied only after a failed gate. Hidden cases were never repair input.",
+        "Visible failures were supplied only after a failed gate. Withheld cases were never repair input.",
     ]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(output)
@@ -1739,7 +1747,7 @@ def main() -> None:
     parser.add_argument(
         "--one-shot-source-run", type=Path,
         help=(
-            "Run only the one-shot + repair arm, using the promoted corpus and final sketch "
+            "Run only the one-shot + repair arm, using the accepted CE archive and final sketch "
             "from another run directory or report.json"
         ),
     )

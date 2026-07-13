@@ -64,7 +64,11 @@ class ExperimentTests(unittest.TestCase):
             (workspace / "oracle_prompt.txt").write_text(
                 'Read {note}; return {"tags": []}.\n'
             )
-            return {"strategy_py": "generated", "oracle_prompt": "generated"}, {
+            (workspace / "SKETCH.md").write_text(
+                f"# Revised sketch {len(developer_calls)}\n"
+            )
+            return {"strategy_py": "generated", "oracle_prompt": "generated",
+                    "sketch_md": f"# Revised sketch {len(developer_calls)}"}, {
                 "error": None, "request": {}, "response": {}, "content": "{}",
                 "reasoning": "", "usage": {}, "diffs": {},
             }
@@ -118,6 +122,54 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(gate_sizes, [0, 1, 2, 2, 2])
         self.assertTrue(result["final_gate"]["passed"])
         self.assertIn("sketch_after", result["initial_generation"])
+
+    def test_accepted_counterexample_must_change_sketch(self):
+        case = json.loads(experiment.CASES_PATH.read_text())[0]
+        calls = 0
+
+        def fake_developer(workspace, promoted, active_failure, arm, phase, label,
+                           client, ledger, complete_corpus=None):
+            nonlocal calls
+            del promoted, active_failure, arm, label, client, ledger, complete_corpus
+            calls += 1
+            (workspace / "strategy.py").write_text(
+                "def recommend(profile, breeds, rules, oracle_tags):\n"
+                "    return {'operation': 'recommend', 'breed': breeds[0]['name'], "
+                "'cited_rules': [], 'rationale': 'generated'}\n"
+            )
+            (workspace / "oracle_prompt.txt").write_text("Read {note}.\n")
+            if phase == "initial":
+                (workspace / "SKETCH.md").write_text("# Initial generated sketch\n")
+            return {"strategy_py": "generated", "oracle_prompt": "generated"}, {
+                "error": None, "diffs": {},
+            }
+
+        def fake_oracle(candidate, observed, client, ledger):
+            del observed, client, ledger
+            return dict(candidate), {"reference_agreement": True, "parsed": candidate}
+
+        introductions = iter([self._evaluation(case, False)])
+        gates = iter([
+            {"passed": True, "passed_count": 1, "total": 1,
+             "cases": [self._evaluation(experiment.initial_acceptance_case(), True)]},
+            {"passed": True, "passed_count": 2, "total": 2,
+             "cases": [self._evaluation(experiment.initial_acceptance_case(), True),
+                       self._evaluation(case, True)]},
+        ])
+
+        with tempfile.TemporaryDirectory() as tmp, \
+             patch.object(experiment, "call_developer", side_effect=fake_developer), \
+             patch.object(experiment, "call_oracle", side_effect=fake_oracle), \
+             patch.object(experiment, "evaluate_case", side_effect=lambda *_a, **_k: next(introductions)), \
+             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)):
+            with self.assertRaisesRegex(
+                ExperimentError, "without revising the sketch"
+            ):
+                experiment.run_iterative(
+                    Path(tmp), [case], object(), experiment.Ledger(), max_repairs=1,
+                )
+
+        self.assertEqual(calls, 2)
 
     def test_promotion_preserves_restricted_catalog_and_rule_order(self):
         case = dict(json.loads(experiment.CASES_PATH.read_text())[0])

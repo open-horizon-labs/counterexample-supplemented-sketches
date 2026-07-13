@@ -1,6 +1,9 @@
 # Sketch: Task Line Parser
 
-This sketch is the method input for the clean-room parser example. It gives the coding agent the intended shape while the companion counterexamples name plausible wrong implementations.
+This is the evolved sketch for the clean-room parser example. Each accepted case in
+`counterexamples.md` contributed a rule now stated here. A coding agent should be able to discard
+the existing parser and regenerate it from this sketch plus the known-code result types. The
+counterexample archive explains why the rules exist; the tests check the regenerated code.
 
 Input shape:
 
