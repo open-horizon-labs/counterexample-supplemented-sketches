@@ -277,11 +277,13 @@ not generalize to other models, adapters, or tasks.
 
 ## Read further
 
-- [`paper/catsynth-worked-example.md`](paper/catsynth-worked-example.md) walks through the actual
-  generations, the paired comparison, the UI, and the source artifacts.
-- [`paper/main.pdf`](paper/main.pdf) presents the method, its lineage, the finite-regression theorem,
-  and the CatSynth example.
+- [`paper/main.pdf`](paper/main.pdf) is the self-contained paper: the method, its lineage, the
+  finite-regression theorem, experimental design, results, limitations, and compact CatSynth
+  example.
 - [`paper/main.tex`](paper/main.tex) and [`paper/references.bib`](paper/references.bib) contain the
   paper source and bibliography.
+- [`paper/catsynth-worked-example.md`](paper/catsynth-worked-example.md) is the optional audit and
+  reproduction supplement. It contains the full generation sequence, UI, source map, and
+  artifact-level results.
 - [`examples/task-line-parser/`](examples/task-line-parser/) is a smaller dependency-free sketch
   and counterexample exercise.

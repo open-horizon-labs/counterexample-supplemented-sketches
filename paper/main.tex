@@ -53,8 +53,8 @@ and comparison predicates for the current regression set.
 The originating deployment ran inside a proprietary enterprise harness: a custom Cursor
 extension, \texttt{cursor://}-style commands, and an embedded web application where
 subject-matter experts loaded production examples, corrected outputs, and helped turn those
-corrections into input/output specifications.  The public companion repository provides
-CatSynth, a synthetic browser application and a captured coding-agent experiment.  The
+corrections into input/output specifications.  We evaluate the public method with CatSynth, a
+synthetic browser application and a captured coding-agent experiment.  The
 experiment gives the Developer one active failure at a time, requires a sketch revision for
 each accepted counterexample, and gates every revision against a regression set.  CatSynth is
 small, so its regression set contains its entire accepted archive.  A closed-world run
@@ -159,7 +159,8 @@ stores the links among them without treating the result as a solver-backed proof
         Oracle~B, prompt-mediated completion for sketch-declared narrative holes;
   \item a finite-regression theorem for replay/compare gates and the proof obligation it leaves
         behind;
-  \item a worked example and companion repository for runnable inspection.
+  \item a worked example and captured comparison, with a separate audit and reproduction
+        artifact.
 \end{enumerate}
 
 % ---------------------------------------------------------------------------
@@ -187,8 +188,9 @@ operationally.  The evidence boundary is narrower than that plumbing: SMEs judge
 outputs; operators approved policy-changing counterexamples; the sketch evolved; and the golden
 subset made implementation regressions visible.
 
-The public artifact uses synthetic data and public rules.  It keeps the inspectable shape of the
-deployment: paper, fixtures, tests, provenance, and a small remediation case.  A reader can
+CatSynth uses synthetic data and public rules.  It preserves an inspectable version of the
+deployment's control structure through fixtures, tests, provenance, and a small remediation
+case.  A reader can
 inspect how a correction becomes an accepted counterexample, how the sketch records the rule, how
 an agent repair changes code or prompts, and what the replay/compare gate checks.  The claim
 stays bounded to that inspectable shape.
@@ -833,7 +835,7 @@ $\regression$-correctness.
 The theorem is bounded to the regression set, the encoded replay checker, the encoded semantic
 comparer, and the current approved expected rows.  It does not cover archived cases omitted from
 $\regression$, unapproved failures, unencoded policy fields, future model behavior, or private
-deployment behavior outside the public artifact.  The archive provides provenance, not proof.
+deployment behavior outside the reported experiment.  The archive provides provenance, not proof.
 If a checker is wrong, maintainers must fix it.  If an approved expected row is wrong, an SME must correct it.
 A maintainer can audit which predicates passed, which regressions they covered, which archived
 rules those checks represent, and which questions remain outside the proof.
@@ -899,9 +901,9 @@ preference gap, so replay passes, but it does not preserve the approved breed an
 fields, so semantic compare fails.}
 \end{center}
 
-The illustrated companion at \texttt{paper/catsynth-worked-example.md} follows the same case
-from the sketch and anchors through the tempting output, accepted archive row, and regression
-result.
+The method, experimental protocol, and reported results are fully stated in this paper.  An
+optional artifact supplement adds the complete per-generation trace, screenshots, source map,
+and reproduction commands.
 
 \subsection{Captured synthesis trajectory}
 
@@ -1035,37 +1037,6 @@ time until the implementation passes.  If regeneration requires replaying the co
 as prompt context, revise the sketch: it has not yet synthesized the accepted policy well enough.
 
 % ---------------------------------------------------------------------------
-\section{Companion artifact}
-\label{sec:artifact}
-
-The companion repository is the public inspection path for the paper's bounded claim.  It
-publishes CatSynth's initial sketch, proposed cases, Developer and Oracle adapters, browser
-application, gates, tests, and full generated histories.  The candidate stream and authoritative
-expected outputs are frozen before the run, simulating an operator-approved stream without giving
-the model authority to approve policy.  The executable
-\texttt{experiment/run\_experiment.py} implements the Sketch--CE and closed-world spec-first
-loops.  \texttt{experiment/adaptive\_open\_world\_experiment.py} freezes a candidate pool,
-reveals one case at a time, archives every Developer generation, and runs the two open-world
-controls.  The
-illustrated supplement traces those artifacts through the captured run, interface, and source
-files.
-
-Readers can inspect the repository to answer five concrete questions:
-
-\begin{enumerate}
-  \item Which single failure was visible to each Developer generation?
-  \item How did the sketch, deterministic code, and prompt change together?
-  \item How did every accepted CE change the sketch?
-  \item Which regression gate ran after each revision?
-  \item Which proposed cases were accepted as failures or retained only as coverage?
-\end{enumerate}
-
-That inspection matters because the claim is finite and executable.  A passing gate says that
-the current artifact satisfies the encoded replay and comparison predicates for the regression
-set.  Production data, proprietary workflow code, private operator decisions, archived cases not
-selected for regression, and behavior outside the public cases remain outside the artifact.
-
-% ---------------------------------------------------------------------------
 \section{Discussion}
 \label{sec:discussion}
 
@@ -1131,8 +1102,8 @@ known wrong implementations and protect distinct boundaries.
         token ratios and checked results are not a
         benchmark or a causal estimate.
   \item \textbf{Enterprise evidence boundary.}  Readers can inspect the control
-        structure in the public companion's sanitized fixtures.  Public evidence
-        covers that control structure, not private deployment behavior.
+        structure in CatSynth's synthetic fixtures.  The reported evidence covers that control
+        structure, not private deployment behavior.
 \end{enumerate}
 
 These boundaries mark where the proof stops.  The gate checks the finite regression set with
@@ -1160,6 +1131,16 @@ generated implementations.  The code can be discarded and regenerated.
 A passing gate does not prove the domain correct.  It says only this: for the current repository,
 current checkers, and current regression set, replay and semantic comparison pass.  Everything
 outside those encoded cases and predicates still belongs to human review and future discovery.
+
+\section*{Artifact availability}
+
+The argument, method, experimental design, reported results, and limitations are complete in
+this paper.  A separate public artifact is available for audit and reproduction; it does not
+extend the method or the paper's claims.  It contains CatSynth's synthetic fixtures, initial and
+evolved sketches, Developer and Oracle adapters, generated code and prompts, per-generation gate
+outcomes and diffs, compact token ledgers, browser application, full experiment histories, and an
+illustrated implementation supplement.  The artifact is available in the
+\href{https://github.com/muness/sketch-counterexample-agent}{public repository}.
 
 \bibliographystyle{plain}
 \small

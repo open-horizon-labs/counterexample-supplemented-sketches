@@ -1,16 +1,22 @@
-# CatSynth: The Full Sketch–Counterexample Run
+# CatSynth Artifact Supplement: The Full Sketch–Counterexample Run
 
-This supplement shows how CatSynth implements the method in *Agentic Synthesis against
-Counterexample-Supplemented Sketches*. The browser makes the artifacts visible. The experiment
-harness actually asks a coding model to evolve the sketch, deterministic code, and model prompt
-one counterexample at a time.
+This is the audit and reproduction companion to *Agentic Synthesis against
+Counterexample-Supplemented Sketches*. The [paper](main.pdf) contains the complete argument,
+method, experimental design, reported results, and limitations. Nothing in this supplement
+extends its method or claims.
+
+This supplement provides the implementation depth that would interrupt the paper: the complete
+CatSynth generation sequence, screenshots, reproduction commands, source map, and links from
+each counterexample to the revised sketch, code, prompt, and gate result. The browser makes the
+finished artifacts visible. The experiment harness asks a coding model to evolve the sketch,
+deterministic code, and model prompt one counterexample at a time.
 
 CatSynth uses synthetic breed attributes and policy rows selected to make the control loop easy
 to inspect. Nothing here is pet-selection or medical advice.
 
-## The method boundary
+## The artifact boundary
 
-The method has four separate responsibilities:
+For orientation, CatSynth maps the paper's method onto four operational responsibilities:
 
 - The **operator** decides whether a failing case is an authoritative counterexample to the
   current sketch.
@@ -248,6 +254,16 @@ Every generation directory under `arms/` contains:
 The Sketch-CE repair metadata identifies one active failure and no unrevealed case. The rebuild
 controls preserve each generated state and the visible failures returned after a failed gate.
 A reader can therefore inspect the information boundary and code evolution directly.
+
+## Audit questions
+
+The retained histories let a reader answer five questions without relying on the paper's prose:
+
+1. Which single failure was visible to each Developer generation?
+2. How did the sketch, deterministic code, and prompt change together?
+3. How did every accepted CE change the sketch?
+4. Which regression gate ran after each revision?
+5. Which proposed cases became accepted CEs, and which were recorded only as coverage?
 
 ## The open-world comparison
 
