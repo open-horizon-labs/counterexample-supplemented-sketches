@@ -102,7 +102,9 @@ def run_gate(conn, mode: str = "policy", llm_client: Optional[LLMClient] = None)
             "interpretation": _interpret(replay_ok, compare_ok),
         })
 
-    passed = all(c["passed"] for c in cases)
+    # An empty corpus carries no evidence. Report it as not passing instead of
+    # relying on Python's vacuous all([]) == True behavior.
+    passed = bool(cases) and all(c["passed"] for c in cases)
     summary = {
         "mode": mode,
         "passed": passed,

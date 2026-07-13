@@ -6,7 +6,7 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{booktabs}
-\usepackage{enumitem}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{url}
 
@@ -51,9 +51,16 @@ and comparison predicates for the promoted corpus.
 The originating deployment ran inside a proprietary enterprise harness: a custom Cursor
 extension, \texttt{cursor://}-style commands, and an embedded web application where
 subject-matter experts loaded production examples, corrected outputs, and helped turn those
-corrections into input/output specifications.  The public companion repository provides the
-sanitized RosterSynth slice: the sketch, fixtures, code, tests, and generated evidence needed
-to inspect the disclosed loop.
+corrections into input/output specifications.  The public companion repository provides
+CatSynth, a synthetic browser application and a captured coding-agent experiment.  The
+experiment gives the Developer one active failure at a time, lets it revise the sketch,
+deterministic code, and prompt together, and gates every revision against the full promoted
+corpus.  A closed-world run separately gives the same model a complete immutable specification;
+it reaches 20/20 visible and 21/21 hidden cases in four Developer calls.  In the open-world run,
+eight of fourteen proposed cases fail and are promoted.  Retained Sketch--CE uses 217,576
+Developer tokens, versus 400,081 for replaying all discovered cases and 371,050 for rebuilding
+from the evolved sketch.  All three pass eight visible cases; their hidden scores are 15/21,
+19/21, and 18/21 respectively.  These are inspectable runs, not general performance claims.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
@@ -66,11 +73,12 @@ instruction, or a reviewer note.  The agent can satisfy that signal and still vi
 that made an SME reject the first repair.  If the rule stays in chat or review memory, the next
 agent run can make the same plausible mistake.
 
-The repair loop turns that rejected repair into a repository constraint.  An SME
-correction promotes a case into the corpus.  The sketch records the rule the correction exposed.
-The agent repairs a deterministic code surface or a prompt-mediated surface under known-code
-anchors.  The gate replays the promoted case and compares the policy-bearing fields that decide
-whether the tempting repair is still rejected.
+The repair loop turns that rejected repair into a repository constraint.  An SME correction
+supplies the approved output and the rule it exemplifies; a maintainer decides whether to promote
+it.  The Developer then revises the current sketch, deterministic code, and prompt-mediated
+surface under known-code anchors.  It receives one active failure.  The gate receives the
+initial anchor and every promoted case.  No new counterexample is revealed until the full gate
+is green.
 
 Tests and prompts remain part of the loop.  Tests catch shape errors, exceptions, bad deltas, and
 regressions.  Prompts can state intent for the current run.  A promoted counterexample has a
@@ -79,7 +87,7 @@ check.
 
 The loop needs five artifacts:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item a \textbf{sketch} $\sketch$: a partial program in prose and code-shaped structure;
   \item a \textbf{counterexample-supplemented corpus} $\corpus$: examples, observations, and
         promoted failures;
@@ -96,25 +104,24 @@ The loop needs five artifacts:
 \begin{tabular}{c}
 \textbf{Method at a glance} \\
 \midrule
-SME correction promotes a case into $\corpus$ \\
+Reviewer correction promotes one failing case into $\corpus$ \\
 $\Downarrow$ \\
-Human sketch $\sketch$ records the exposed rule \\
+Developer revises sketch $\sketch$, code, and prompt for that failure \\
 $\Downarrow$ \\
-Agent edits code and prompt surfaces under anchors $\anchors$ \\
+Gate runs the initial anchor and all of $\corpus$ \\
 $\Downarrow$ \\
-Replay checks state repair over each promoted case \\
-$\Downarrow$ \\
-Semantic compare checks policy-bearing fields
+Green: reveal the next case; red: return one failed regression
 \end{tabular}}
 
 {\small\emph{The loop turns a tempting wrong repair into durable repository guidance.}}
 \end{center}
 
-The sketch records the human's current strategy: which repairs are permitted, prioritized, or
-forbidden.  The corpus records cases that have earned specification authority through
-promotion.  The gate is the executable boundary for the current done state.  A failure changes
-the repository only when it changes the sketch or the corpus and the gate can check the new
-rule.
+The initial sketch records the human's current strategy: which repairs are permitted,
+prioritized, or forbidden.  During synthesis, the Developer may reorganize or generalize that
+strategy while it edits code and prompts.  The corpus records cases that have earned
+specification authority through promotion.  Reviewer-approved outputs remain authoritative; a
+model-drafted explanation cannot overrule them.  The gate is the executable boundary for the
+current done state.
 
 \paragraph{Claim.}
 A repository-native workflow is inspectable when every promoted counterexample connects four
@@ -132,7 +139,7 @@ counterexample, and the executable check often live in separate artifacts.  The 
 stores the links among them without treating the result as a solver-backed proof.
 
 \paragraph{What the paper provides.}
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item a repository-native artifact: the counterexample-supplemented sketch;
   \item a process model that turns subject-matter expert corrections into input/output specs,
         counterexamples, and golden data;
@@ -182,7 +189,7 @@ the task.
 
 The repair often goes this way:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item A user gives an agent a domain task.
   \item The prompt names the state gap.
   \item The agent finds a local patch that closes that gap.
@@ -372,15 +379,16 @@ Gate & What behavior is executable now? & Readers cannot see what the repository
 \end{table}
 
 \begin{definition}[Sketch]
-A sketch $\sketch$ is a human-editable artifact that records the strategy space the agent may
+A sketch $\sketch$ is a reviewable, agent-editable artifact that records the strategy space the agent may
 use and the holes it may fill.  It may contain prose, tables, pseudo-code, type shapes,
-policy order, abstention rules, and examples of forbidden repairs.  Maintainers revise it
-when a promoted counterexample exposes a missing rule.
+policy order, abstention rules, and examples of forbidden repairs.  A human supplies the initial
+sketch.  During synthesis the Developer revises it with code and prompts; maintainers review the
+result.
 \end{definition}
 
 Maintainers and agents use the sketch to find the policy shape:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item Which operations exist?
   \item Which operation has priority when several repairs close the same state gap?
   \item Which fields are policy-bearing?
@@ -459,7 +467,7 @@ that extraction is clerical; the SME's correction is the source of domain judgme
 
 The SME's correction has three parts:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item the observed input;
   \item the corrected output;
   \item the explanation that distinguishes the corrected output from the tempting wrong one.
@@ -486,16 +494,18 @@ text, fixtures, or tests.  It does not decide which domain rule is true.  Its jo
 make a repair that satisfies $\sketch$, $\corpus$, $\anchors$, and $\gate$ without breaking
 the repository's existing shape.
 
-The agent should receive three forms of context before editing:
+The agent should receive four forms of context before editing:
 
-\begin{enumerate}[leftmargin=*]
-  \item the sketch clause involved;
-  \item the counterexample and tempting wrong patch;
+\begin{enumerate}
+  \item the current sketch, code, and prompt;
+  \item one active counterexample or failed regression, projected to its checked fields;
+  \item the reviewer policy that explains the failure;
   \item the known-code anchors that define output shape and local conventions.
 \end{enumerate}
 
-With that context, the agent has a narrower repair job: preserve the rule, reject the
-known tempting patch, and keep the codebase's existing shape.
+The full promoted corpus is not repair context.  It belongs to the gate.  With one active
+failure, the agent has a narrower job: generalize the rule, reject the known tempting patch, and
+keep the codebase's existing shape.
 
 \subsection{Oracle A: deterministic code}
 
@@ -522,9 +532,35 @@ enough counterexamples make it precise.
 \section{Counterexample lifecycle}
 \label{sec:lifecycle}
 
-The sequence starts when an SME sees a wrong output and ends when maintainers rerun the
-repository gate.  In between, the SME corrects, the maintainer extracts and promotes, the
-team revises the sketch, the coding agent repairs, and the gate checks the current corpus.
+The sequence begins with a partial sketch, not with a finished implementation.  The Developer
+first generates the sketch, deterministic code, and prompt surface.  An initial acceptance case
+must pass before the first domain counterexample is revealed.  Thereafter, the Developer sees
+one active failure while the gate sees the entire promoted corpus.
+
+\begin{quote}
+\textbf{Repository synthesis loop}
+\begin{verbatim}
+(S, code, prompt) = Developer(S0, empty code, empty prompt, K)
+while Gate(initial anchor) fails:
+    (S, code, prompt) = Developer(S, code, prompt, one failure, K)
+
+for proposed reviewer case c:
+    if c passes current implementation:
+        record c as coverage; do not promote it
+        continue
+    promote c into E
+    active = c
+    repeat:
+        (S, code, prompt) = Developer(S, code, prompt, active, K)
+        failures = Gate(initial anchor + all of E)
+        active = one failed regression
+    until failures is empty
+\end{verbatim}
+\end{quote}
+
+A passing proposal does not become a counterexample merely because it was scheduled for review.
+It is coverage.  A failing proposal becomes specification only after review and promotion.  A
+new proposal remains hidden until all current regressions pass.
 
 \subsection{Observation}
 
@@ -535,16 +571,18 @@ promoted it as specification.
 
 \subsection{Correction}
 
-The SME correction names the desired output and the rule behind it.  When useful, the SME also
+The SME correction names the desired output and the rule behind it.  The reviewed expected output
+has specification authority; an LLM may draft a generalized clause or explanation but may not
+replace the approved result.  When useful, the SME also
 names the tempting wrong repair: an output that could satisfy replay while violating policy.
 That gives the maintainer a rule to inspect instead of a bare bad row.
 
 \subsection{Spec extraction}
 
-The harness or maintainer translates the correction into an input/output spec.  An LLM can
-draft this spec, especially when the SME explanation is prose.  The maintainer reviews the
-draft and decides whether it states observable expected behavior.  The maintainer treats the
-extracted spec as a proposed check, not a decision about truth.
+The harness or maintainer translates the correction into an input/output spec.  An LLM can draft
+the general sketch clause, especially when the SME explanation is prose.  The maintainer reviews
+that draft.  The model's proposed wording is advisory; the reviewed expected fields remain the
+source of truth.
 
 \subsection{Promotion}
 
@@ -552,30 +590,37 @@ The maintainer promotes only cases they are willing to treat as specification.  
 case to $\corpus$ with enough information to reject the tempting wrong repair.  They treat
 promotion as a deliberate specification change, not automatic elevation of every correction.
 
-During promotion, the maintainer also checks the attached artifacts.  The sketch may need a
-new clause, the comparer may need a new field, the fixture may need a clearer name, and the
-failure message may need to tell the next agent where to look.  Without those pieces, adding
-a row does not make the repair problem clearer.
+Before promotion, the harness runs the proposed case against the current implementation.  If the
+case already passes on the fields it claims to constrain, the harness records coverage and does
+not add it to $\corpus$.  During promotion, the maintainer also checks the attached artifacts.
+The comparer may need a new field, the fixture may need a clearer name, and the failure packet
+must expose only the fields this counterexample constrains.
 
 \subsection{Sketch revision}
 
-The team revises the sketch when they decide the promoted case adds or clarifies a rule future
-repairs must follow.  The revised sketch should state the general rule and the fixture answer
-that demonstrates it.  This keeps the next agent pass from memorizing one row.  The team
-writes the rule in the sketch and records the concrete input/output pressure in the fixture.
+The Developer revises the sketch together with code and prompts.  It may generalize the active
+failure, reorganize earlier clauses, or leave a newly declared policy hole open.  It receives the
+current sketch and implementation, known-code anchors, and one projected failure packet.  It
+does not receive the unrevealed cases or the full promoted corpus.
+
+The revised sketch should state general policy rather than paste the concrete row.  Reviewers can
+reject a sketch edit that invents policy or erases an earlier rule, while the full gate catches
+behavioral regressions already represented in $\corpus$.
 
 \subsection{Repair}
 
-The coding agent repairs Oracle~A, Oracle~B, fixtures, or tests under the revised sketch.
-Known-code anchors tell the agent which result shapes and local conventions to preserve.  The
-repair should close the promoted case while preserving earlier promoted cases.  Otherwise the
-repair only moves the failure.
+The Developer repairs Oracle~A, Oracle~B, and the sketch under known-code anchors.  A repair turn
+targets exactly one failure.  It can change both deterministic and prompt-mediated surfaces when
+the counterexample crosses that boundary.  The gate, rather than the repair prompt, carries the
+responsibility for all earlier promoted behavior.
 
 \subsection{Gate}
 
-The gate runs replay and semantic compare over all promoted cases.  A passing gate supports
-the Section~\ref{sec:correctness} result for the current strategy, corpus, checkers, fixtures,
-and golden rows.  If any of those change, the maintainer must run the gate again.
+The gate runs replay and semantic compare over the initial anchor and all promoted cases.  If a
+prior case fails, the harness selects one failed regression as the next active Developer input
+and reruns the full gate after the revision.  A passing gate supports the
+Section~\ref{sec:correctness} result for the current strategy, corpus, checkers, fixtures, and
+golden rows.  If any of those change, the maintainer must run the gate again.
 
 % ---------------------------------------------------------------------------
 \section{Gate semantics}
@@ -635,7 +680,7 @@ failure.  The failure message should point the repair agent to the rule to inspe
 
 Good gates have these properties:
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item \textbf{Promoted corpus coverage.}  Every promoted case runs.
   \item \textbf{Failure specificity.}  Replay and compare failures are reported separately.
   \item \textbf{Deterministic CI path.}  Gate-critical checks do not depend on a live model
@@ -716,56 +761,107 @@ passed, which corpus they covered, and which questions remain outside the proof.
 
 \subsection{Scenario}
 
-In RosterSynth, a subject-matter expert sees one roster-hours gap and two active
-bookings that explain it.  The quick arithmetic fix is to append an adjustment
-that closes the delta between badge hours and scheduled hours.  The policy fix
-is to cancel the selected duplicate booking.  Both repairs can close the hours
-balance; only one records the rule the SME meant.
+CatSynth presents a synthetic owner profile with one visible preference gap and one hard policy
+rule.  The owner wants a large, fluffy, affectionate cat and has an allergy trait.  The naive
+resolver selects Persian because it maximizes the encoded preferences.  The policy resolver
+selects Siberian because the fixture marks it as satisfying the same preferences and the hard
+allergy rule.  These are illustrative fixture attributes, not pet-selection or medical advice.
 
-The ambiguity is the case's value.  A repair can close state without choosing
-the right policy operation.  The promoted counterexample has to preserve that
-near miss, because the next agent is likely to make the same arithmetic repair
-unless the sketch says which operation has priority.
+The ambiguity is the case's value.  Both candidates close the state gap defined by the replay
+predicate.  Only one satisfies the policy-bearing fields in the promoted expectation.  The
+counterexample preserves the near miss so a later agent cannot recover the tempting preference
+ranking and still pass the gate.
 
-\begin{table}[t]
 \begin{center}
 \small
 \begin{tabular}{p{0.22\linewidth}p{0.23\linewidth}p{0.21\linewidth}p{0.22\linewidth}}
 \toprule
 Repair & State effect & Policy meaning & Gate result \\
 \midrule
-Append adjustment & hours delta closed & gap compensation & replay accepts; compare rejects \\
-Cancel duplicate & hours delta closed & duplicate removed & replay accepts; compare accepts \\
+Persian & preferences satisfied & hard rule ignored & replay accepts; compare rejects \\
+Siberian & preferences satisfied & hard rule respected & replay accepts; compare accepts \\
 \bottomrule
 \end{tabular}
+\smallskip
+
+\textit{The worked example separates state repair from policy repair in one small case.}
 \end{center}
-\caption{The worked example separates state repair from policy repair in one small case.}
-\label{tab:worked-example-repairs}
-\end{table}
 
 \subsection{Tempting repair}
 
-The tempting repair adds an adjustment row.  Replay accepts it because the
-encoded state predicate only asks whether the arithmetic gap is gone.  Semantic
-compare rejects it because the output chose compensation instead of duplicate
-cancellation.  The state is fixed by the wrong operation.
+The tempting repair ranks breeds only by preference match.  Replay accepts Persian because the
+fixture marks it as large, fluffy, and affectionate.  Semantic compare rejects the output
+because the promoted expectation names Siberian and cites the hard allergy rule.  The state gap
+is closed by an output that violates the encoded policy.
 
 \subsection{Sketch rule}
 
-The promoted counterexample adds a sketch rule: duplicate active bookings with
-the same relevant shape on the pay-window end date cancel the selected duplicate
-when that cancellation closes the gap.  The sketch now tells the next agent
-which operation has priority over an adjustment.  It also tells the maintainer
-what future changes must preserve: the operation order, the selected duplicate,
-and the fields that distinguish cancellation from compensation.
+The promoted counterexample adds a sketch rule: preference match never overrides a hard rule.
+The sketch tells the next agent that filtering precedes ranking.  It also names the fields that
+future changes must preserve: operation, selected breed, and cited rule identifiers.
 
 \subsection{Replay and compare}
 
-Replay asks, ``did the proposed output repair the encoded state gap?''  Compare
-asks, ``did it use the encoded rule the sketch requires?''  RosterSynth needs
-both questions because the adjustment repair passes the first check and fails
-the second.  The promoted case guards the policy choice as well as the
-arithmetic.
+Replay asks, ``did the proposed output repair the encoded state gap?''  Compare asks, ``did it
+use the encoded rule the sketch requires?''  CatSynth needs both questions because the naive
+preference result passes the first check and fails the second.  The promoted case guards the
+policy choice as well as the visible preference match.
+
+\begin{center}
+\includegraphics[width=\linewidth]{figures/catsynth/04-naive-gate.png}
+
+\small\textit{CatSynth makes the two predicates visible: the naive strategy repairs the encoded
+preference gap, so replay passes, but it does not preserve the promoted breed and cited-rule
+fields, so semantic compare fails.}
+\end{center}
+
+The illustrated companion at \texttt{paper/catsynth-worked-example.md} follows the same case
+from the sketch and anchors through the tempting output, promoted corpus row, and gate result.
+
+\subsection{Captured synthesis trajectory}
+
+The browser shows the finished artifacts.  The experiment reconstructs their synthesis.  It
+starts with the initial sketch and empty deterministic and prompt files.  GPT-5.4-mini at low
+effort acts as Developer; tools and environment access are disabled.  Each successful revision
+is copied into a separate generation directory with the exact active failure and full gate.
+
+\begin{center}
+\small
+\begin{tabular}{p{0.12\linewidth}p{0.30\linewidth}p{0.36\linewidth}p{0.10\linewidth}}
+\toprule
+Generation & Newly checked policy & Before repair & Gate \\
+\midrule
+000 & Initial preference strategy & Empty implementation & 1/1 \\
+001 & Allergy hard filter & Persian, no cited rule & 2/2 \\
+002 & Hard-rule composition and abstention & Balinese, one cited rule & 3/3 \\
+003 & Travel note maps to \texttt{avoid\_needy} & No Oracle tag & 4/4 \\
+004 & Tag penalty and base-score boundary & Balinese with correct tag & 5/5 \\
+005 & Distinct soft rules compose & Incomplete soft ranking & 6/6 \\
+006 & Duplicate soft concern applies once & Missing narrative tag & 7/7 \\
+007 & Unknown allergy status escalates & Unsafe recommendation & 8/8 \\
+008 & Malformed applicable policy escalates & Ignored policy error & 9/9 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The separation between generations 003 and 004 is deliberate.  Generation 003 checks only the
+prompt-mediated tag.  Its failure packet contains no breed values and leaves the deterministic
+meaning of the tag open.  The next proposed case then fails because the correct tag does not yet
+produce the approved ranking.  That independent failure becomes the fourth counterexample.
+
+The main decision is not ``iteration or one shot.''  It is whether the governing policy is
+already complete.  In a separate closed-world run, the model receives an immutable complete
+specification and empty implementation files.  It reaches 20/20 visible and 21/21 hidden cases
+after four Developer calls and 132,632 Developer tokens.  When that premise is true, spec-first
+is the simpler approach.
+
+The open-world run adds two controls to isolate retained state.  Replay-all rebuilds from the
+initial sketch and all promoted cases known at each epoch.  Evolved-sketch rebuild receives the
+current sketch but never the full counterexample corpus; after a failed gate it receives the
+visible failure packets.  Retained Sketch--CE uses 9 Developer calls and 217,576 Developer
+tokens, replay-all uses 15 and 400,081, and evolved-sketch rebuild uses 16 and 371,050.  Their
+hidden scores are 18/21, 15/21, and 19/21.  Sketch--CE reduces implementation work and churn in
+this run, but does not achieve the best hidden score or the lowest total model-token count.
 
 % ---------------------------------------------------------------------------
 \section{Applying the method}
@@ -779,10 +875,11 @@ patch.
 
 \subsection{Start with the sketch}
 
-Write the rule before asking the agent for code.  Put the first sketch in a short file that
+Write the known strategy before asking the agent for code.  Put the first sketch in a short file that
 names the allowed operations, priority order, known holes, and abstention cases.  Give later
-failures a clause to attach to.  Do not present the first sketch as a complete policy; use it
-as the team's record of what the agent must preserve.
+failures a clause to attach to.  Do not present the first sketch as a complete policy.  Ask the
+Developer to return the revised sketch with every implementation generation, and review that
+artifact with the code and prompt it describes.
 
 \subsection{Collect discriminating examples}
 
@@ -809,9 +906,10 @@ is still broken; compare failure means the state repair passed while a policy fi
 
 \subsection{Promote failures deliberately}
 
-Triage each failure before adding it to $\corpus$.  Treat fixture bugs as fixture work and
-checker bugs as checker work.  Promote only failures that expose missing policy, and update
-$\sketch$ at the same time so the example has a rule to enforce.
+Triage each proposed case before adding it to $\corpus$.  Run it first.  A passing proposal is
+coverage, not a counterexample.  Treat fixture bugs as fixture work and checker bugs as checker
+work.  Promote only failures that expose missing policy, then give the Developer that one failure
+so it can revise $\sketch$ and the implementation together.
 
 For each promoted case, record four things: the tempting patch it rejects, the sketch clause
 that changed, the replay or compare predicate that checks it, and the failure message that
@@ -823,18 +921,22 @@ specification pressure.
 \label{sec:artifact}
 
 The companion repository is the public inspection path for the paper's bounded claim.  It
-publishes the sanitized RosterSynth slice needed to check what the gate depends on: the
-sketch, promoted corpus, focal counterexample, deterministic Oracle~A code, Oracle~B prompt
-path, hybrid resolver, replay and semantic-compare tests, and generated provenance.
+publishes CatSynth's initial sketch, proposed cases, Developer and Oracle adapters, browser
+application, gates, tests, and full generated histories.  The executable
+\texttt{experiment/run\_experiment.py} implements the Sketch--CE and closed-world spec-first
+loops.  \texttt{experiment/adaptive\_open\_world\_experiment.py} freezes a candidate pool,
+reveals one case at a time, archives every Developer generation, and runs the two open-world
+controls.  The
+illustrated supplement traces those artifacts through the captured run, interface, and source
+files.
 
 Readers can inspect the repository to answer four concrete questions:
 
-\begin{enumerate}[leftmargin=*]
-  \item Which sketch clause and promoted row encode the domain rule?
-  \item Which code or prompt surface implements the repair?
-  \item Which replay and compare checks reject the tempting wrong repair?
-  \item Which generated evidence ties the sketch, corpus, implementation surface, and gate
-        result together?
+\begin{enumerate}
+  \item Which single failure was visible to each Developer generation?
+  \item How did the sketch, deterministic code, and prompt change together?
+  \item Which full-corpus gate ran after each revision?
+  \item Which proposed cases were promoted as failures or retained only as coverage?
 \end{enumerate}
 
 That inspection matters because the claim is finite and executable.  A passing gate says that
@@ -877,7 +979,7 @@ domain rule someone can name.
 \section{Limitations}
 \label{sec:limitations}
 
-\begin{enumerate}[leftmargin=*]
+\begin{enumerate}
   \item \textbf{Finite corpus.}  A passing gate proves only the current promoted
         $\corpus$.  When a new failure appears, someone must promote it and run the
         gate again before the bounded result covers it.  The result does not extend
@@ -898,6 +1000,12 @@ domain rule someone can name.
         counterexamples arrive.
   \item \textbf{Prompt drift.}  Live model behavior can drift.  Review live output
         before promotion; do not treat a prompt response as a proof artifact.
+  \item \textbf{Single captured comparisons.}  CatSynth records one stochastic run per path with
+        one model and candidate order.  The closed-world run begins with information the
+        open-world run must discover, so their token totals answer different questions.  Within
+        the open-world experiment, the rebuild controls inherit the promoted stream without
+        paying its discovery cost.  The observed token ratios and checked results are not a
+        benchmark or a causal estimate.
   \item \textbf{Enterprise evidence boundary.}  Readers can inspect the control
         structure in the public companion's sanitized fixtures.  Public evidence
         covers that control structure, not private deployment behavior.
@@ -915,13 +1023,14 @@ deployment claim.
 Do not trust an agent repair just because the patch looks plausible.  Trust it only after
 an SME has stated the rule and the repository can rerun that rule against the repair.
 
-For a promoted case, the required trail is: the SME correction, the sketch clause that
-records the rule, the promoted counterexample that captures the known wrong repair, the
-code or prompt surface changed by the agent, the replay predicate that checks state repair,
-and the semantic compare predicate that checks policy fields.
+For a promoted case, the required trail is: the SME correction, the one projected failure given
+to the Developer, the revised sketch and implementation, the full promoted corpus run by the
+gate, the replay predicate that checks state repair, and the semantic compare predicate that
+checks policy fields.
 
-When those pieces are present, the agent has a bounded job: repair code or prompts under
-the current sketch and promoted corpus.  A passing gate does not prove the domain correct.
+When those pieces are present, the agent has a bounded job: revise the sketch, code, and prompt
+for one active failure.  The gate, not the repair prompt, carries the full promoted corpus.  A
+passing gate does not prove the domain correct.
 It says only this: for the current repository, current checkers, and current promoted
 corpus, replay and semantic comparison pass.  Everything outside those encoded cases and
 predicates still belongs to human review and future promotion.

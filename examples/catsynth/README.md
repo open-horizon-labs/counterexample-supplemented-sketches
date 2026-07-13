@@ -1,116 +1,230 @@
-# CatSynth Worked Example
+# CatSynth
 
-> A second worked example for this repository, alongside
-> [`../rostersynth-kiosk/`](../rostersynth-kiosk/). Where RosterSynth demonstrates
-> the method through a CLI + JSON scenarios in a workforce-roster domain, CatSynth
-> is a **runnable web UI** over a more relatable domain (recommending a cat breed).
-> Both illustrate the same loop from the paper; the domain is only a worked example.
+CatSynth is the executable example for *Agentic Synthesis against
+Counterexample-Supplemented Sketches*. It has two connected parts:
 
-A small, runnable illustration of the loop from **"Agentic Synthesis against
-Counterexample-Supplemented Sketches"** ([`../../paper/main.pdf`](../../paper/main.pdf)).
-It swaps the paper's enterprise harness (Docker / Lambda / SQS / Bedrock) for a
-**local SQLite database and a local web UI**, so you can watch the loop without any
-cloud infrastructure.
+- an agentic experiment that starts from a sketch and empty implementation, reveals one
+  counterexample at a time, and archives every generated sketch, code file, prompt, and gate;
+- a local FastAPI and SQLite teaching UI that makes the finished method artifacts visible.
 
-## The domain
+The data is synthetic and chosen to expose the control loop. It is not pet-selection or medical
+advice.
 
-Recommend a cat breed for an owner profile. The loop is trying to build a
-**golden dataset** for cat suggestions:
+## The experiment implements the method
 
-- **Wikipedia** is the source for cat *facts* — each breed's summary text and
-  page URL are fetched once and cached into SQLite (offline afterwards).
-- **Local rule tables** hold the rulesets for owner traits that don't mix with
-  certain cat types (e.g. *allergies → forbid non-hypoallergenic breeds*,
-  *long work hours → forbid highly social breeds*, *apartment → forbid
-  high-energy breeds*).
+The iterative arm runs this algorithm:
 
-## How the paper's pieces map here
+```text
+generate sketch + code + prompt from the initial sketch
+run the initial acceptance gate
+while the initial gate fails:
+    send that one failure and the current files to Developer
+    regenerate sketch + code + prompt
+    rerun the initial gate
 
-| Paper artifact | In CatSynth |
-| --- | --- |
-| **Sketch S** | [`sketch/SKETCH.md`](sketch/SKETCH.md) — operations, priority order, holes, forbidden repairs |
-| **Corpus E** | `golden_corpus` table — promoted counterexamples (expected output + tempting repair + violated rule) |
-| **Anchors K** | `catsynth/models.py` — the `Recommendation` output shape; the generic rule evaluator |
-| **Oracle A** | `catsynth/oracle_a.py` — deterministic hard-rule filter + preference ranking + abstention |
-| **Oracle B** | `catsynth/oracle_b.py` — prompt-mediated narrative interpretation (pluggable LLM; deterministic mock default) |
-| **Hybrid resolver** | `catsynth/resolver.py` — Oracle A first, narrative note routed to Oracle B for *soft* constraints only |
-| **Gate G** | `catsynth/gate.py` — **replay** (state repair) + **semantic compare** (policy-bearing fields) |
-
-## The worked counterexample (FR-1)
-
-An owner wants a *"big, fluffy, affectionate lap cat"* and has allergies.
-
-- **Tempting repair** (naive resolver): recommend **Persian** — it closes the
-  "big/fluffy/affectionate" gap, so **replay accepts** it.
-- **Policy** says non-hypoallergenic breeds are forbidden for allergic owners,
-  so **semantic compare rejects** Persian on the `breed` field.
-- **Correct repair** (policy resolver): recommend **Siberian** — also big,
-  fluffy, and affectionate, but hypoallergenic.
-
-This is the paper's core lesson in one case: *a state-valid repair can still be
-a policy violation.* Replay and compare fail differently and both are needed.
-
-## Quick start
-
-```bash
-pip install -r requirements.txt
-
-python cli.py seed            # create + seed SQLite, cache Wikipedia facts
-python cli.py gate            # policy mode -> PASS 3/3
-python cli.py gate --mode naive   # tempting resolver -> FAIL (compare rejects Persian)
-
-python cli.py serve           # open http://127.0.0.1:8000
+for each proposed counterexample, in reveal order:
+    run it against the current implementation
+    reject it as coverage if it already passes
+    promote it only if it fails
+    active_failure = the newly promoted counterexample
+    while the full gate fails:
+        send active_failure and the current files to Developer
+        regenerate sketch + code + prompt
+        run the initial anchor plus every promoted counterexample
+        active_failure = one failed regression, if any
 ```
 
-Seed offline (no network) with `python cli.py seed --no-wiki`.
+Developer owns all three evolving files:
 
-### Using local Ollama for Oracle B
+- `SKETCH.md` — the current strategy and policy;
+- `strategy.py` — deterministic implementation;
+- `oracle_prompt.txt` — prompt-mediated narrative implementation.
 
-The **Playground** tab can route the narrative note to a local
-[Ollama](https://ollama.com) model instead of the mock. It auto-detects a
-running server and lists installed models. Defaults are configurable:
+Developer receives exactly one active failure during an iterative repair. It does not receive
+the promoted corpus or unrevealed cases. The gate evaluates the whole promoted corpus after
+every revision.
+
+## Closed world versus open world
+
+If the complete governing policy can be written before implementation, use spec-first. The
+captured `gpt-5.4-mini` spec-first run reached 20/20 visible and 21/21 hidden cases with 4
+Developer calls and 132,632 Developer tokens.
+
+Use Sketch-CE when that complete specification is not available because policy is still being
+discovered. Replay-all and evolved-sketch rebuild are experimental controls for that open-world
+case, not separate headline methods.
+
+- [Closed-world spec-first generations and results](experiment/results/gpt-5.4-mini-spec-first-20260712/README.md)
+- [Open-world Sketch-CE comparison](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
+
+## Reproduce a new run
+
+Run the adaptive three-path comparison with the Codex App Server backend:
 
 ```bash
-# defaults: http://localhost:11434 and qwen2.5-coder:14b
-set CATSYNTH_OLLAMA_HOST=http://localhost:11434
-set CATSYNTH_OLLAMA_MODEL=qwen2.5-coder:14b
+uv run --with-requirements requirements.txt \
+python experiment/adaptive_open_world_experiment.py \
+  --model gpt-5.4-mini \
+  --max-repairs 12
 ```
 
-The **gate stays model-free**: it always uses the deterministic mock so results
-are reproducible. Ollama is opt-in from the Playground only.
+The adapter uses low effort, no summary, no tools, a read-only environment, no model fallback,
+and one ephemeral thread for each Oracle or Developer call.
 
-## The local UI
+Use an OpenAI-compatible endpoint by selecting the other backend:
 
-- **Review** — pick a scenario, see the owner profile and the resolver's
-  proposed recommendation (toggle **policy** vs **naive**), plus the
-  Wikipedia-sourced breed facts and full trace. Correct the output and
-  **promote** it into the golden corpus.
-- **Playground** — send an ad-hoc "fake request": build any owner profile,
-  add a free-text note, and see what comes back. Oracle B can be backed by the
-  deterministic **mock** or your **local Ollama** model. The card shows the
-  Oracle B backend, the tags it produced, the derived soft rules, and the raw
-  completion.
-- **Gate** — run the gate in either mode and read the per-case replay/compare
-  table (mirrors Table 2 in the paper), with a provenance log of past runs.
-- **Corpus (E)** — the promoted counterexamples.
-- **Rules** — the owner-trait ruleset tables (hard `forbid` / soft `discourage`).
-- **Sketch (S)** — the rendered strategy document.
+```bash
+CATSYNTH_LLM_API_KEY=local \
+python3 experiment/run_experiment.py \
+  --provider openai-compatible \
+  --base-url http://127.0.0.1:8080/v1 \
+  --model your-served-model
+```
+
+The endpoint must provide model listing, Chat Completions, JSON-schema structured output, and
+token usage.
+
+## Read the captured run
+
+The published run is
+[`experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/).
+
+The pool contained 14 proposed cases. Eight failed and were promoted; six already passed and
+were recorded as coverage without a Developer call. The same eight-case discovery stream was
+then evaluated through replay-all and evolved-sketch rebuild controls.
+
+| Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
+|---|---:|---:|---:|
+| Developer calls | 15 | 16 | 9 |
+| Developer tokens | 400,081 | 371,050 | 217,576 |
+| All model tokens in arm | 1,061,834 | 998,307 | 1,191,504 |
+| Extra repair attempts | 6 | 7 | 0 |
+| Artifact churn lines | 2,394 | 2,326 | 719 |
+| Visible promoted cases | 8/8 | 8/8 | 8/8 |
+| Hidden cases | 15/21 | 19/21 | 18/21 |
+
+Every generation directory contains the complete `SKETCH.md`, `strategy.py`, and
+`oracle_prompt.txt`, plus compact failure, gate, usage, and diff metadata. The repository does
+not include repeated transport transcripts.
+
+Retaining state used less Developer work and produced fewer regressions and changed lines in
+this run. It did not minimize total model tokens, and evolved-sketch rebuild had the best hidden
+score. Read the [experiment overview](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
+for the design, results, and claim boundary.
+
+## What the promoted counterexamples add
+
+### CE1: filter hard policy before ranking
+
+The initial implementation recommends Persian to an owner with mild allergies. The promoted
+case requires Siberian and cites `allergy_requires_hypoallergenic`. Developer updates the sketch
+and generic rule evaluator so applicable hard `forbid` rows remove candidates before preference
+ranking.
+
+### CE2: compose hard rules and abstain
+
+The next profile activates five hard rules and leaves no surviving breed. The current strategy
+still recommends Balinese and cites only the earlier allergy rule. Developer extends the sketch
+and code to evaluate the additional generic operators, compose all applicable hard rules, and
+return `abstain` with every applicable rule ID.
+
+### CE3: teach the prompt one controlled tag
+
+The next profile contains travel and loneliness only in a narrative note. The current prompt
+returns no tags. CE3 compares only `oracle_tags`: Developer teaches the prompt to emit exactly
+`avoid_needy` and records that classification in the sketch. The tag's deterministic effect
+remains an explicit policy hole. The full gate passes 4/4.
+
+### CE4: make the tag affect ranking without inventing policy
+
+After CE3, the prompt emits `avoid_needy`, but the strategy still recommends Balinese. CE4 is a
+new counterexample: the tag applies a one-point soft penalty to highly social breeds, and base
+preference scoring must continue to use only the explicit `wants_*` fields. Developer removes
+unauthorized scoring from default activity/noise traits, implements the penalty, and returns
+Persian. The complete gate passes 5/5.
+
+### CE6: compose distinct soft rules
+
+The implementation handled one discourage rule but not the combined ranking effect of several
+different soft predicates. CE6 makes all applicable soft adjustments contribute before the
+final tie-break.
+
+### CE7: deduplicate one concern across two surfaces
+
+A structured discourage row and the narrative tag `avoid_high_energy` can express the same
+policy. CE7 requires one semantic penalty rather than counting the concern twice.
+
+### CE10: escalate when safety data is unknown
+
+An allergy value outside `none`, `mild`, or `severe` is not equivalent to no allergy. CE10 makes
+the strategy ask for clarification instead of guessing.
+
+### CE12: expose malformed applicable policy
+
+An applicable policy row with an unsupported operator cannot be ignored. CE12 requires
+`escalate` and cites the malformed rule so a reviewer can repair the policy source.
+
+## Run the teaching UI
+
+```bash
+python3 cli.py seed --no-wiki
+python3 cli.py serve
+```
+
+Open <http://127.0.0.1:8000>.
+
+The browser exposes:
+
+- **Review** — compare policy and naive recommendations for a scenario;
+- **Corpus** — inspect promoted expected outputs, tempting outputs, and rule links;
+- **Rules** — inspect hard `forbid` and soft `discourage` rows;
+- **Sketch** — read the finished human-facing strategy;
+- **Gate** — run replay and semantic compare separately;
+- **Playground** — exercise the runtime Oracle B through the deterministic mock or a selectable
+  OpenAI-compatible endpoint.
+
+The UI's focal allergy case makes the two gate predicates visible. A preference-only resolver
+chooses Persian. Replay accepts the visible size, affection, and fluffiness match. Semantic
+compare rejects the choice because the promoted output is Siberian with the hard allergy rule
+cited.
+
+The SQLite database is only a runtime projection. Delete `catsynth.db` and rerun
+`python3 cli.py seed --no-wiki` to reconstruct it from `catsynth/seed.py`.
+
+## Repository map
+
+| Method artifact | File |
+|---|---|
+| Initial sketch | [`experiment/initial_sketch.md`](experiment/initial_sketch.md) |
+| Counterexample reveal schedule | [`experiment/cases.json`](experiment/cases.json) |
+| Sketch-CE loop | [`experiment/run_experiment.py`](experiment/run_experiment.py) |
+| Adaptive three-path comparison | [`experiment/adaptive_open_world_experiment.py`](experiment/adaptive_open_world_experiment.py) |
+| Published generations and results | [`experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/) |
+| Clean-room baseline | [`experiment/baseline/`](experiment/baseline/) |
+| Codex App Server transport | [`catsynth/codex_app_server.py`](catsynth/codex_app_server.py) |
+| OpenAI-compatible transport | [`catsynth/openai_compat.py`](catsynth/openai_compat.py) |
+| Reference deterministic policy | [`catsynth/oracle_a.py`](catsynth/oracle_a.py) |
+| Runtime narrative Oracle | [`catsynth/oracle_b.py`](catsynth/oracle_b.py) |
+| App replay and semantic compare | [`catsynth/gate.py`](catsynth/gate.py) |
+| Synthetic fixtures and UI corpus | [`catsynth/seed.py`](catsynth/seed.py) |
+| Browser app | [`catsynth/app.py`](catsynth/app.py) and [`catsynth/static/`](catsynth/static/) |
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests
+python3 -m unittest discover -s tests -v
 ```
 
-The tests use the standard library only (no third-party runner) and are
-model-free (Oracle B uses the deterministic mock). They assert that policy mode
-is E-correct while the naive resolver is caught by semantic compare on the
-allergy counterexample.
+The orchestration tests assert the method, not just the final outputs. They check that a failed
+initial generation is repaired before CE1, a passing proposal is rejected as coverage, each
+Developer repair receives one active failure rather than the full corpus, snapshots contain the
+complete evolving files, and the gate includes the initial anchor plus every promoted case.
 
-## Extending the loop (another domain)
+The app tests use the deterministic runtime Oracle so they remain model-free.
 
-1. Replace the breed catalog + Wikipedia titles in `catsynth/seed.py`.
-2. Rewrite the rule rows (the local policy tables).
-3. Adjust the `Recommendation` policy fields and the replay predicate in
-   `catsynth/gate.py`.
-4. Update `sketch/SKETCH.md` and promote your own counterexamples.
+## Claim boundary
+
+A green gate covers the checked corpus under the current fixtures and evaluators. The 21 hidden
+cases add withheld variants to this one experiment, but they do not turn the result into a
+universal claim. Incorrect fixtures, incorrect expected outputs, checker bugs, unseen policy,
+different models, and different reveal orders remain outside the evidence.

@@ -1,186 +1,232 @@
 # Agentic Synthesis against Counterexample-Supplemented Sketches
 
-**Paper PDF:** [`paper/main.pdf`](paper/main.pdf)  
-**Paper source:** [`paper/main.tex`](paper/main.tex)  
-**Bibliography source:** [`paper/references.bib`](paper/references.bib)  
-**Companion artifact:** runnable examples, fixtures, and provenance for the paper's claims.
+This repository demonstrates a coding method for systems whose real specification is still
+being discovered.
 
-**Agentic synthesis against counterexample-supplemented sketches** makes coding-agent work checkable against a finite promoted corpus. A human writes a partial program-like sketch; failures become counterexamples; an agent edits code and prompts; replay/compare gates check the current artifact against the promoted cases.
+Start with a sketch of the strategy. Let a coding agent generate the implementation. Then reveal
+one concrete case where that implementation is wrong. Give the agent the current sketch, current
+code, and that one failure. After every revision, run the entire promoted corpus. A repair is done
+only when the new case and every earlier case pass.
 
-The paper is the primary artifact. It names the method, gives the formal model, places the work against sketching, CEGIS, programming by example, tests-as-prompts, and coding-agent benchmarks, and states the finite-corpus correctness claim. This repository is companion evidence: runnable examples, fixtures, provenance, and tests for the paper's worked claims.
+The sketch and implementation evolve together. The Developer may rewrite deterministic code,
+the model prompt, and the sketch itself. It cannot memorize the unrevealed test set because it
+never receives it.
 
-## Method at a glance
+CatSynth is the runnable example. It includes the teaching UI, the experiment harness, every
+generated implementation and sketch, and an open-world comparison against two rebuild
+strategies.
+
+## The method
+
+Let `S` be the current sketch, `E` the promoted counterexample corpus, `K` the repository's
+known-code constraints, and `G` the regression gate.
+
+1. Write an initial sketch `S0` that fixes the interface, the known strategy, and the holes that
+   remain open.
+2. Ask Developer to generate the initial sketch, deterministic implementation, and prompt
+   implementation under `K`.
+3. Run the initial acceptance gate. If it fails, give Developer that one failure and repeat.
+4. Reveal one proposed counterexample. Run it against the current implementation before
+   promotion. If it already passes, it is coverage, not a counterexample.
+5. Promote a genuinely failing case into `E`.
+6. Give Developer the current sketch, current code and prompt, and exactly one active failure.
+   Developer may generalize the failure by changing both the sketch and implementation.
+7. Run `G` over the initial anchor and all of `E`.
+8. If a regression fails, make that failed case the next single active failure and return to
+   step 6. Reveal no new counterexample until the full gate is green.
+9. Repeat from step 4.
+
+The Developer sees one active failure. The gate sees the whole promoted corpus.
 
 ```mermaid
-flowchart LR
-    Sketch["Sketch: permitted strategy"] --> Agent["Agent edits code/prompts"]
-    Anchors["Known-code anchors"] --> Agent
-    Corpus["Promoted corpus E"] --> Replay["Replay: did state repair?"]
-    Agent --> Replay
-    Replay --> Compare["Semantic compare: did policy field match?"]
-    Corpus --> Compare
-    Compare -->|pass| Done["Current artifact satisfies E"]
-    Compare -->|fail| Counterexample["Promote counterexample"]
-    Counterexample --> Sketch
+flowchart TD
+    S0["Initial sketch S0"] --> D0["Developer generates sketch + code + prompt"]
+    D0 --> G0["Run initial acceptance gate"]
+    G0 -->|fail| F0["Send that one failure to Developer"]
+    F0 --> D0
+    G0 -->|pass| N["Reveal one proposed counterexample"]
+    N --> P{"Does current implementation fail it?"}
+    P -->|no| C["Coverage, not a counterexample"]
+    P -->|yes| E["Promote into corpus E"]
+    E --> D["Developer revises sketch + code + prompt for one failure"]
+    D --> G["Gate: initial anchor + every promoted case"]
+    G -->|fail| R["Choose one failed regression"]
+    R --> D
+    G -->|pass| N
 ```
 
-## Read by path
+This is the repository-scale adaptation of the CEGIS rhythm: generate, find a counterexample,
+repair, and verify. The synthesizer is an ordinary coding model editing ordinary files, so the
+claim is deliberately finite. A green gate establishes only that the current implementation
+satisfies the current encoded checks for the current promoted corpus.
 
-- **Academics:** start with [`paper/main.tex`](paper/main.tex), then inspect [`paper/references.bib`](paper/references.bib) and the executable evidence below. The claim boundary is finite-corpus soundness over the promoted corpus `E`.
-- **Developers:** read the RosterSynth kiosk path, then run the commands in [Reproduce the paper artifact](#reproduce-the-paper-artifact). The examples show how to turn sketch clauses, failures, replay checks, and compare checks into an agent loop.
+## Choose the frame before choosing the loop
 
-The RosterSynth kiosk material is the paper's worked example. It supports the method; the paper carries the claim.
+There are two main situations:
 
-## Where the worked example lives
+- **Closed world:** the complete governing specification is available before implementation.
+  Use spec-first generation and repair.
+- **Open world:** important governing policy will be discovered only after an implementation
+  encounters concrete failures. Use Sketch-CE to evolve the sketch and implementation together.
 
-No agent key is required to reproduce the public artifact. The repo does **not** regenerate code by calling a live coding agent; it publishes the sketch, promoted examples, code surfaces, prompts, cassettes, gates, and tests needed to inspect the loop without private credentials. Live Bedrock is an optional Oracle B backend; the checked evidence uses JSON cassettes.
+CatSynth captures both with the same `gpt-5.4-mini` model and low-effort controls. In the
+closed-world run, spec-first reached 20/20 visible and 21/21 hidden cases with 4 Developer calls
+and 132,632 Developer tokens. That is the better approach when its premise is true.
 
-Start with the stitched evidence doc:
+[Read the closed-world spec-first run.](examples/catsynth/experiment/results/gpt-5.4-mini-spec-first-20260712/README.md)
 
-- [`paper/extracted-rostersynth-kiosk-paper.md`](paper/extracted-rostersynth-kiosk-paper.md) — traces the kiosk counterexample from sketch clause to corpus case, historical failure, Oracle A code, Oracle B prompt/cassette behavior, replay/compare gates, hybrid behavior, llm-only behavior, and tests.
+The replay-all and evolved-sketch paths below are controls inside the open-world experiment.
+They are not additional headline methodologies.
 
-Then inspect the source artifacts directly:
+## What happened in the captured CatSynth run
 
-| Question | Artifact |
-|---|---|
-| What is the sketch? | [`examples/rostersynth-kiosk/source/docs/sketch.md`](examples/rostersynth-kiosk/source/docs/sketch.md) |
-| What examples are in the promoted corpus `E`? | [`examples/rostersynth-kiosk/source/scenarios/manifest.json`](examples/rostersynth-kiosk/source/scenarios/manifest.json) |
-| What is the focal counterexample? | [`examples/rostersynth-kiosk/source/scenarios/roster.kiosk_double_booking.v1.json`](examples/rostersynth-kiosk/source/scenarios/roster.kiosk_double_booking.v1.json) |
-| What generated/maintained code handles Oracle A? | [`examples/rostersynth-kiosk/source/rostersynth/playbook.py`](examples/rostersynth-kiosk/source/rostersynth/playbook.py) and [`resolver/deterministic.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/deterministic.py) |
-| What is the hybrid path? | [`examples/rostersynth-kiosk/source/rostersynth/resolver/hybrid.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/hybrid.py) |
-| What is the llm-only path? | [`examples/rostersynth-kiosk/source/rostersynth/resolver/llm.py`](examples/rostersynth-kiosk/source/rostersynth/resolver/llm.py), [`oracle/prompt.py`](examples/rostersynth-kiosk/source/rostersynth/oracle/prompt.py), and [`source/cassettes/`](examples/rostersynth-kiosk/source/cassettes/) |
-| What proves deterministic, hybrid, and llm-only behavior? | [`examples/rostersynth-kiosk/tests/test_extracted_rostersynth.py`](examples/rostersynth-kiosk/tests/test_extracted_rostersynth.py) |
+The checked-in run used Codex App Server and `gpt-5.4-mini` at low effort, with no tools,
+environment access, or model fallback. It froze 14 proposed cases before the run. Eight failed
+the retained implementation and were promoted. Six already passed and were recorded as
+coverage without being sent to Developer.
 
-## Originating setting
+The experiment replayed that eight-case discovery stream through three paths:
 
-The method originated in a proprietary enterprise deployment for a heterogeneous data-cleansing pipeline operated by non-developers. That deployment used a custom Cursor extension, `cursor://`-style commands, an embedded SME web app, SME corrections converted with LLM assistance into input/output specs, a counterexample loop, and a promoted golden corpus for multiple downstream clients.
+- **Sketch-CE** retained its sketch, code, and prompt and repaired one active failure at a time.
+- **Replay all** rebuilt from the initial sketch and every promoted case known at that epoch.
+- **Evolved-sketch rebuild** rebuilt from the current Sketch-CE sketch. If the full gate failed,
+  it received the visible failures from that gate, but never the full CE corpus.
 
-This public companion contains the publishable slice: the paper, clean fixtures, runnable examples, tests, and provenance. Production data, client-specific rules, proprietary extension code, and private SME workflows stay outside the repo.
+| Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
+|---|---:|---:|---:|
+| Developer calls | 15 | 16 | 9 |
+| Developer tokens | 400,081 | 371,050 | 217,576 |
+| All model tokens in arm | 1,061,834 | 998,307 | 1,191,504 |
+| Extra repair attempts | 6 | 7 | 0 |
+| First-attempt prior regressions | 2 | 7 | 0 |
+| Artifact churn lines | 2,394 | 2,326 | 719 |
+| Visible promoted cases | 8/8 | 8/8 | 8/8 |
+| Hidden cases | 15/21 | 19/21 | 18/21 |
 
-## What this companion artifact supports
+Retaining the implementation reduced Developer tokens and churn in this run. It did not use the
+fewest total model tokens: Sketch-CE also paid for candidate probes, Specification-Oracle
+promotion, and additional cumulative gates. Evolved-sketch rebuild had the best hidden score.
+The result supports a narrower claim about implementation continuity, not universal cost or
+correctness superiority.
 
-The paper's executable claim is bounded:
+Read the [experiment overview](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
+or inspect the [complete compact results](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/results.json).
 
-> If the replay/compare gate passes every case in the promoted counterexample corpus `E`, then the current agent-produced artifact is correct for `E` under the repository's executable replay and compare semantics.
+## Inspect the actual synthesis history
 
-The repository supports that claim with:
+The complete reviewable history is under
+[`examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/).
 
-| Artifact | Paper role |
-|---|---|
-| `examples/rostersynth-kiosk/source/docs/sketch.md` | Concrete sketch clauses for the worked example |
-| `examples/rostersynth-kiosk/source/scenarios/*.json` | Corpus `E` and promoted counterexamples |
-| `examples/rostersynth-kiosk/source/rostersynth/playbook.py` | Oracle A deterministic implementation |
-| `examples/rostersynth-kiosk/source/rostersynth/oracle/prompt.py` | Oracle B prompt path |
-| `examples/rostersynth-kiosk/source/cassettes/*.json` | Reproducible Oracle B cassette fixtures |
-| `examples/rostersynth-kiosk/tests/test_extracted_rostersynth.py` | Executable checks for the paper's worked-example claims |
-| `build/rostersynth-kiosk-graph.json` | Source/provenance graph for appendix-style inspection |
-| `.oh/knowledge/rostersynth-kiosk/` | Repo-native node files for the same graph |
+Each generation directory for each path contains the post-call state:
 
-## Worked example: RosterSynth kiosk
+- `SKETCH.md` — the sketch Developer returned for that generation;
+- `strategy.py` — the complete deterministic implementation;
+- `oracle_prompt.txt` — the complete prompt implementation;
+- `metadata.json` — the active failure, promoted corpus IDs, compact gate result, token usage,
+  and diffs.
 
-The paper uses one concrete case to show why replay and semantic compare are separate checks.
+Raw transport transcripts remain local. The repository keeps the evolving artifacts and the
+evidence needed to explain why each generation exists.
 
-A roster has twin active 40-hour bookings on the pay-window end date. Badge hours are 40 and scheduled hours are 80, so a naive append of `-40h` closes the coverage math while violating duplicate policy. The correct repair cancels the duplicate booking with the higher `bookingId`.
+## Run the synthesis experiment
 
-The counterexample path is:
-
-```text
-roster.kiosk_double_booking.v1
-→ sketch Op 2: cancel duplicate higher bookingId when it alone closes delta
-→ historical failure: append -40h passes replay; compare rejects expected append vs modify
-→ Oracle A: _try_cancel_duplicate emits modify bookingId=1802 status=4
-→ Oracle B prompt/cassette path states the same rule
-→ lower-booking cassette bookingId=1801 passes replay; compare catches wrong booking
-→ gate passes after sketch/code/prompt alignment
-```
-
-That path is evidence for the paper's method.
-
-## Reproduce the paper artifact
-
-From the repo root:
+From `examples/catsynth` with Python 3 and the requirements installed:
 
 ```bash
-python3 tools/extract_rostersynth_example.py --write --paper
-python3 tools/extract_rostersynth_example.py --ce roster.kiosk_double_booking.v1
-python3 -m unittest discover -s examples/rostersynth-kiosk/tests
+uv run --with-requirements requirements.txt \
+python experiment/adaptive_open_world_experiment.py \
+  --model gpt-5.4-mini \
+  --max-repairs 12
 ```
 
-Expected test result:
+The Codex adapter speaks the App Server JSON-RPC protocol directly. It pins low effort,
+disables tools and environment access, and prevents provider fallback.
 
-```text
-Ran 6 tests
-OK
+An OpenAI-compatible Chat Completions endpoint is selectable instead:
+
+```bash
+CATSYNTH_LLM_API_KEY=local \
+python3 experiment/run_experiment.py \
+  --provider openai-compatible \
+  --base-url http://127.0.0.1:8080/v1 \
+  --model your-served-model
 ```
 
-The checks exercise the paper's worked-example obligations:
+The endpoint must expose `GET /v1/models`, `POST /v1/chat/completions`, JSON-schema structured
+output, and usage fields.
 
-- Oracle A cancels higher duplicate `bookingId=1802`.
-- Wrong append passes replay; compare rejects it.
-- Lower-booking cassette cancels `1801`; compare rejects it.
-- Hybrid keeps deterministic Oracle A on the kiosk case and avoids fallback.
-- Oracle B prompt includes decision order, Op 2, higher-bookingId rule, and payload.
-- Full corpus gates match deterministic, hybrid cassette, and llm-only cassette evidence.
+## Run the CatSynth teaching UI
 
-## For developers
+The browser app presents the same method artifacts in a small synthetic domain. It is useful for
+seeing the difference between state repair and policy preservation; the captured experiment is
+the evidence that a coding model actually evolved the sketch and implementation.
 
-Use the companion artifact as an implementation appendix. The adaptable pattern is:
-
-1. Put the intended strategy in a sketch file.
-2. Add counterexamples for plausible wrong implementations.
-3. Point the agent at known-code anchors before it writes new code.
-4. Require a replay check for state repair.
-5. Require a compare check for semantic fields replay under-specifies.
-6. Promote every failure into the corpus and sketch before rerunning the agent.
-
-A tiny didactic parser slice remains under [`examples/task-line-parser/`](examples/task-line-parser/) for readers who want the smallest version of the loop.
-
-## For academics
-
-Treat the repository as supplementary material for evaluating the paper's claims:
-
-- [`paper/main.tex`](paper/main.tex) names and argues the method;
-- the correctness result is finite-corpus soundness over the promoted corpus `E`;
-- the RosterSynth kiosk case is the concrete witness;
-- the tests and graph show how source artifacts back the paper's claims.
-
-The relevant comparison points are program sketching, CEGIS, programming by example, tests-as-prompts, and coding-agent benchmarks.
-
-## Repository map
-
-```text
-paper/
-  main.tex                               # paper: process, references, formal model, correctness theorem
-  references.bib                         # bibliography
-  extracted-rostersynth-kiosk-paper.md   # generated evidence appendix
-examples/
-  rostersynth-kiosk/                     # worked example supporting the paper
-    source/                              # copied RosterSynth source slice: sketch, scenarios, cassettes, code, tests
-    tests/                               # self-contained checks for the paper's worked-example claims
-  task-line-parser/                      # smallest didactic slice
-flows/                                   # reusable agent flow prompts
-.oh/knowledge/rostersynth-kiosk/         # repo-native graph node files
-build/rostersynth-kiosk-graph.json       # extracted provenance graph
+```bash
+cd examples/catsynth
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 cli.py seed --no-wiki
+python3 cli.py serve
 ```
 
-## References
+Open <http://127.0.0.1:8000>.
 
-The paper's canonical BibTeX is [`paper/references.bib`](paper/references.bib). The current reference set is:
+The focal UI case is an allergic owner who wants a large, fluffy, affectionate cat. A naive
+preference-only strategy chooses Persian. Replay accepts that visible preference match, but
+semantic compare rejects it because the promoted policy requires Siberian and the cited hard
+rule `allergy_requires_hypoallergenic`.
 
-- Solar-Lezama, Armando. 2008. *Program Synthesis by Sketching.* EECS Department, University of California, Berkeley, technical report UCB/EECS-2008-177. <http://www2.eecs.berkeley.edu/Pubs/TechRpts/2008/EECS-2008-177.html>
-- Solar-Lezama, Armando. 2013. *Program Sketching.* *International Journal on Software Tools for Technology Transfer* 15(5-6), 475-495. <https://doi.org/10.1007/s10009-012-0249-7>
-- Solar-Lezama, Armando, Liviu Tancau, Rastislav Bodik, Sanjit A. Seshia, and Vijay A. Saraswat. 2006. *Combinatorial Sketching for Finite Programs.* ASPLOS 2006, 404-415. <https://doi.org/10.1145/1168857.1168907>
-- Jha, Susmit, Sumit Gulwani, Sanjit A. Seshia, and Ashish Tiwari. 2010. *Oracle-Guided Component-Based Program Synthesis.* ICSE 2010, 215-224. <https://doi.org/10.1145/1806799.1806833>
-- Gulwani, Sumit, Oleksandr Polozov, and Rishabh Singh. 2017. *Program Synthesis.* *Foundations and Trends in Programming Languages* 4(1-2), 1-119. <https://doi.org/10.1561/2500000010>
-- Polozov, Oleksandr, and Sumit Gulwani. 2015. *FlashMeta: A Framework for Inductive Program Synthesis.* OOPSLA 2015, 107-126. <https://doi.org/10.1145/2814270.2814310>
-- Jimenez, Carlos E., John Yang, Alexander Wettig, Shunyu Yao, Kexin Pei, Ofir Press, and Karthik R. Narasimhan. 2024. *SWE-bench: Can Language Models Resolve Real-world GitHub Issues?* ICLR 2024. <https://openreview.net/forum?id=VTF8yNQM66>
-- Cui, Yi. 2025. *Tests as Prompt: A Test-Driven-Development Benchmark for LLM Code Generation.* arXiv:2505.09027. <https://arxiv.org/abs/2505.09027>
-- Reynolds, Laria, and Kyle McDonell. 2021. *Prompt Programming for Large Language Models: Beyond the Few-Shot Paradigm.* arXiv:2102.07350. <https://arxiv.org/abs/2102.07350>
-- Liu, Pengfei, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Graham Neubig. 2023. *Pre-train, Prompt, and Predict: A Systematic Survey of Prompting Methods in Natural Language Processing.* *ACM Computing Surveys* 55(9), article 195, 1-35. <https://doi.org/10.1145/3560815>
-- Beheshti, Amin. 2024. *Natural Language-Oriented Programming (NLOP): Towards Democratizing Software Creation.* IEEE SSE 2024, 258-267. <https://doi.org/10.1109/SSE62657.2024.00047>
-- Ko, Andrew J., Robin Abraham, Laura Beckwith, Alan Blackwell, Margaret Burnett, Martin Erwig, Chris Scaffidi, Joseph Lawrance, Henry Lieberman, Brad Myers, Mary Beth Rosson, Gregg Rothermel, Mary Shaw, and Susan Wiedenbeck. 2011. *The State of the Art in End-User Software Engineering.* *ACM Computing Surveys* 43(3), article 21. <https://doi.org/10.1145/1922649.1922658>
-- Chen, Zhenpeng, Chong Wang, Weisong Sun, Xuanzhe Liu, Jie M. Zhang, and Yang Liu. 2025. *Promptware Engineering: Software Engineering for Prompt-Enabled Systems.* arXiv:2503.02400. <https://arxiv.org/abs/2503.02400>
-- Dohmke, Thomas. 2024. *GitHub Copilot Workspace: Welcome to the Copilot-native Developer Environment.* GitHub Blog. <https://github.blog/news-insights/product-news/github-copilot-workspace/>
-- Swaminathan, Nikhil, and Deepak Singh. 2025. *Introducing Kiro.* Kiro Blog. <https://kiro.dev/blog/introducing-kiro/>
-- GitHub. 2026. *What is Spec-Driven Development?* GitHub Spec Kit Documentation. <https://github.github.io/spec-kit/concepts/sdd.html>
-- Adzic, Gojko. 2011. *Specification by Example: How Successful Teams Deliver the Right Software.* Manning Publications.
+![CatSynth showing replay pass and semantic compare failure](paper/figures/catsynth/04-naive-gate.png)
+
+CatSynth's breed attributes and policy rows are synthetic fixtures. They illustrate the control
+loop; they are not pet-selection or medical advice.
+
+The SQLite database is disposable runtime state. Delete `examples/catsynth/catsynth.db` and run
+`python3 cli.py seed --no-wiki` to rebuild it from
+[`seed.py`](examples/catsynth/catsynth/seed.py).
+
+## Map the method to the repository
+
+| Method term | CatSynth artifact |
+|---|---|
+| Initial sketch | [`experiment/initial_sketch.md`](examples/catsynth/experiment/initial_sketch.md) |
+| Proposed counterexamples | [`experiment/cases.json`](examples/catsynth/experiment/cases.json) |
+| Developer and gate loop | [`experiment/run_experiment.py`](examples/catsynth/experiment/run_experiment.py) |
+| Codex App Server adapter | [`catsynth/codex_app_server.py`](examples/catsynth/catsynth/codex_app_server.py) |
+| OpenAI-compatible adapter | [`catsynth/openai_compat.py`](examples/catsynth/catsynth/openai_compat.py) |
+| Deterministic reference, Oracle A | [`catsynth/oracle_a.py`](examples/catsynth/catsynth/oracle_a.py) |
+| Prompt-mediated runtime surface, Oracle B | [`catsynth/oracle_b.py`](examples/catsynth/catsynth/oracle_b.py) |
+| Replay and semantic compare | [`catsynth/gate.py`](examples/catsynth/catsynth/gate.py) |
+| Teaching UI | [`catsynth/app.py`](examples/catsynth/catsynth/app.py) and [`catsynth/static/`](examples/catsynth/catsynth/static/) |
+| Adaptive comparison harness | [`experiment/adaptive_open_world_experiment.py`](examples/catsynth/experiment/adaptive_open_world_experiment.py) |
+| Complete post-hoc generations | [`experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/) |
+
+Run all CatSynth tests with:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+## Claim boundary
+
+A passing gate means the current strategy passes the repository's current replay and semantic
+comparison predicates for the current promoted corpus. It does not establish correctness for
+unseen cases, unencoded rules, incorrect golden outputs, buggy checkers, future model behavior,
+or real cat-selection decisions.
+
+The comparison adds another boundary: it is one run with one model and one reveal order. It
+shows the mechanism and preserves the evidence needed to inspect it. Equal checked results do
+not establish semantic equivalence outside the visible and hidden cases, and the token ratio does
+not generalize to other models, adapters, or tasks.
+
+## Read further
+
+- [`paper/catsynth-worked-example.md`](paper/catsynth-worked-example.md) walks through the actual
+  generations, the paired comparison, the UI, and the source artifacts.
+- [`paper/main.pdf`](paper/main.pdf) presents the method, its lineage, the finite-corpus theorem,
+  and the CatSynth example.
+- [`paper/main.tex`](paper/main.tex) and [`paper/references.bib`](paper/references.bib) contain the
+  paper source and bibliography.
+- [`examples/task-line-parser/`](examples/task-line-parser/) is a smaller dependency-free sketch
+  and counterexample exercise.

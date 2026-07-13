@@ -65,5 +65,152 @@
     "rule_ids": [],
     "oracle_tag_ids": ["avoid_needy"],
     "sketch_rule": "FR-4: Base preference ranking uses only wants_size, wants_affection, and wants_fluffy; default activity_level, noise_tolerance, experience, and other profile traits add no preference score without a promoted clause. During deterministic ranking, avoid_needy applies a one-point soft penalty to breeds with sociability >= high. It never filters candidates or relaxes hard rules."
+  },
+  {
+    "id": "ce-005-soft-rule-never-filters",
+    "scenario_id": "soft_not_hard",
+    "policy": "A discourage rule is a one-point ranking penalty, never a filter. If every available candidate receives a soft penalty, the best remaining candidate is still recommended rather than abstaining.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siamese",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "breed_names": ["Siamese"],
+    "rule_ids": ["low_noise_discourage_vocal"],
+    "sketch_rule": "FR-5: Applicable kind=discourage rows subtract one point from matching candidates. They never remove a candidate, trigger abstention, or appear in cited_rules."
+  },
+  {
+    "id": "ce-006-soft-rules-compose",
+    "scenario_id": "soft_rules_compose",
+    "policy": "Distinct applicable soft rules compose. Each distinct discourage predicate contributes one point; evaluating only the first matching soft rule is incorrect.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "breed_names": ["Abyssinian", "Siamese", "British Shorthair"],
+    "rule_ids": [
+      "low_noise_discourage_vocal",
+      "low_activity_discourage_high_energy",
+      "novice_discourage_high_energy"
+    ],
+    "sketch_rule": "FR-6: Apply every distinct applicable discourage predicate during ranking. Multiple different policy predicates accumulate; ranking uses base score minus the complete soft-penalty total."
+  },
+  {
+    "id": "ce-007-duplicate-soft-signal",
+    "scenario_id": "duplicate_soft_signal",
+    "policy": "Structured policy and a narrative tag can express the same soft concern. Deduplicate soft adjustments by the semantic predicate (cat_attribute, cat_op, cat_value) so the same concern is applied once across surfaces.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Bengal",
+      "cited_rules": [],
+      "oracle_tags": ["avoid_high_energy"]
+    },
+    "breed_names": ["Bengal", "British Shorthair"],
+    "rule_ids": ["low_activity_discourage_high_energy"],
+    "oracle_tag_ids": ["avoid_high_energy"],
+    "sketch_rule": "FR-7: Merge structured discourage rows and narrative soft tags by semantic predicate. Identical cat_attribute/cat_op/cat_value predicates incur one penalty total, even when both surfaces express them."
+  },
+  {
+    "id": "ce-008-narrative-negation",
+    "scenario_id": "narrative_negation",
+    "policy": "Oracle B interprets the owner's assertion, including negation and attribution. A note saying the owner does not travel while someone else does must not emit avoid_needy.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Persian",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "checked_fields": ["oracle_tags"],
+    "rule_ids": [],
+    "oracle_tag_ids": [],
+    "sketch_rule": "FR-8: Prompt-mediated tags follow the owner's asserted situation, not keyword presence. Respect explicit negation and do not transfer another person's travel or absence to the owner."
+  },
+  {
+    "id": "ce-009-narrative-cannot-override-hard-policy",
+    "scenario_id": "narrative_hard_conflict",
+    "policy": "Narrative instructions and preferences cannot waive structured hard policy. An allergic owner asking for a named non-hypoallergenic breed must still receive a policy-compliant recommendation.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siberian",
+      "cited_rules": ["allergy_requires_hypoallergenic"],
+      "oracle_tags": []
+    },
+    "rule_ids": ["allergy_requires_hypoallergenic"],
+    "oracle_tag_ids": [],
+    "sketch_rule": "FR-9: Oracle B may emit controlled soft tags only. It may not interpret free text as a waiver, named-breed command, or relaxation of any applicable hard rule."
+  },
+  {
+    "id": "ce-010-missing-safety-data-escalates",
+    "scenario_id": "missing_safety_data",
+    "policy": "Unknown or missing allergy status is an unresolved safety input. Escalate for clarification instead of treating unknown as none or guessing a recommendation.",
+    "expected": {
+      "operation": "escalate",
+      "breed": null,
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "rule_ids": [],
+    "sketch_rule": "FR-10: If allergies is missing, null, blank, or outside none/mild/severe, ESCALATE with no breed. Unknown safety data is not equivalent to a negative value."
+  },
+  {
+    "id": "ce-011-empty-catalog-escalates",
+    "scenario_id": "empty_catalog",
+    "policy": "No catalog is an unavailable-input condition, not evidence that policy rejected every candidate. Escalate on an empty breed list; reserve abstain for a non-empty catalog emptied by applicable hard rules.",
+    "expected": {
+      "operation": "escalate",
+      "breed": null,
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "breed_names": [],
+    "rule_ids": [],
+    "sketch_rule": "FR-11: Distinguish input absence from policy exhaustion. An empty breeds input ESCALATEs; a non-empty catalog with no hard-rule survivors ABSTAINs."
+  },
+  {
+    "id": "ce-012-invalid-rule-escalates",
+    "scenario_id": "invalid_rule_language",
+    "policy": "An applicable policy row with an unsupported operator cannot be silently ignored. Escalate and cite the uninterpretable rule ID so a reviewer can repair the policy source.",
+    "expected": {
+      "operation": "escalate",
+      "breed": null,
+      "cited_rules": ["invalid_reviewer_policy"],
+      "oracle_tags": []
+    },
+    "rule_ids": ["invalid_reviewer_policy"],
+    "sketch_rule": "FR-12: If an applicable rule kind, trait operator, cat operator, attribute, or ordinal value is unsupported, ESCALATE and cite that rule ID. Never silently skip uninterpretable policy."
+  },
+  {
+    "id": "ce-013-effective-citation-scope",
+    "scenario_id": "citation_scope",
+    "policy": "On a successful recommendation, cite only applicable hard rules that actually eliminated at least one supplied candidate. On abstention, continue to cite every applicable hard rule.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siberian",
+      "cited_rules": ["allergy_requires_hypoallergenic"],
+      "oracle_tags": []
+    },
+    "breed_names": ["Persian", "Siberian", "Balinese", "Devon Rex"],
+    "rule_ids": [
+      "allergy_requires_hypoallergenic",
+      "children_require_good_with_children"
+    ],
+    "sketch_rule": "FR-13: Recommendation provenance lists applicable hard rules that removed at least one candidate from the supplied catalog. Abstention provenance lists all applicable hard rules because the combined policy exhausted the catalog."
+  },
+  {
+    "id": "ce-014-post-soft-tiebreak",
+    "scenario_id": "post_soft_tiebreak",
+    "policy": "Apply all hard filtering and soft adjustments before deterministic name tie-breaking. Alphabetical order resolves only the final adjusted-score tie.",
+    "expected": {
+      "operation": "recommend",
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "breed_names": ["Abyssinian", "British Shorthair"],
+    "rule_ids": ["novice_discourage_high_energy"],
+    "sketch_rule": "FR-14: Rank by final score after every hard filter and deduplicated soft penalty, then by normalized breed name ascending. Do not choose a base-score tie winner before soft policy is applied."
   }
 ]

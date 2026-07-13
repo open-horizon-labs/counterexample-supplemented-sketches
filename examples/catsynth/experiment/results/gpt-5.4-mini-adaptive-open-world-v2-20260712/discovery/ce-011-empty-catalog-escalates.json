@@ -1,0 +1,40 @@
+{
+  "counterexample": {
+    "breed_names": [],
+    "expected": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-011-empty-catalog-escalates",
+    "policy": "No catalog is an unavailable-input condition, not evidence that policy rejected every candidate. Escalate on an empty breed list; reserve abstain for a non-empty catalog emptied by applicable hard rules.",
+    "rule_ids": [],
+    "scenario_id": "empty_catalog",
+    "sketch_rule": "FR-11: Distinguish input absence from policy exhaustion. An empty breeds input ESCALATEs; a non-empty catalog with no hard-rule survivors ABSTAINs."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-011-empty-catalog-escalates",
+    "passed": true,
+    "scenario_id": "empty_catalog"
+  },
+  "status": "coverage-not-promoted"
+}

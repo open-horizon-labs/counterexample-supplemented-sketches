@@ -17,31 +17,47 @@ async function api(path, opts) {
 
 function toast(msg) {
   let t = $(".toast");
-  if (!t) { t = el("div", "toast"); document.body.appendChild(t); }
+  if (!t) {
+    t = el("div", "toast");
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-live", "polite");
+    document.body.appendChild(t);
+  }
   t.textContent = msg;
   t.classList.add("show");
   setTimeout(() => t.classList.remove("show"), 2200);
 }
 
 // --- tabs -------------------------------------------------------------------
-document.querySelectorAll(".tab").forEach((tab) => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
-    tab.classList.add("active");
-    $("#" + tab.dataset.tab).classList.add("active");
-    if (tab.dataset.tab === "corpus") loadCorpus();
-    if (tab.dataset.tab === "rules") loadRules();
-    if (tab.dataset.tab === "sketch") loadSketch();
-    if (tab.dataset.tab === "gate") loadGateRuns();
-    if (tab.dataset.tab === "playground") initPlayground();
+async function activateTab(tabId, updateHash = true) {
+  const tab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+  const panel = $("#" + tabId);
+  if (!tab || !panel) return;
+  document.querySelectorAll(".tab").forEach((t) => {
+    const active = t === tab;
+    t.classList.toggle("active", active);
+    t.setAttribute("aria-selected", String(active));
   });
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p === panel));
+  if (updateHash) history.replaceState(null, "", `#${tabId}`);
+  if (tabId === "corpus") await loadCorpus();
+  if (tabId === "rules") await loadRules();
+  if (tabId === "sketch") await loadSketch();
+  if (tabId === "gate") await loadGateRuns();
+  if (tabId === "playground") initPlayground();
+}
+
+document.querySelectorAll(".tab").forEach((tab) =>
+  tab.addEventListener("click", () => activateTab(tab.dataset.tab)));
+
+window.addEventListener("hashchange", () => {
+  const tabId = location.hash.replace(/^#/, "");
+  if (tabId) activateTab(tabId, false);
 });
 
 // Home guided-tour buttons jump straight to the live tab that runs the step.
 document.querySelectorAll("[data-goto]").forEach((btn) =>
-  btn.addEventListener("click", () =>
-    document.querySelector(`.tab[data-tab="${btn.dataset.goto}"]`)?.click()));
+  btn.addEventListener("click", () => activateTab(btn.dataset.goto)));
 
 // --- mode toggle ------------------------------------------------------------
 document.querySelectorAll("#mode-toggle .seg").forEach((seg) => {
@@ -63,11 +79,19 @@ async function loadScenarios() {
   state.scenarios.forEach((s) => {
     const li = el("li");
     li.dataset.id = s.scenario_id;
+    li.setAttribute("role", "button");
+    li.tabIndex = 0;
     li.innerHTML = `<span class="sid">${esc(s.scenario_id)}</span>
       ${s.promoted ? `<span class="badge promoted" role="button" tabindex="0"
         title="A counterexample for this scenario is in corpus E — click to view it">promoted ↗</span>` : ""}
       <span class="slabel">${esc(s.label)}</span>`;
     li.addEventListener("click", () => selectScenario(s.scenario_id));
+    li.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        selectScenario(s.scenario_id);
+      }
+    });
     const badge = li.querySelector(".badge.promoted");
     if (badge) {
       const jump = (e) => { e.stopPropagation(); showCorpusForScenario(s.scenario_id); };
@@ -76,6 +100,9 @@ async function loadScenarios() {
     }
     list.appendChild(li);
   });
+  if (!state.selected && state.scenarios.some((s) => s.scenario_id === "allergy_lapcat")) {
+    await selectScenario("allergy_lapcat");
+  }
 }
 
 function traitRows(sc) {
@@ -124,7 +151,10 @@ function recCard(rec, breedDetail) {
 }
 
 function correctionForm(sc, rec) {
-  const breedOpts = state.breeds.map((b) => `<option value="${esc(b.name)}"${b.name === rec.breed ? " selected" : ""}>${esc(b.name)}</option>`).join("");
+  const expectedBreedOpts = state.breeds.map((b) =>
+    `<option value="${esc(b.name)}"${b.name === rec.breed ? " selected" : ""}>${esc(b.name)}</option>`).join("");
+  const temptingBreedOpts = state.breeds.map((b) =>
+    `<option value="${esc(b.name)}">${esc(b.name)}</option>`).join("");
   const ruleChecks = state.rules.map((r) =>
     `<label style="display:inline-flex;gap:6px;align-items:center;width:auto;margin-right:12px">
       <input type="checkbox" style="width:auto" name="cited" value="${esc(r.id)}"
@@ -132,23 +162,23 @@ function correctionForm(sc, rec) {
   return `<div class="correction">
     <h3>SME correction → promote to corpus (E)</h3>
     <p class="form-note">Record the corrected output, the tempting wrong repair, and the rule it violates.</p>
-    <label>Expected operation</label>
+    <label for="c-op">Expected operation</label>
     <select id="c-op">
       <option value="recommend"${rec.operation === "recommend" ? " selected" : ""}>recommend</option>
       <option value="abstain"${rec.operation === "abstain" ? " selected" : ""}>abstain</option>
       <option value="escalate"${rec.operation === "escalate" ? " selected" : ""}>escalate</option>
     </select>
-    <label>Expected breed</label>
-    <select id="c-breed"><option value="">(none)</option>${breedOpts}</select>
+    <label for="c-breed">Expected breed</label>
+    <select id="c-breed"><option value="">(none)</option>${expectedBreedOpts}</select>
     <label>Cited rules (policy-bearing)</label>
     <div style="padding:8px 0">${ruleChecks}</div>
-    <label>Tempting wrong breed (optional)</label>
-    <select id="c-tempting"><option value="">(none)</option>${breedOpts}</select>
-    <label>Violated rule id (optional)</label>
+    <label for="c-tempting">Tempting wrong breed (optional)</label>
+    <select id="c-tempting"><option value="" selected>(none)</option>${temptingBreedOpts}</select>
+    <label for="c-violated">Violated rule id (optional)</label>
     <input id="c-violated" placeholder="e.g. allergy_requires_hypoallergenic" />
-    <label>Sketch clause</label>
+    <label for="c-clause">Sketch clause</label>
     <input id="c-clause" placeholder="e.g. FR-1 allergy override" />
-    <label>Note / reason</label>
+    <label for="c-note">Note / reason</label>
     <textarea id="c-note" placeholder="Why is the tempting repair wrong?"></textarea>
     <div class="row"><button class="btn primary" id="promote-btn">Promote counterexample</button></div>
   </div>`;
@@ -157,7 +187,11 @@ function correctionForm(sc, rec) {
 async function selectScenario(id) {
   state.selected = id;
   document.querySelectorAll("#scenario-list li").forEach((li) =>
-    li.classList.toggle("selected", li.dataset.id === id));
+    {
+      const selected = li.dataset.id === id;
+      li.classList.toggle("selected", selected);
+      li.setAttribute("aria-pressed", String(selected));
+    });
   const data = await api(`/api/suggest/${id}?mode=${state.mode}`);
   const sc = data.scenario;
   const detail = $("#review-detail");
@@ -260,9 +294,7 @@ async function loadCorpus() {
 
 // Switch to the Corpus tab and highlight the entry(ies) for one scenario.
 async function showCorpusForScenario(scenarioId) {
-  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === "corpus"));
-  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "corpus"));
-  await loadCorpus();
+  await activateTab("corpus");
   const cards = Array.from($("#corpus-list").querySelectorAll(`.card[data-scenario="${scenarioId}"]`));
   if (!cards.length) { toast(`No corpus entry found for ${scenarioId}.`); return; }
   cards.forEach((card) => {
@@ -335,14 +367,24 @@ async function loadSketch() {
 function renderMarkdown(md) {
   const lines = md.split("\n");
   let html = "", inCode = false;
-  let para = [], quote = [], items = null;  // buffers for the block currently open
+  let para = [], quote = [], items = null, listTag = null;
   const inline = (t) => esc(t)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
   const flushPara = () => { if (para.length) { html += `<p>${inline(para.join(" "))}</p>`; para = []; } };
   const flushQuote = () => { if (quote.length) { html += `<blockquote>${inline(quote.join(" "))}</blockquote>`; quote = []; } };
-  const flushList = () => { if (items) { html += "<ul>" + items.map((t) => `<li>${inline(t)}</li>`).join("") + "</ul>"; items = null; } };
+  const flushList = () => {
+    if (items) html += `<${listTag}>` + items.map((t) => `<li>${inline(t)}</li>`).join("") + `</${listTag}>`;
+    items = null;
+    listTag = null;
+  };
+  const appendListItem = (tag, text) => {
+    if (items && listTag !== tag) flushList();
+    items = items || [];
+    listTag = tag;
+    items.push(text);
+  };
   const flushAll = () => { flushPara(); flushQuote(); flushList(); };
   for (const raw of lines) {
     if (raw.trim().startsWith("```")) { flushAll(); inCode = !inCode; html += inCode ? "<pre>" : "</pre>"; continue; }
@@ -350,8 +392,8 @@ function renderMarkdown(md) {
     const heading = raw.match(/^(#{1,6}) /);
     if (heading) { flushAll(); const lvl = heading[1].length; html += `<h${lvl}>${inline(raw.slice(lvl + 1))}</h${lvl}>`; }
     else if (/^> /.test(raw)) { flushPara(); flushList(); quote.push(raw.slice(2)); }
-    else if (/^\s*[-*] /.test(raw)) { flushPara(); flushQuote(); (items = items || []).push(raw.replace(/^\s*[-*] /, "")); }
-    else if (/^\s*\d+\. /.test(raw)) { flushPara(); flushQuote(); (items = items || []).push(raw.replace(/^\s*\d+\. /, "")); }
+    else if (/^\s*[-*] /.test(raw)) { flushPara(); flushQuote(); appendListItem("ul", raw.replace(/^\s*[-*] /, "")); }
+    else if (/^\s*\d+\. /.test(raw)) { flushPara(); flushQuote(); appendListItem("ol", raw.replace(/^\s*\d+\. /, "")); }
     else if (raw.trim() === "") { flushAll(); }
     // A non-blank plain line continues whichever block is open (wrapped text),
     // otherwise it starts a new paragraph.
@@ -380,25 +422,25 @@ function initPlayground() {
     seg.addEventListener("click", () => {
       document.querySelectorAll("#pg-backend .seg").forEach((s) => s.classList.remove("active"));
       seg.classList.add("active"); pg.backend = seg.dataset.backend;
-      $("#pg-model-wrap").style.display = pg.backend === "ollama" ? "" : "none";
+      $("#pg-model-wrap").style.display = pg.backend === "local" ? "" : "none";
     }));
 
   $("#pg-form").addEventListener("submit", (e) => { e.preventDefault(); sendPlayground(); });
 
-  loadOllamaStatus();
+  loadLlmStatus();
 }
 
-async function loadOllamaStatus() {
-  const status = $("#pg-ollama-status");
+async function loadLlmStatus() {
+  const status = $("#pg-llm-status");
   try {
-    const s = await api("/api/ollama");
+    const s = await api("/api/llm");
     const sel = $("#pg-model");
     sel.innerHTML = s.models.map((m) => `<option${m === s.default_model ? " selected" : ""}>${esc(m)}</option>`).join("")
       || `<option value="${esc(s.default_model)}">${esc(s.default_model)}</option>`;
     status.innerHTML = s.available
-      ? `<span style="color:var(--pass)">● Ollama up</span> at <code>${esc(s.host)}</code> (${s.models.length} model${s.models.length === 1 ? "" : "s"})`
-      : `<span style="color:var(--fail)">● Ollama unreachable</span> at <code>${esc(s.host)}</code> — mock still works`;
-  } catch (e) { status.textContent = "Could not query Ollama status."; }
+      ? `<span style="color:var(--pass)">● Local API up</span> at <code>${esc(s.base_url)}</code> (${s.models.length} model${s.models.length === 1 ? "" : "s"})`
+      : `<span style="color:var(--fail)">● Local API unreachable</span> at <code>${esc(s.base_url)}</code> — mock still works`;
+  } catch (e) { status.textContent = "Could not query the local API."; }
 }
 
 function readProfileForm() {
@@ -412,7 +454,7 @@ function readProfileForm() {
     experience: val("experience"), wants_size: val("wants_size") || null,
     young_children: chk("young_children"), wants_affection: chk("wants_affection"),
     wants_fluffy: chk("wants_fluffy"), narrative_note: val("narrative_note") || null,
-    mode: pg.mode, oracle_b: pg.backend, ollama_model: f.elements["ollama_model"]?.value || null,
+    mode: pg.mode, oracle_b: pg.backend, llm_model: f.elements["llm_model"]?.value || null,
   };
 }
 
@@ -422,7 +464,7 @@ async function sendPlayground() {
   const btn = $("#pg-submit");
   btn.disabled = true;
   box.innerHTML = `<p class="muted"><span class="spin"></span> Resolving${
-    body.oracle_b === "ollama" && body.narrative_note ? " (calling Ollama…)" : ""}</p>`;
+    body.oracle_b === "local" && body.narrative_note ? " (calling local model…)" : ""}</p>`;
   try {
     const data = await api("/api/test-suggest", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
@@ -446,4 +488,13 @@ async function sendPlayground() {
   }
 }
 
-loadScenarios();
+async function start() {
+  await loadScenarios();
+  const requestedTab = location.hash.replace(/^#/, "");
+  const tabId = document.querySelector(`.tab[data-tab="${requestedTab}"]`) ? requestedTab : "home";
+  await activateTab(tabId, false);
+  const runMode = new URLSearchParams(location.search).get("run");
+  if (tabId === "gate" && (runMode === "policy" || runMode === "naive")) await runGate(runMode);
+}
+
+start();

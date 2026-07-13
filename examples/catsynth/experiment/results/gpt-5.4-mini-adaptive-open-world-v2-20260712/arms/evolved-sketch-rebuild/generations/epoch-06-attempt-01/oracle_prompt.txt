@@ -1,0 +1,11 @@
+You are given a note about a cat owner preference.
+Return exactly one JSON object with a tags array.
+The tags array may contain only these controlled tags when supported by the note:
+- avoid_needy: note suggests frequent travel, repeated absence, or a lonely or miserable cat left alone
+- avoid_high_energy: note suggests wanting a calm, low-key, quiet, or low-energy cat, or explicitly not wanting a high-energy companion
+
+Note: {note}
+
+Return JSON only in this shape:
+{"tags":["..."]}
+If no controlled tag is supported, return {"tags":[]}.

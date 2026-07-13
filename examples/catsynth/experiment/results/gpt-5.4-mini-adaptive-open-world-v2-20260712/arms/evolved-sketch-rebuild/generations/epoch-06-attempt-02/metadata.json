@@ -1,0 +1,451 @@
+{
+  "active_failure": {
+    "failures": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [
+            "low_activity_discourage_high_energy",
+            "low_noise_discourage_vocal"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "Initial sketch only.",
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [
+              "low_activity_discourage_high_energy",
+              "low_noise_discourage_vocal"
+            ],
+            "checked": true,
+            "expected": [],
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "low",
+          "allergies": "none",
+          "experience": "novice",
+          "home_size": "house",
+          "label": "First-time owner, quiet home, wants a calm affectionate cat",
+          "narrative_note": null,
+          "noise_tolerance": "low",
+          "scenario_id": "novice_quiet",
+          "wants_affection": true,
+          "wants_fluffy": true,
+          "wants_size": null,
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [],
+        "reviewer_policy": "Initial sketch preference ranking with no learned policy rows.",
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [
+            "low_activity_discourage_high_energy",
+            "low_noise_discourage_vocal"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "FR-6: Apply every distinct applicable discourage predicate during ranking. Multiple different policy predicates accumulate; ranking uses base score minus the complete soft-penalty total.",
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [
+              "low_activity_discourage_high_energy",
+              "low_noise_discourage_vocal"
+            ],
+            "checked": true,
+            "expected": [],
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "low",
+          "allergies": "none",
+          "experience": "novice",
+          "home_size": "house",
+          "label": "Novice, low-activity owner wants a quiet low-key cat",
+          "narrative_note": null,
+          "noise_tolerance": "low",
+          "scenario_id": "soft_rules_compose",
+          "wants_affection": false,
+          "wants_fluffy": false,
+          "wants_size": null,
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [
+          {
+            "cat_attribute": "vocal",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "low_noise_discourage_vocal",
+            "kind": "discourage",
+            "reason": "Low noise tolerance: very vocal breeds are discouraged.",
+            "trait": "noise_tolerance",
+            "trait_op": "eq",
+            "trait_value": "low"
+          },
+          {
+            "cat_attribute": "energy",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "low_activity_discourage_high_energy",
+            "kind": "discourage",
+            "reason": "Low owner activity: high-energy breeds are discouraged.",
+            "trait": "activity_level",
+            "trait_op": "eq",
+            "trait_value": "low"
+          },
+          {
+            "cat_attribute": "energy",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "novice_discourage_high_energy",
+            "kind": "discourage",
+            "reason": "Novice owner: demanding high-energy breeds are discouraged.",
+            "trait": "experience",
+            "trait_op": "eq",
+            "trait_value": "novice"
+          }
+        ],
+        "reviewer_policy": "Distinct applicable soft rules compose. Each distinct discourage predicate contributes one point; evaluating only the first matching soft rule is incorrect.",
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [
+            "low_activity_discourage_high_energy"
+          ],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "FR-7: Merge structured discourage rows and narrative soft tags by semantic predicate. Identical cat_attribute/cat_op/cat_value predicates incur one penalty total, even when both surfaces express them.",
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [
+              "low_activity_discourage_high_energy"
+            ],
+            "checked": true,
+            "expected": [],
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "low",
+          "allergies": "none",
+          "experience": "experienced",
+          "home_size": "house",
+          "label": "Structured and narrative inputs express the same energy concern",
+          "narrative_note": "I want a calm, low-key cat rather than a high-energy companion.",
+          "noise_tolerance": "high",
+          "scenario_id": "duplicate_soft_signal",
+          "wants_affection": false,
+          "wants_fluffy": false,
+          "wants_size": "medium",
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [
+          {
+            "cat_attribute": "energy",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "nb_avoid_high_energy",
+            "kind": "discourage",
+            "reason": "Narrative note: owner wants a low-key cat; high-energy breeds discouraged."
+          }
+        ],
+        "relevant_rule_rows": [
+          {
+            "cat_attribute": "energy",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "low_activity_discourage_high_energy",
+            "kind": "discourage",
+            "reason": "Low owner activity: high-energy breeds are discouraged.",
+            "trait": "activity_level",
+            "trait_op": "eq",
+            "trait_value": "low"
+          }
+        ],
+        "reviewer_policy": "Structured policy and a narrative tag can express the same soft concern. Deduplicate soft adjustments by the semantic predicate (cat_attribute, cat_op, cat_value) so the same concern is applied once across surfaces.",
+        "scenario_id": "duplicate_soft_signal"
+      }
+    ]
+  },
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -55,6 +55,7 @@\n - Narrative tags may introduce the same soft predicates as structured rules. Their penalties also deduplicate against one another by semantic predicate.\n - If the oracle tag `avoid_needy` is present, it maps to the predicate `sociability gte high` and adds a one-point soft penalty unless that predicate was already counted.\n - If the oracle tag `avoid_high_energy` is present, it maps to the predicate `energy gte high` and adds a one-point soft penalty unless that predicate was already counted.\n+- Soft penalties affect ranking only and are not reported as cited rules.\n - Break ties by breed name in ascending order.\n \n ## Output shape\n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -92,9 +92,6 @@\n             _get(rule, \"cat_value\"),\n         )\n \n-    def _is_discourage(rule):\n-        return _get(rule, \"kind\") == \"discourage\"\n-\n     profile_obj = profile or {}\n     breed_list = list(breeds or [])\n     rule_list = list(rules or [])\n@@ -136,24 +133,21 @@\n \n     soft_predicates = []\n     soft_seen = set()\n-    soft_rule_ids = []\n-\n-    def _add_soft_predicate(pred, rid=None):\n+\n+    def _add_soft_predicate(pred):\n         if pred not in soft_seen:\n             soft_seen.add(pred)\n             soft_predicates.append(pred)\n-            if rid is not None:\n-                soft_rule_ids.append(rid)\n \n     for rule in rule_list:\n-        if _is_discourage(rule) and _matches_rule_trigger(rule, profile_obj):\n-            _add_soft_predicate(_semantic_predicate(rule), _get(rule, \"id\"))\n+        if _get(rule, \"kind\") == \"discourage\" and _matches_rule_trigger(rule, profile_obj):\n+            _add_soft_predicate(_semantic_predicate(rule))\n \n     for tag in tags:\n         if tag == \"avoid_needy\":\n-            _add_soft_predicate((\"sociability\", \"gte\", \"high\"), None)\n+            _add_soft_predicate((\"sociability\", \"gte\", \"high\"))\n         elif tag == \"avoid_high_energy\":\n-            _add_soft_predicate((\"energy\", \"gte\", \"high\"), None)\n+            _add_soft_predicate((\"energy\", \"gte\", \"high\"))\n \n     def _breed_score(breed):\n         score = 0\n@@ -199,14 +193,7 @@\n         ((-_breed_score(b), _get(b, \"name\"), b) for b in filtered),\n         key=lambda item: (item[0], item[1]),\n     )\n-    _, best_name, best_breed = ranked[0]\n-\n-    cited = []\n-    seen = set()\n-    for rid in hard_hit_ids + soft_rule_ids:\n-        if rid is not None and rid not in seen:\n-            seen.add(rid)\n-            cited.append(rid)\n+    _, best_name, _best_breed = ranked[0]\n \n     rationale = \"Selected the highest-scoring remaining breed after applying hard filters and preference-based ranking.\"\n     if soft_predicates:\n@@ -215,6 +202,6 @@\n     return {\n         \"operation\": \"recommend\",\n         \"breed\": best_name,\n-        \"cited_rules\": cited,\n+        \"cited_rules\": hard_hit_ids,\n         \"rationale\": rationale,\n     }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 3363,
+      "prompt_tokens": 23944,
+      "reasoning_tokens": 115,
+      "total_tokens": 27307
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "passed": true,
+        "scenario_id": "duplicate_soft_signal"
+      }
+    ],
+    "passed": true,
+    "passed_count": 7,
+    "total": 7
+  },
+  "source_generation": "generation"
+}

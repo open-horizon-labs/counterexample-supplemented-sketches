@@ -1,0 +1,53 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-010-missing-safety-data-escalates",
+    "policy": "Unknown or missing allergy status is an unresolved safety input. Escalate for clarification instead of treating unknown as none or guessing a recommendation.",
+    "rule_ids": [],
+    "scenario_id": "missing_safety_data",
+    "sketch_rule": "FR-10: If allergies is missing, null, blank, or outside none/mild/severe, ESCALATE with no breed. Unknown safety data is not equivalent to a negative value."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-010-missing-safety-data-escalates",
+    "mismatches": {
+      "breed": {
+        "actual": "Persian",
+        "checked": true,
+        "expected": null,
+        "match": false
+      },
+      "operation": {
+        "actual": "recommend",
+        "checked": true,
+        "expected": "escalate",
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "missing_safety_data"
+  },
+  "status": "promoted"
+}

@@ -1,0 +1,62 @@
+{
+  "counterexample": {
+    "breed_names": [
+      "Bengal",
+      "British Shorthair"
+    ],
+    "expected": {
+      "breed": "Bengal",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_high_energy"
+      ]
+    },
+    "id": "ce-007-duplicate-soft-signal",
+    "oracle_tag_ids": [
+      "avoid_high_energy"
+    ],
+    "policy": "Structured policy and a narrative tag can express the same soft concern. Deduplicate soft adjustments by the semantic predicate (cat_attribute, cat_op, cat_value) so the same concern is applied once across surfaces.",
+    "rule_ids": [
+      "low_activity_discourage_high_energy"
+    ],
+    "scenario_id": "duplicate_soft_signal",
+    "sketch_rule": "FR-7: Merge structured discourage rows and narrative soft tags by semantic predicate. Identical cat_attribute/cat_op/cat_value predicates incur one penalty total, even when both surfaces express them."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Bengal",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Bengal",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_high_energy"
+      ]
+    },
+    "id": "ce-007-duplicate-soft-signal",
+    "mismatches": {
+      "oracle_tags": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "avoid_high_energy"
+        ],
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "duplicate_soft_signal"
+  },
+  "status": "promoted"
+}

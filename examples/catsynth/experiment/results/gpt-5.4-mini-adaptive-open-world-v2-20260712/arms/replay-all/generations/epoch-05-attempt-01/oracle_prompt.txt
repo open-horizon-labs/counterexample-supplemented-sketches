@@ -1,0 +1,13 @@
+You are classifying a cat adoption note into controlled tags.
+
+Return exactly one JSON object with a tags array.
+
+Allowed tag meanings:
+- avoid_needy: the note says the owner travels frequently, is often away, or previously had a cat that seemed lonely or miserable when left alone.
+
+Classify only the supplied note.
+Do not invent new tags.
+If no allowed meaning applies, return {"tags": []}.
+
+Note:
+{note}

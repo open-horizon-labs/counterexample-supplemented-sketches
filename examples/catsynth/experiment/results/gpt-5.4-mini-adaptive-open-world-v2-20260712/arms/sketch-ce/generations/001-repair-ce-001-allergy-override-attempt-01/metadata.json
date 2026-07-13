@@ -1,0 +1,155 @@
+{
+  "active_failure": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-1: A forbid rule applies when the profile trait matches its trigger. For trait_op=in, trait_value is a comma-separated set. A matching cat predicate identifies a violation to remove; cat_op=is_false matches false. Filter violations before preference ranking and cite the applicable hard rule.",
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-001-allergy-override",
+    "mismatches": {
+      "breed": {
+        "actual": "Persian",
+        "checked": true,
+        "expected": "Siberian",
+        "match": false
+      },
+      "cited_rules": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "allergy_requires_hypoallergenic"
+        ],
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "moderate",
+      "allergies": "mild",
+      "experience": "experienced",
+      "home_size": "house",
+      "label": "Allergic owner wants a big fluffy affectionate lap cat",
+      "narrative_note": null,
+      "noise_tolerance": "high",
+      "scenario_id": "allergy_lapcat",
+      "wants_affection": true,
+      "wants_fluffy": true,
+      "wants_size": "large",
+      "work_hours": "normal",
+      "young_children": false
+    },
+    "relevant_oracle_tag_rules": [],
+    "relevant_rule_rows": [
+      {
+        "cat_attribute": "hypoallergenic",
+        "cat_op": "is_false",
+        "cat_value": "",
+        "id": "allergy_requires_hypoallergenic",
+        "kind": "forbid",
+        "reason": "Owner has allergies: non-hypoallergenic breeds are forbidden.",
+        "trait": "allergies",
+        "trait_op": "in",
+        "trait_value": "mild,severe"
+      }
+    ],
+    "reviewer_policy": "For this synthetic fixture, mild or severe allergies forbid every breed whose hypoallergenic attribute is false. Hard policy filters candidates before preference ranking.",
+    "scenario_id": "allergy_lapcat"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -1,4 +1,4 @@\n-# Initial CatSynth sketch\n+# CatSynth sketch\n \n Implement a deterministic cat recommendation strategy with this public entry\n point:\n@@ -10,18 +10,43 @@\n Return a dictionary containing `operation`, `breed`, `cited_rules`, and\n `rationale`.\n \n-## Current policy\n+## Core policy\n \n-- `operation` is `recommend` when at least one breed candidate is available.\n - If `breeds` is empty, return `escalate` with `breed = null`.\n - Do not inspect `scenario_id`.\n-- Do not assign any policy meaning to `rules` or `oracle_tags` yet.\n - Do not hard-code behavior for named fixtures.\n+- Preserve deterministic behavior across identical inputs.\n \n-## Ranking\n+## Hard rules first\n \n-Rank breeds by the owner's explicit positive preferences using deterministic\n-ordinal encodings:\n+Some rule rows are promoted to hard filters.\n+\n+A hard `forbid` rule removes a breed when both of these are true:\n+\n+1. the profile matches the rule trigger, and\n+2. the breed matches the rule's cat predicate.\n+\n+Supported predicate operators:\n+\n+- `eq`\n+- comma-separated `in`\n+- `is_true`\n+- `is_false`\n+- ordinal `gte` / `lte`\n+\n+For `in`, `trait_value` and `cat_value` are comma-separated strings. Empty values\n+match nothing.\n+\n+When a hard rule removes one or more breeds, include the applicable rule IDs in\n+`cited_rules`.\n+\n+If hard rules remove every breed, return `escalate` with `breed = null` and the\n+applicable hard rule IDs in `cited_rules`.\n+\n+## Ranking after filtering\n+\n+Rank the remaining breeds by the owner's explicit positive preferences using\n+stable ordinal encodings:\n \n - `low = 0`, `moderate = 1`, `high = 2`\n - `small = 0`, `medium = 1`, `large = 2`\n@@ -44,8 +69,8 @@\n - `cited_rules`: a list of rule ID strings\n - `rationale`: a short explanation string\n \n-For this initial sketch, `cited_rules` is always an empty list because no rule\n-semantics are promoted yet.\n+`oracle_tags` does not affect selection unless a later sketch promotion assigns\n+it meaning.\n \n ## Stable input shapes\n \n@@ -63,19 +88,6 @@\n Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`,\n `cat_attribute`, `cat_op`, and `cat_value`.\n \n-Operators describe predicates:\n-\n-- `eq`\n-- comma-separated `in`\n-- `is_true`\n-- `is_false`\n-- ordinal `gte` / `lte`\n-\n-The initial sketch intentionally does not say what a matched rule does.\n-\n-`oracle_tags` is a list of controlled strings. The initial sketch intentionally\n-assigns no meaning to any tag.\n-\n ## Narrative prompt contract\n \n Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`.\n@@ -84,6 +96,6 @@\n \n ## Empty-candidate fallback\n \n-If a later promoted clause removes every candidate but no promoted clause says\n-what to do with the empty set, return `escalate` with no breed. This preserves\n-the policy hole for a counterexample instead of silently choosing an answer.\n+If filtering removes every candidate, return `escalate` with no breed and cite\n+the hard rules that caused removal. This keeps the hard-rule behavior explicit\n+instead of silently choosing from forbidden breeds.\n",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -2,6 +2,6 @@\n {note}\n \n Return exactly one JSON object with a single key named \"tags\" whose value is an array.\n-Only use tags whose meanings are defined by the current sketch.\n-At this stage, the sketch defines no narrative tags, so return:\n+Only use tags whose meanings are defined by the current sketch or by supplied counterexamples.\n+At this stage, the sketch defines no narrative tags beyond empty output, so return:\n {\"tags\": []}\n",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -1,11 +1,13 @@\n def recommend(profile, breeds, rules, oracle_tags):\n-    \"\"\"Deterministic initial CatSynth recommendation strategy.\n+    \"\"\"Deterministic CatSynth recommendation strategy.\n \n-    This implementation follows the current sketch:\n-    - rank breeds by explicit owner preferences\n-    - do not assign semantics to rules or oracle_tags yet\n-    - never inspect scenario_id\n-    - break ties by breed name\n+    Behavior:\n+    - Apply promoted hard rules first.\n+    - Forbid rules remove breeds that match the rule's cat predicate when the\n+      profile matches the rule's trait trigger.\n+    - Then rank the remaining breeds by explicit owner preferences.\n+    - Never inspect scenario_id.\n+    - Do not use oracle_tags for selection.\n     \"\"\"\n \n     size_order = {\"small\": 0, \"medium\": 1, \"large\": 2}\n@@ -19,6 +21,68 @@\n \n     def norm_ord(value):\n         return ordinal_order.get(value, None)\n+\n+    def split_csv(value):\n+        if value is None or value == \"\":\n+            return []\n+        parts = []\n+        for item in str(value).split(\",\"):\n+            item = item.strip()\n+            if item:\n+                parts.append(item)\n+        return parts\n+\n+    def profile_matches(rule):\n+        trait = rule.get(\"trait\")\n+        op = rule.get(\"trait_op\")\n+        target = profile.get(trait)\n+        rule_value = rule.get(\"trait_value\")\n+\n+        if op == \"eq\":\n+            return target == rule_value\n+        if op == \"in\":\n+            return target in split_csv(rule_value)\n+        if op == \"is_true\":\n+            return target is True\n+        if op == \"is_false\":\n+            return target is False\n+        if op in (\"gte\", \"lte\"):\n+            if target is None:\n+                return False\n+            left = norm_ord(target) if target in ordinal_order else target\n+            right = norm_ord(rule_value) if rule_value in ordinal_order else rule_value\n+            if left is None or right is None:\n+                return False\n+            if op == \"gte\":\n+                return left >= right\n+            return left <= right\n+        return False\n+\n+    def cat_matches(rule, breed):\n+        attr = rule.get(\"cat_attribute\")\n+        op = rule.get(\"cat_op\")\n+        target = breed.get(attr)\n+        rule_value = rule.get(\"cat_value\")\n+\n+        if op == \"eq\":\n+            return target == rule_value\n+        if op == \"in\":\n+            return target in split_csv(rule_value)\n+        if op == \"is_true\":\n+            return target is True\n+        if op == \"is_false\":\n+            return target is False\n+        if op in (\"gte\", \"lte\"):\n+            if target is None:\n+                return False\n+            left = norm_ord(target) if target in ordinal_order else target\n+            right = norm_ord(rule_value) if rule_value in ordinal_order else rule_value\n+            if left is None or right is None:\n+                return False\n+            if op == \"gte\":\n+                return left >= right\n+            return left <= right\n+        return False\n \n     def score_breed(breed):\n         score = 0\n@@ -49,8 +113,39 @@\n             \"rationale\": \"No breeds were supplied, so there is no candidate to recommend.\"\n         }\n \n+    applicable_forbid_ids = []\n+    filtered = []\n+    for breed in breeds:\n+        name = breed.get(\"name\")\n+        if name is None:\n+            continue\n+\n+        violated = False\n+        for rule in rules or []:\n+            if rule.get(\"kind\") != \"forbid\":\n+                continue\n+            if not profile_matches(rule):\n+                continue\n+            if cat_matches(rule, breed):\n+                violated = True\n+                rule_id = rule.get(\"id\")\n+                if rule_id is not None and rule_id not in applicable_forbid_ids:\n+                    applicable_forbid_ids.append(rule_id)\n+                break\n+\n+        if not violated:\n+            filtered.append(breed)\n+\n+    if not filtered:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": applicable_forbid_ids,\n+            \"rationale\": \"All supplied breeds were removed by applicable hard rules.\"\n+        }\n+\n     ranked = []\n-    for breed in breeds:\n+    for breed in filtered:\n         name = breed.get(\"name\")\n         if name is None:\n             continue\n@@ -60,8 +155,8 @@\n         return {\n             \"operation\": \"escalate\",\n             \"breed\": None,\n-            \"cited_rules\": [],\n-            \"rationale\": \"No breed names were available to rank.\"\n+            \"cited_rules\": applicable_forbid_ids,\n+            \"rationale\": \"No breed names were available to rank after applying hard rules.\"\n         }\n \n     ranked.sort(key=lambda item: (-item[0], item[1]))\n@@ -74,10 +169,12 @@\n         rationale_parts.append(\"affection and calmness\")\n     if profile.get(\"wants_fluffy\") is True:\n         rationale_parts.append(\"fluffiness\")\n+    if applicable_forbid_ids:\n+        rationale_parts.append(\"hard rules applied\")\n \n     return {\n         \"operation\": \"recommend\",\n         \"breed\": chosen_name,\n-        \"cited_rules\": [],\n+        \"cited_rules\": applicable_forbid_ids,\n         \"rationale\": \"; \".join(rationale_parts) + \".\"\n     }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1408,
+      "completion_tokens": 2703,
+      "prompt_tokens": 20850,
+      "reasoning_tokens": 273,
+      "total_tokens": 23553
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      }
+    ],
+    "passed": true,
+    "passed_count": 2,
+    "total": 2
+  },
+  "source_generation": "001-repair-ce-001-allergy-override-attempt-01"
+}

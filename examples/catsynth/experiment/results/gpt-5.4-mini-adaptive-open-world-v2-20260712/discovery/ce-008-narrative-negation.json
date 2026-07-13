@@ -1,0 +1,40 @@
+{
+  "counterexample": {
+    "checked_fields": [
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-008-narrative-negation",
+    "oracle_tag_ids": [],
+    "policy": "Oracle B interprets the owner's assertion, including negation and attribution. A note saying the owner does not travel while someone else does must not emit avoid_needy.",
+    "rule_ids": [],
+    "scenario_id": "narrative_negation",
+    "sketch_rule": "FR-8: Prompt-mediated tags follow the owner's asserted situation, not keyword presence. Respect explicit negation and do not transfer another person's travel or absence to the owner."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-008-narrative-negation",
+    "passed": true,
+    "scenario_id": "narrative_negation"
+  },
+  "status": "coverage-not-promoted"
+}

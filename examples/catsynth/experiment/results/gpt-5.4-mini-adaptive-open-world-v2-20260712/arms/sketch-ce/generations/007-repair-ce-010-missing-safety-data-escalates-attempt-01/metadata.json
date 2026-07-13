@@ -1,0 +1,304 @@
+{
+  "active_failure": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-10: If allergies is missing, null, blank, or outside none/mild/severe, ESCALATE with no breed. Unknown safety data is not equivalent to a negative value.",
+    "expected": {
+      "breed": null,
+      "cited_rules": [],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-010-missing-safety-data-escalates",
+    "mismatches": {
+      "breed": {
+        "actual": "Persian",
+        "checked": true,
+        "expected": null,
+        "match": false
+      },
+      "operation": {
+        "actual": "recommend",
+        "checked": true,
+        "expected": "escalate",
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "moderate",
+      "allergies": "unknown",
+      "experience": "experienced",
+      "home_size": "house",
+      "label": "Allergy status is unknown and requires human clarification",
+      "narrative_note": null,
+      "noise_tolerance": "high",
+      "scenario_id": "missing_safety_data",
+      "wants_affection": true,
+      "wants_fluffy": false,
+      "wants_size": null,
+      "work_hours": "normal",
+      "young_children": false
+    },
+    "relevant_oracle_tag_rules": [],
+    "relevant_rule_rows": [],
+    "reviewer_policy": "Unknown or missing allergy status is an unresolved safety input. Escalate for clarification instead of treating unknown as none or guessing a recommendation.",
+    "scenario_id": "missing_safety_data"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-010-missing-safety-data-escalates"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -10,7 +10,8 @@\n \n ## Core policy\n \n-- If `breeds` is empty, return `escalate` with `breed = null`.\n+- If `profile.allergies` is missing, blank, unknown, or outside `none` / `mild` / `severe`, return `escalate` with `breed = null` because the safety input is unresolved.\n+- If `breeds` is empty, return `escalate` with `breed = null` because there is no catalog to evaluate.\n - If hard rules eliminate every supplied breed, return `abstain` with `breed = null` and cite the applicable hard rule IDs.\n - Do not inspect `scenario_id`.\n - Do not hard-code behavior for named fixtures.\n@@ -92,6 +93,8 @@\n \n ## Empty-candidate fallback\n \n+If `profile.allergies` is missing, blank, unknown, or outside `none` / `mild` / `severe`, return `escalate` with no breed because the safety input is unresolved.\n+\n If `breeds` is empty, return `escalate` with no breed because there is no catalog to evaluate.\n \n If filtering removes every candidate, return `abstain` with no breed and cite the hard rules that caused removal. This keeps the hard-rule behavior explicit instead of silently choosing from forbidden breeds or escalating a solvable no-match case.\n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -3,6 +3,8 @@\n \n     Policy:\n     - Apply promoted hard rules first.\n+    - If allergies is missing, blank, unknown, or outside the approved set,\n+      escalate because the safety input is unresolved.\n     - If hard rules eliminate every supplied breed, abstain and cite the hard\n       rule IDs.\n     - If breeds is empty, escalate because there is no catalog to evaluate.\n@@ -19,6 +21,7 @@\n \n     size_order = {\"small\": 0, \"medium\": 1, \"large\": 2}\n     ordinal_order = {\"low\": 0, \"moderate\": 1, \"high\": 2}\n+    valid_allergies = {\"none\", \"mild\", \"severe\"}\n \n     def norm_bool(value):\n         return value is True\n@@ -161,6 +164,26 @@\n         score -= soft_penalty\n         return score\n \n+    allergies = profile.get(\"allergies\")\n+    if allergies is None:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"Allergy status is missing, so the safety input is unresolved and needs human clarification.\"\n+        }\n+    if isinstance(allergies, str):\n+        allergies_value = allergies.strip().lower()\n+    else:\n+        allergies_value = allergies\n+    if allergies_value not in valid_allergies:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"Allergy status is unknown or outside the supported set, so the safety input is unresolved and needs human clarification.\"\n+        }\n+\n     if not breeds:\n         return {\n             \"operation\": \"escalate\",\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 17792,
+      "completion_tokens": 3814,
+      "prompt_tokens": 22535,
+      "reasoning_tokens": 82,
+      "total_tokens": 26349
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "passed": true,
+        "scenario_id": "duplicate_soft_signal"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-010-missing-safety-data-escalates",
+        "passed": true,
+        "scenario_id": "missing_safety_data"
+      }
+    ],
+    "passed": true,
+    "passed_count": 8,
+    "total": 8
+  },
+  "source_generation": "007-repair-ce-010-missing-safety-data-escalates-attempt-01"
+}

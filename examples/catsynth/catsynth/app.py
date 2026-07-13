@@ -168,20 +168,18 @@ def api_gate_runs():
         conn.close()
 
 
-@app.get("/api/ollama")
-def api_ollama_status():
-    """Report whether the local Ollama server is reachable and list its models."""
-    import requests
-    host = oracle_b.OLLAMA_HOST
+@app.get("/api/llm")
+def api_llm_status():
+    """Report models exposed by the configured OpenAI-compatible API."""
+    from .openai_compat import OpenAICompatibleClient
+    base_url = oracle_b.LLM_BASE_URL
     try:
-        resp = requests.get(f"{host.rstrip('/')}/api/tags", timeout=5)
-        resp.raise_for_status()
-        models = [m["name"] for m in resp.json().get("models", [])]
-        return {"available": True, "host": host, "models": models,
-                "default_model": oracle_b.OLLAMA_MODEL}
+        models = OpenAICompatibleClient(base_url=base_url, timeout=5).list_models()
+        return {"available": True, "base_url": base_url, "models": models,
+                "default_model": oracle_b.LLM_MODEL}
     except Exception as exc:
-        return {"available": False, "host": host, "models": [],
-                "default_model": oracle_b.OLLAMA_MODEL, "error": str(exc)}
+        return {"available": False, "base_url": base_url, "models": [],
+                "default_model": oracle_b.LLM_MODEL, "error": str(exc)}
 
 
 class ProfileIn(BaseModel):
@@ -198,14 +196,14 @@ class ProfileIn(BaseModel):
     wants_fluffy: bool = False
     narrative_note: Optional[str] = None
     mode: str = "policy"
-    oracle_b: str = "mock"          # mock | ollama
-    ollama_model: Optional[str] = None
+    oracle_b: str = "mock"          # mock | local
+    llm_model: Optional[str] = None
 
 
 @app.post("/api/test-suggest")
 def api_test_suggest(body: ProfileIn):
     """Run the resolver on an ad-hoc profile (not a stored scenario). Oracle B
-    can be backed by the mock or a local Ollama model."""
+    can be backed by the mock or an OpenAI-compatible local model."""
     owner = OwnerProfile(
         scenario_id="__adhoc__", label=body.label,
         allergies=body.allergies, work_hours=body.work_hours, home_size=body.home_size,
@@ -215,7 +213,7 @@ def api_test_suggest(body: ProfileIn):
         wants_fluffy=body.wants_fluffy, narrative_note=body.narrative_note or None,
     )
     client = oracle_b.make_client(body.oracle_b,
-                                  model=body.ollama_model or oracle_b.OLLAMA_MODEL)
+                                  model=body.llm_model or oracle_b.LLM_MODEL)
     conn = _conn()
     try:
         try:

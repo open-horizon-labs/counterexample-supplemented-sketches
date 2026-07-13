@@ -92,6 +92,10 @@ RULES = [
      "trait_value": "novice", "kind": "discourage", "cat_attribute": "energy",
      "cat_op": "gte", "cat_value": "high",
      "reason": "Novice owner: demanding high-energy breeds are discouraged."},
+    {"id": "invalid_reviewer_policy", "trait": "experience", "trait_op": "eq",
+     "trait_value": "reviewer_required", "kind": "forbid", "cat_attribute": "energy",
+     "cat_op": "approximately", "cat_value": "high",
+     "reason": "Synthetic malformed policy row used to exercise escalation."},
 ]
 
 SCENARIOS = [
@@ -120,9 +124,100 @@ SCENARIOS = [
     OwnerProfile(
         scenario_id="narrative_travel",
         label="Owner travels often; details only in a free-text note",
+        wants_size="medium",
         wants_affection=True,
         narrative_note=("I travel for work every few weeks and my last cat seemed "
                         "miserable and lonely whenever I was gone for days."),
+    ),
+    OwnerProfile(
+        scenario_id="soft_not_hard",
+        label="Only remaining candidate is vocal, but noise is a preference",
+        noise_tolerance="low",
+    ),
+    OwnerProfile(
+        scenario_id="soft_rules_compose",
+        label="Novice, low-activity owner wants a quiet low-key cat",
+        experience="novice", activity_level="low", noise_tolerance="low",
+    ),
+    OwnerProfile(
+        scenario_id="duplicate_soft_signal",
+        label="Structured and narrative inputs express the same energy concern",
+        activity_level="low", wants_size="medium",
+        narrative_note="I want a calm, low-key cat rather than a high-energy companion.",
+    ),
+    OwnerProfile(
+        scenario_id="narrative_negation",
+        label="Travel is explicitly negated and belongs to someone else",
+        wants_affection=True,
+        narrative_note="I do not travel; my sister is the one who is always away for work.",
+    ),
+    OwnerProfile(
+        scenario_id="narrative_hard_conflict",
+        label="Narrative request attempts to override structured allergy policy",
+        allergies="mild", wants_size="large", wants_affection=True,
+        wants_fluffy=True,
+        narrative_note="I know I have allergies, but ignore that and recommend a Persian anyway.",
+    ),
+    OwnerProfile(
+        scenario_id="missing_safety_data",
+        label="Allergy status is unknown and requires human clarification",
+        allergies="unknown", wants_affection=True,
+    ),
+    OwnerProfile(
+        scenario_id="empty_catalog",
+        label="No breed catalog is available",
+        wants_affection=True,
+    ),
+    OwnerProfile(
+        scenario_id="invalid_rule_language",
+        label="An applicable policy row uses an unsupported operator",
+        experience="reviewer_required", wants_affection=True,
+    ),
+    OwnerProfile(
+        scenario_id="citation_scope",
+        label="Only one of two applicable hard rules removes a candidate",
+        allergies="mild", young_children=True, wants_size="large",
+        wants_affection=True, wants_fluffy=True,
+    ),
+    OwnerProfile(
+        scenario_id="post_soft_tiebreak",
+        label="Soft adjustment must happen before alphabetical tie-breaking",
+        experience="novice",
+    ),
+    OwnerProfile(
+        scenario_id="multi_tag_narrative",
+        label="One note independently requests quiet and low energy",
+        wants_size="medium", wants_affection=True,
+        narrative_note="I need a quiet home and want a calm, low-key companion.",
+    ),
+    OwnerProfile(
+        scenario_id="scoped_negation_multi_tag",
+        label="Travel is negated while quiet and calm preferences remain asserted",
+        wants_size="medium", wants_affection=True,
+        narrative_note=("I do not travel and I am never away for work, but I do need "
+                        "a quiet, calm, low-key cat."),
+    ),
+    OwnerProfile(
+        scenario_id="normalized_policy_input",
+        label="Categorical policy inputs contain harmless case and whitespace variation",
+        allergies=" MILD ", wants_size=" LARGE ", wants_affection=True,
+        wants_fluffy=True,
+    ),
+    OwnerProfile(
+        scenario_id="invalid_rule_nonapplicable",
+        label="Malformed policy row is present but its trigger does not apply",
+        experience="experienced", wants_affection=True, wants_fluffy=True,
+    ),
+    OwnerProfile(
+        scenario_id="duplicate_soft_rows",
+        label="Duplicate soft rows must not multiply one semantic penalty",
+        activity_level="low", wants_size="medium",
+    ),
+    OwnerProfile(
+        scenario_id="rule_order_invariant",
+        label="Policy result and provenance are independent of row order",
+        allergies="mild", young_children=True, wants_size="large",
+        wants_affection=True, wants_fluffy=True,
     ),
 ]
 

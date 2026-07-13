@@ -1,0 +1,54 @@
+{
+  "counterexample": {
+    "checked_fields": [
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "id": "ce-003-narrative-travel-tag",
+    "oracle_tag_ids": [],
+    "policy": "Oracle B maps the owner's note only to controlled soft tags. A note about frequent travel, absence, or a lonely cat must produce exactly the tag avoid_needy. This counterexample promotes only the prompt-mediated classification; it does not yet define how deterministic ranking consumes the tag. The prompt may not invent unrelated tags or relax hard rules.",
+    "rule_ids": [],
+    "scenario_id": "narrative_travel",
+    "sketch_rule": "FR-3: Prompt-mediated narrative interpretation emits only controlled soft tags. Travel, frequent absence, or concern about a lonely cat maps to exactly avoid_needy. The prompt must classify only the supplied note rather than its own instructions. The deterministic meaning of avoid_needy remains an open hole."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Balinese",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "id": "ce-003-narrative-travel-tag",
+    "mismatches": {
+      "oracle_tags": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "avoid_needy"
+        ],
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "narrative_travel"
+  },
+  "status": "promoted"
+}

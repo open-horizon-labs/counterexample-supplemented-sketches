@@ -1,0 +1,198 @@
+{
+  "active_failure": {
+    "failures": [
+      {
+        "actual": {
+          "breed": "Ragdoll",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "Initial sketch only.",
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "mismatches": {
+          "breed": {
+            "actual": "Ragdoll",
+            "checked": true,
+            "expected": "Persian",
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "low",
+          "allergies": "none",
+          "experience": "novice",
+          "home_size": "house",
+          "label": "First-time owner, quiet home, wants a calm affectionate cat",
+          "narrative_note": null,
+          "noise_tolerance": "low",
+          "scenario_id": "novice_quiet",
+          "wants_affection": true,
+          "wants_fluffy": true,
+          "wants_size": null,
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [],
+        "reviewer_policy": "Initial sketch preference ranking with no learned policy rows.",
+        "scenario_id": "novice_quiet"
+      }
+    ]
+  },
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -130,12 +130,14 @@\n \n     wanted_size = profile.get('wants_size')\n     if wanted_size in ('small', 'medium', 'large'):\n-        score += max(0, 2 - abs(_ord(breed.get('size')) - _ord(wanted_size)))\n+        breed_size = _ord(breed.get('size'))\n+        wanted_size_ord = _ord(wanted_size)\n+        if breed_size is not None and wanted_size_ord is not None:\n+            score += max(0, 2 - abs(breed_size - wanted_size_ord))\n \n     if _parse_bool(profile.get('wants_affection')):\n-        score += (_ord(breed.get('affection')) or 0)\n+        score += _ord(breed.get('affection')) or 0\n         score += max(0, 2 - (_ord(breed.get('energy')) or 0))\n-        score += max(0, 2 - (_ord(breed.get('vocal')) or 0))\n         if str(profile.get('noise_tolerance')) == 'low':\n             score += max(0, 2 - (_ord(breed.get('vocal')) or 0))\n         if str(profile.get('activity_level')) == 'low':\n@@ -149,6 +151,14 @@\n         score -= _ord(breed.get('affection')) or 0\n \n     return score\n+\n+\n+def _better_candidate(current, challenger):\n+    if current is None:\n+        return True\n+    if challenger[0] != current[0]:\n+        return challenger[0] > current[0]\n+    return challenger[1] < current[1]\n \n \n def recommend(profile, breeds, rules, oracle_tags):\n@@ -176,9 +186,9 @@\n     best = None\n     best_key = None\n     for breed in survivors:\n-        score = _score_breed(profile, breed, oracle_tags or [])\n-        key = (score, breed.get('name') or '')\n-        if best is None or key > best_key:\n+        name = breed.get('name') or ''\n+        key = (_score_breed(profile, breed, oracle_tags or []), name)\n+        if _better_candidate(best_key, key):\n             best = breed\n             best_key = key\n \n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 16256,
+      "completion_tokens": 3271,
+      "prompt_tokens": 21999,
+      "reasoning_tokens": 386,
+      "total_tokens": 25270
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      }
+    ],
+    "passed": true,
+    "passed_count": 4,
+    "total": 4
+  },
+  "source_generation": "generation"
+}

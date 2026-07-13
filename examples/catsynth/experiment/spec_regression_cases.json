@@ -1,0 +1,88 @@
+[
+  {
+    "id": "spec-015-multiple-narrative-tags",
+    "scenario_id": "multi_tag_narrative",
+    "spec_section": "Narrative Oracle: independent controlled tags",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Balinese",
+      "cited_rules": [],
+      "oracle_tags": ["avoid_high_energy", "avoid_vocal"]
+    },
+    "rule_ids": []
+  },
+  {
+    "id": "spec-016-scoped-negation",
+    "scenario_id": "scoped_negation_multi_tag",
+    "spec_section": "Narrative Oracle: negation is scoped per concern",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Balinese",
+      "cited_rules": [],
+      "oracle_tags": ["avoid_high_energy", "avoid_vocal"]
+    },
+    "rule_ids": []
+  },
+  {
+    "id": "spec-017-normalized-policy-input",
+    "scenario_id": "normalized_policy_input",
+    "spec_section": "Normalization",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siberian",
+      "cited_rules": ["allergy_requires_hypoallergenic"],
+      "oracle_tags": []
+    },
+    "rule_ids": ["allergy_requires_hypoallergenic"]
+  },
+  {
+    "id": "spec-018-nonapplicable-invalid-rule",
+    "scenario_id": "invalid_rule_nonapplicable",
+    "spec_section": "Invalid policy is fatal only when its trigger applies",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Persian",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "rule_ids": ["invalid_reviewer_policy"],
+    "rule_sequence": ["invalid_reviewer_policy"]
+  },
+  {
+    "id": "spec-019-duplicate-soft-row",
+    "scenario_id": "duplicate_soft_rows",
+    "spec_section": "Semantic deduplication",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Bengal",
+      "cited_rules": [],
+      "oracle_tags": []
+    },
+    "breed_names": ["Bengal", "British Shorthair"],
+    "rule_ids": ["low_activity_discourage_high_energy"],
+    "rule_sequence": [
+      "low_activity_discourage_high_energy",
+      "low_activity_discourage_high_energy"
+    ]
+  },
+  {
+    "id": "spec-020-rule-order-invariance",
+    "scenario_id": "rule_order_invariant",
+    "spec_section": "Hard-rule provenance is order-invariant",
+    "expected": {
+      "operation": "recommend",
+      "breed": "Siberian",
+      "cited_rules": ["allergy_requires_hypoallergenic"],
+      "oracle_tags": []
+    },
+    "breed_names": ["Persian", "Siberian", "Balinese", "Devon Rex"],
+    "rule_ids": [
+      "allergy_requires_hypoallergenic",
+      "children_require_good_with_children"
+    ],
+    "rule_sequence": [
+      "children_require_good_with_children",
+      "allergy_requires_hypoallergenic"
+    ]
+  }
+]

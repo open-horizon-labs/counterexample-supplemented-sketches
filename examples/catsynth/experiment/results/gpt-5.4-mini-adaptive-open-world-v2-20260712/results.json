@@ -1,0 +1,4411 @@
+{
+  "arms": {
+    "replay_all": {
+      "developer": {
+        "cached_prompt_tokens": 150144,
+        "calls": 15,
+        "completion_tokens": 41155,
+        "prompt_tokens": 358926,
+        "reasoning_tokens": 4675,
+        "total_tokens": 400081
+      },
+      "evaluation": {
+        "hidden": [
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-allergy-medium",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-apartment-energy-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-children-boolean-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "hidden-travel-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-neutral-note",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-single-candidate",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-compose",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "hidden-duplicate-soft-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-negated-travel",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-hard-narrative-conflict",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-blank-allergy",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-empty-catalog",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-invalid-rule",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-effective-citation",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-post-soft-tiebreak",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-multi-tag-synonym",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-scoped-negation-multi",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-normalized-severe",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-nonapplicable-invalid",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-duplicate-soft-rows",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-reversed-rule-order",
+            "passed": false
+          }
+        ],
+        "hidden_passed": 15,
+        "hidden_total": 21,
+        "visible_passed": 8,
+        "visible_reference": [
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "visible_total": 8
+      },
+      "final_gate": {
+        "cases": [
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "initial-preference-ranking",
+            "passed": true,
+            "scenario_id": "novice_quiet"
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "passed": true,
+        "passed_count": 9,
+        "total": 9
+      },
+      "metrics": {
+        "artifact_churn_lines": 2394,
+        "prior_regressions_on_first_attempt": 2,
+        "rebuilds": 9,
+        "repair_attempts": 6
+      },
+      "quality": {
+        "anchor_preserved": true,
+        "ast_nodes": 1749,
+        "changed_lines_from_baseline": 259,
+        "decision_nodes": 77,
+        "forbidden_scenario_literals": [],
+        "prompt_chars": 712,
+        "strategy_loc": 224
+      },
+      "tokens": {
+        "by_category": {
+          "developer_replay_all": {
+            "cached_prompt_tokens": 150144,
+            "calls": 15,
+            "completion_tokens": 41155,
+            "prompt_tokens": 358926,
+            "reasoning_tokens": 4675,
+            "total_tokens": 400081
+          },
+          "runtime_oracle": {
+            "cached_prompt_tokens": 579200,
+            "calls": 39,
+            "completion_tokens": 1870,
+            "prompt_tokens": 659883,
+            "reasoning_tokens": 1114,
+            "total_tokens": 661753
+          }
+        },
+        "calls": [
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 1524,
+            "label": "epoch-00-attempt-01",
+            "prompt_tokens": 18091,
+            "reasoning_tokens": 269,
+            "total_tokens": 19615
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 2144,
+            "label": "epoch-01-attempt-01",
+            "prompt_tokens": 19859,
+            "reasoning_tokens": 196,
+            "total_tokens": 22003
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 2108,
+            "label": "epoch-01-attempt-02",
+            "prompt_tokens": 21324,
+            "reasoning_tokens": 173,
+            "total_tokens": 23432
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_replay_all",
+            "completion_tokens": 2061,
+            "label": "epoch-02-attempt-01",
+            "prompt_tokens": 22067,
+            "reasoning_tokens": 132,
+            "total_tokens": 24128
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_replay_all",
+            "completion_tokens": 2686,
+            "label": "epoch-03-attempt-01",
+            "prompt_tokens": 23767,
+            "reasoning_tokens": 649,
+            "total_tokens": 26453
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-3-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16911,
+            "reasoning_tokens": 9,
+            "total_tokens": 16940
+          },
+          {
+            "cached_prompt_tokens": 21888,
+            "category": "developer_replay_all",
+            "completion_tokens": 2078,
+            "label": "epoch-04-attempt-01",
+            "prompt_tokens": 25599,
+            "reasoning_tokens": 91,
+            "total_tokens": 27677
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-4-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16898,
+            "reasoning_tokens": 9,
+            "total_tokens": 16927
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "replay_all-epoch-4-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16898,
+            "reasoning_tokens": 10,
+            "total_tokens": 16928
+          },
+          {
+            "cached_prompt_tokens": 23424,
+            "category": "developer_replay_all",
+            "completion_tokens": 2489,
+            "label": "epoch-05-attempt-01",
+            "prompt_tokens": 26538,
+            "reasoning_tokens": 292,
+            "total_tokens": 29027
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "replay_all-epoch-5-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16879,
+            "reasoning_tokens": 15,
+            "total_tokens": 16914
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-5-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16879,
+            "reasoning_tokens": 9,
+            "total_tokens": 16908
+          },
+          {
+            "cached_prompt_tokens": 25472,
+            "category": "developer_replay_all",
+            "completion_tokens": 2488,
+            "label": "epoch-06-attempt-01",
+            "prompt_tokens": 27304,
+            "reasoning_tokens": 434,
+            "total_tokens": 29792
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-6-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16916,
+            "reasoning_tokens": 9,
+            "total_tokens": 16945
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 28,
+            "label": "replay_all-epoch-6-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16916,
+            "reasoning_tokens": 8,
+            "total_tokens": 16944
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-6-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16909,
+            "reasoning_tokens": 9,
+            "total_tokens": 16938
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_replay_all",
+            "completion_tokens": 2478,
+            "label": "epoch-07-attempt-01",
+            "prompt_tokens": 28927,
+            "reasoning_tokens": 179,
+            "total_tokens": 31405
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 53,
+            "label": "replay_all-epoch-7-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16907,
+            "reasoning_tokens": 33,
+            "total_tokens": 16960
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 40,
+            "label": "replay_all-epoch-7-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16907,
+            "reasoning_tokens": 20,
+            "total_tokens": 16947
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 36,
+            "label": "replay_all-epoch-7-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16900,
+            "reasoning_tokens": 16,
+            "total_tokens": 16936
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_replay_all",
+            "completion_tokens": 2751,
+            "label": "epoch-07-attempt-02",
+            "prompt_tokens": 22119,
+            "reasoning_tokens": 470,
+            "total_tokens": 24870
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "replay_all-epoch-7-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16902,
+            "reasoning_tokens": 15,
+            "total_tokens": 16937
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 31,
+            "label": "replay_all-epoch-7-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16902,
+            "reasoning_tokens": 11,
+            "total_tokens": 16933
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "replay_all-epoch-7-attempt-2:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 9,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 28544,
+            "category": "developer_replay_all",
+            "completion_tokens": 4172,
+            "label": "epoch-08-attempt-01",
+            "prompt_tokens": 30650,
+            "reasoning_tokens": 736,
+            "total_tokens": 34822
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 2539,
+            "label": "epoch-08-attempt-02",
+            "prompt_tokens": 19507,
+            "reasoning_tokens": 357,
+            "total_tokens": 22046
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 196,
+            "label": "replay_all-epoch-8-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16873,
+            "reasoning_tokens": 180,
+            "total_tokens": 17069
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 102,
+            "label": "replay_all-epoch-8-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16873,
+            "reasoning_tokens": 86,
+            "total_tokens": 16975
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 59,
+            "label": "replay_all-epoch-8-attempt-2:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16866,
+            "reasoning_tokens": 39,
+            "total_tokens": 16925
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 3661,
+            "label": "epoch-08-attempt-03",
+            "prompt_tokens": 25823,
+            "reasoning_tokens": 350,
+            "total_tokens": 29484
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "replay_all-epoch-8-attempt-3:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 10,
+            "total_tokens": 16925
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "replay_all-epoch-8-attempt-3:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 14,
+            "total_tokens": 16929
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 96,
+            "label": "replay_all-epoch-8-attempt-3:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16888,
+            "reasoning_tokens": 80,
+            "total_tokens": 16984
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_replay_all",
+            "completion_tokens": 3864,
+            "label": "epoch-08-attempt-04",
+            "prompt_tokens": 24051,
+            "reasoning_tokens": 104,
+            "total_tokens": 27915
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 40,
+            "label": "replay_all-epoch-8-attempt-4:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16935,
+            "reasoning_tokens": 20,
+            "total_tokens": 16975
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 45,
+            "label": "replay_all-epoch-8-attempt-4:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16935,
+            "reasoning_tokens": 25,
+            "total_tokens": 16980
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 36,
+            "label": "replay_all-epoch-8-attempt-4:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16928,
+            "reasoning_tokens": 16,
+            "total_tokens": 16964
+          },
+          {
+            "cached_prompt_tokens": 14720,
+            "category": "developer_replay_all",
+            "completion_tokens": 4112,
+            "label": "epoch-08-attempt-05",
+            "prompt_tokens": 23300,
+            "reasoning_tokens": 243,
+            "total_tokens": 27412
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 54,
+            "label": "replay_all-epoch-8-attempt-5:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 34,
+            "total_tokens": 17008
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 50,
+            "label": "replay_all-epoch-8-attempt-5:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 30,
+            "total_tokens": 17004
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 48,
+            "label": "replay_all-epoch-8-attempt-5:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16947,
+            "reasoning_tokens": 28,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "replay_all-final-visible:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 21,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "replay_all-final-visible:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 21,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 48,
+            "label": "replay_all-final-visible:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16947,
+            "reasoning_tokens": 28,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "replay_all:reference:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 21,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "replay_all:reference:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16954,
+            "reasoning_tokens": 21,
+            "total_tokens": 16995
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 46,
+            "label": "replay_all:reference:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16947,
+            "reasoning_tokens": 26,
+            "total_tokens": 16993
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "replay_all:hidden:hidden-travel-synonym",
+            "prompt_tokens": 16945,
+            "reasoning_tokens": 21,
+            "total_tokens": 16986
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "replay_all:hidden:hidden-neutral-note",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 19,
+            "total_tokens": 16974
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 45,
+            "label": "replay_all:hidden:hidden-duplicate-soft-synonym",
+            "prompt_tokens": 16944,
+            "reasoning_tokens": 25,
+            "total_tokens": 16989
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 55,
+            "label": "replay_all:hidden:hidden-negated-travel",
+            "prompt_tokens": 16947,
+            "reasoning_tokens": 39,
+            "total_tokens": 17002
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 75,
+            "label": "replay_all:hidden:hidden-hard-narrative-conflict",
+            "prompt_tokens": 16941,
+            "reasoning_tokens": 59,
+            "total_tokens": 17016
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 51,
+            "label": "replay_all:hidden:hidden-multi-tag-synonym",
+            "prompt_tokens": 16947,
+            "reasoning_tokens": 31,
+            "total_tokens": 16998
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 58,
+            "label": "replay_all:hidden:hidden-scoped-negation-multi",
+            "prompt_tokens": 16948,
+            "reasoning_tokens": 38,
+            "total_tokens": 17006
+          }
+        ],
+        "overall": {
+          "cached_prompt_tokens": 729344,
+          "calls": 54,
+          "completion_tokens": 43025,
+          "prompt_tokens": 1018809,
+          "reasoning_tokens": 5789,
+          "total_tokens": 1061834
+        }
+      }
+    },
+    "reviewed_sketch": {
+      "developer": {
+        "cached_prompt_tokens": 120832,
+        "calls": 16,
+        "completion_tokens": 48048,
+        "prompt_tokens": 323002,
+        "reasoning_tokens": 2579,
+        "total_tokens": 371050
+      },
+      "evaluation": {
+        "hidden": [
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-allergy-medium",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-apartment-energy-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-children-boolean-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "hidden-travel-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-neutral-note",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-single-candidate",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-compose",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "hidden-duplicate-soft-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-negated-travel",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-hard-narrative-conflict",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-blank-allergy",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-empty-catalog",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-invalid-rule",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-effective-citation",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-post-soft-tiebreak",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-multi-tag-synonym",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-scoped-negation-multi",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-normalized-severe",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-nonapplicable-invalid",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-duplicate-soft-rows",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-reversed-rule-order",
+            "passed": true
+          }
+        ],
+        "hidden_passed": 19,
+        "hidden_total": 21,
+        "visible_passed": 8,
+        "visible_reference": [
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "visible_total": 8
+      },
+      "final_gate": {
+        "cases": [
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "initial-preference-ranking",
+            "passed": true,
+            "scenario_id": "novice_quiet"
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "passed": true,
+        "passed_count": 9,
+        "total": 9
+      },
+      "metrics": {
+        "artifact_churn_lines": 2326,
+        "prior_regressions_on_first_attempt": 7,
+        "rebuilds": 9,
+        "repair_attempts": 7
+      },
+      "quality": {
+        "anchor_preserved": true,
+        "ast_nodes": 1566,
+        "changed_lines_from_baseline": 286,
+        "decision_nodes": 70,
+        "forbidden_scenario_literals": [],
+        "prompt_chars": 630,
+        "strategy_loc": 228
+      },
+      "tokens": {
+        "by_category": {
+          "developer_reviewed_sketch": {
+            "cached_prompt_tokens": 120832,
+            "calls": 16,
+            "completion_tokens": 48048,
+            "prompt_tokens": 323002,
+            "reasoning_tokens": 2579,
+            "total_tokens": 371050
+          },
+          "runtime_oracle": {
+            "cached_prompt_tokens": 533888,
+            "calls": 37,
+            "completion_tokens": 1329,
+            "prompt_tokens": 625928,
+            "reasoning_tokens": 601,
+            "total_tokens": 627257
+          }
+        },
+        "calls": [
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 1857,
+            "label": "epoch-00-attempt-01",
+            "prompt_tokens": 18092,
+            "reasoning_tokens": 223,
+            "total_tokens": 19949
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2302,
+            "label": "epoch-01-attempt-01",
+            "prompt_tokens": 18294,
+            "reasoning_tokens": 166,
+            "total_tokens": 20596
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2351,
+            "label": "epoch-01-attempt-02",
+            "prompt_tokens": 21678,
+            "reasoning_tokens": 167,
+            "total_tokens": 24029
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2483,
+            "label": "epoch-02-attempt-01",
+            "prompt_tokens": 18376,
+            "reasoning_tokens": 268,
+            "total_tokens": 20859
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2717,
+            "label": "epoch-03-attempt-01",
+            "prompt_tokens": 18418,
+            "reasoning_tokens": 148,
+            "total_tokens": 21135
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 36,
+            "label": "reviewed_sketch-epoch-3-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16880,
+            "reasoning_tokens": 16,
+            "total_tokens": 16916
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3305,
+            "label": "epoch-03-attempt-02",
+            "prompt_tokens": 22938,
+            "reasoning_tokens": 488,
+            "total_tokens": 26243
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 36,
+            "label": "reviewed_sketch-epoch-3-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16880,
+            "reasoning_tokens": 16,
+            "total_tokens": 16916
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3271,
+            "label": "epoch-03-attempt-03",
+            "prompt_tokens": 21999,
+            "reasoning_tokens": 386,
+            "total_tokens": 25270
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 33,
+            "label": "reviewed_sketch-epoch-3-attempt-3:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16880,
+            "reasoning_tokens": 13,
+            "total_tokens": 16913
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2677,
+            "label": "epoch-04-attempt-01",
+            "prompt_tokens": 18417,
+            "reasoning_tokens": 52,
+            "total_tokens": 21094
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 31,
+            "label": "reviewed_sketch-epoch-4-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16894,
+            "reasoning_tokens": 11,
+            "total_tokens": 16925
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "reviewed_sketch-epoch-4-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16894,
+            "reasoning_tokens": 10,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3011,
+            "label": "epoch-04-attempt-02",
+            "prompt_tokens": 22439,
+            "reasoning_tokens": 327,
+            "total_tokens": 25450
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "reviewed_sketch-epoch-4-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16894,
+            "reasoning_tokens": 10,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "reviewed_sketch-epoch-4-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16894,
+            "reasoning_tokens": 10,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 2902,
+            "label": "epoch-05-attempt-01",
+            "prompt_tokens": 18454,
+            "reasoning_tokens": 56,
+            "total_tokens": 21356
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-5-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16900,
+            "reasoning_tokens": 9,
+            "total_tokens": 16929
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-5-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16900,
+            "reasoning_tokens": 9,
+            "total_tokens": 16929
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3362,
+            "label": "epoch-06-attempt-01",
+            "prompt_tokens": 18578,
+            "reasoning_tokens": 21,
+            "total_tokens": 21940
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 53,
+            "label": "reviewed_sketch-epoch-6-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 33,
+            "total_tokens": 16961
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "reviewed_sketch-epoch-6-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 15,
+            "total_tokens": 16943
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-6-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16901,
+            "reasoning_tokens": 9,
+            "total_tokens": 16930
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3363,
+            "label": "epoch-06-attempt-02",
+            "prompt_tokens": 23944,
+            "reasoning_tokens": 115,
+            "total_tokens": 27307
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 49,
+            "label": "reviewed_sketch-epoch-6-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 29,
+            "total_tokens": 16957
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "reviewed_sketch-epoch-6-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 21,
+            "total_tokens": 16949
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-6-attempt-2:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16901,
+            "reasoning_tokens": 9,
+            "total_tokens": 16930
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3678,
+            "label": "epoch-07-attempt-01",
+            "prompt_tokens": 18682,
+            "reasoning_tokens": 44,
+            "total_tokens": 22360
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3510,
+            "label": "epoch-07-attempt-02",
+            "prompt_tokens": 20098,
+            "reasoning_tokens": 80,
+            "total_tokens": 23608
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 51,
+            "label": "reviewed_sketch-epoch-7-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16913,
+            "reasoning_tokens": 31,
+            "total_tokens": 16964
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 50,
+            "label": "reviewed_sketch-epoch-7-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16913,
+            "reasoning_tokens": 30,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-7-attempt-2:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16906,
+            "reasoning_tokens": 9,
+            "total_tokens": 16935
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3620,
+            "label": "epoch-08-attempt-01",
+            "prompt_tokens": 18812,
+            "reasoning_tokens": 38,
+            "total_tokens": 22432
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 40,
+            "label": "reviewed_sketch-epoch-8-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 20,
+            "total_tokens": 16979
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-8-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 9,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-epoch-8-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 9,
+            "total_tokens": 16961
+          },
+          {
+            "cached_prompt_tokens": 23424,
+            "category": "developer_reviewed_sketch",
+            "completion_tokens": 3639,
+            "label": "epoch-08-attempt-02",
+            "prompt_tokens": 23783,
+            "reasoning_tokens": 0,
+            "total_tokens": 27422
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 36,
+            "label": "reviewed_sketch-epoch-8-attempt-2:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 16,
+            "total_tokens": 16975
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "reviewed_sketch-epoch-8-attempt-2:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 21,
+            "total_tokens": 16980
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "reviewed_sketch-epoch-8-attempt-2:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 10,
+            "total_tokens": 16962
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "reviewed_sketch-final-visible:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 14,
+            "total_tokens": 16973
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 48,
+            "label": "reviewed_sketch-final-visible:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 28,
+            "total_tokens": 16987
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch-final-visible:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 9,
+            "total_tokens": 16961
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch:reference:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 9,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch:reference:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16939,
+            "reasoning_tokens": 9,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "reviewed_sketch:reference:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 9,
+            "total_tokens": 16961
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 37,
+            "label": "reviewed_sketch:hidden:hidden-travel-synonym",
+            "prompt_tokens": 16930,
+            "reasoning_tokens": 17,
+            "total_tokens": 16967
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 28,
+            "label": "reviewed_sketch:hidden:hidden-neutral-note",
+            "prompt_tokens": 16924,
+            "reasoning_tokens": 12,
+            "total_tokens": 16952
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 38,
+            "label": "reviewed_sketch:hidden:hidden-duplicate-soft-synonym",
+            "prompt_tokens": 16929,
+            "reasoning_tokens": 18,
+            "total_tokens": 16967
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 37,
+            "label": "reviewed_sketch:hidden:hidden-negated-travel",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 21,
+            "total_tokens": 16969
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 43,
+            "label": "reviewed_sketch:hidden:hidden-hard-narrative-conflict",
+            "prompt_tokens": 16926,
+            "reasoning_tokens": 27,
+            "total_tokens": 16969
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 56,
+            "label": "reviewed_sketch:hidden:hidden-multi-tag-synonym",
+            "prompt_tokens": 16932,
+            "reasoning_tokens": 36,
+            "total_tokens": 16988
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 37,
+            "label": "reviewed_sketch:hidden:hidden-scoped-negation-multi",
+            "prompt_tokens": 16933,
+            "reasoning_tokens": 17,
+            "total_tokens": 16970
+          }
+        ],
+        "overall": {
+          "cached_prompt_tokens": 654720,
+          "calls": 53,
+          "completion_tokens": 49377,
+          "prompt_tokens": 948930,
+          "reasoning_tokens": 3180,
+          "total_tokens": 998307
+        }
+      }
+    },
+    "sketch_ce": {
+      "developer": {
+        "cached_prompt_tokens": 50048,
+        "calls": 9,
+        "completion_tokens": 29102,
+        "prompt_tokens": 188474,
+        "reasoning_tokens": 2283,
+        "total_tokens": 217576
+      },
+      "evaluation": {
+        "hidden": [
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-allergy-medium",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "apartment_no_high_energy"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-apartment-energy-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [
+                "children_require_good_with_children"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-children-boolean-operator",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "hidden-travel-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-neutral-note",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-single-candidate",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-soft-compose",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "hidden-duplicate-soft-synonym",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-negated-travel",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-hard-narrative-conflict",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-blank-allergy",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-empty-catalog",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "hidden-invalid-rule",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-effective-citation",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-post-soft-tiebreak",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-multi-tag-synonym",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy",
+                "avoid_vocal"
+              ]
+            },
+            "id": "hidden-scoped-negation-multi",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Balinese",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-normalized-severe",
+            "passed": false
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-nonapplicable-invalid",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-duplicate-soft-rows",
+            "passed": true
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "hidden-reversed-rule-order",
+            "passed": true
+          }
+        ],
+        "hidden_passed": 18,
+        "hidden_total": 21,
+        "visible_passed": 8,
+        "visible_reference": [
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "visible_total": 8
+      },
+      "final_gate": {
+        "cases": [
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "initial-preference-ranking",
+            "passed": true,
+            "scenario_id": "novice_quiet"
+          },
+          {
+            "actual": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Siberian",
+              "cited_rules": [
+                "allergy_requires_hypoallergenic"
+              ],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-001-allergy-override",
+            "passed": true,
+            "scenario_id": "allergy_lapcat"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "allergy_requires_hypoallergenic",
+                "apartment_no_high_energy",
+                "children_require_good_with_children",
+                "long_hours_no_high_sociability",
+                "severe_allergy_low_shedding"
+              ],
+              "operation": "abstain",
+              "oracle_tags": []
+            },
+            "id": "ce-002-over-constrained-abstention",
+            "passed": true,
+            "scenario_id": "over_constrained"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-003-narrative-travel-tag",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Persian",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_needy"
+              ]
+            },
+            "id": "ce-004-narrative-soft-constraint",
+            "passed": true,
+            "scenario_id": "narrative_travel"
+          },
+          {
+            "actual": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "British Shorthair",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": []
+            },
+            "id": "ce-006-soft-rules-compose",
+            "passed": true,
+            "scenario_id": "soft_rules_compose"
+          },
+          {
+            "actual": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": "Bengal",
+              "cited_rules": [],
+              "operation": "recommend",
+              "oracle_tags": [
+                "avoid_high_energy"
+              ]
+            },
+            "id": "ce-007-duplicate-soft-signal",
+            "passed": true,
+            "scenario_id": "duplicate_soft_signal"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-010-missing-safety-data-escalates",
+            "passed": true,
+            "scenario_id": "missing_safety_data"
+          },
+          {
+            "actual": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "checked_fields": [
+              "operation",
+              "breed",
+              "cited_rules",
+              "oracle_tags"
+            ],
+            "expected": {
+              "breed": null,
+              "cited_rules": [
+                "invalid_reviewer_policy"
+              ],
+              "operation": "escalate",
+              "oracle_tags": []
+            },
+            "id": "ce-012-invalid-rule-escalates",
+            "passed": true,
+            "scenario_id": "invalid_rule_language"
+          }
+        ],
+        "passed": true,
+        "passed_count": 9,
+        "total": 9
+      },
+      "metrics": {
+        "artifact_churn_lines": 719,
+        "prior_regressions_on_first_attempt": 0,
+        "rebuilds": 1,
+        "repair_attempts": 0
+      },
+      "quality": {
+        "anchor_preserved": true,
+        "ast_nodes": 1885,
+        "changed_lines_from_baseline": 333,
+        "decision_nodes": 110,
+        "forbidden_scenario_literals": [],
+        "prompt_chars": 677,
+        "strategy_loc": 298
+      },
+      "tokens": {
+        "by_category": {
+          "developer_iterative": {
+            "cached_prompt_tokens": 50048,
+            "calls": 9,
+            "completion_tokens": 29102,
+            "prompt_tokens": 188474,
+            "reasoning_tokens": 2283,
+            "total_tokens": 217576
+          },
+          "runtime_oracle": {
+            "cached_prompt_tokens": 628608,
+            "calls": 49,
+            "completion_tokens": 1778,
+            "prompt_tokens": 825382,
+            "reasoning_tokens": 825,
+            "total_tokens": 827160
+          },
+          "spec_oracle": {
+            "cached_prompt_tokens": 41472,
+            "calls": 8,
+            "completion_tokens": 1646,
+            "prompt_tokens": 145122,
+            "reasoning_tokens": 478,
+            "total_tokens": 146768
+          }
+        },
+        "calls": [
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_iterative",
+            "completion_tokens": 1920,
+            "label": "initial-generation",
+            "prompt_tokens": 17625,
+            "reasoning_tokens": 338,
+            "total_tokens": 19545
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "spec_oracle",
+            "completion_tokens": 214,
+            "label": "ce-001-allergy-override",
+            "prompt_tokens": 18784,
+            "reasoning_tokens": 41,
+            "total_tokens": 18998
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_iterative",
+            "completion_tokens": 2703,
+            "label": "ce-001-allergy-override:attempt-1",
+            "prompt_tokens": 20850,
+            "reasoning_tokens": 273,
+            "total_tokens": 23553
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "spec_oracle",
+            "completion_tokens": 218,
+            "label": "ce-002-over-constrained-abstention",
+            "prompt_tokens": 19238,
+            "reasoning_tokens": 60,
+            "total_tokens": 19456
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_iterative",
+            "completion_tokens": 2682,
+            "label": "ce-002-over-constrained-abstention:attempt-1",
+            "prompt_tokens": 22110,
+            "reasoning_tokens": 122,
+            "total_tokens": 24792
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 26,
+            "label": "iterative-cycle-3-introduced:ce-003-narrative-travel-tag",
+            "prompt_tokens": 13031,
+            "reasoning_tokens": 9,
+            "total_tokens": 13057
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "spec_oracle",
+            "completion_tokens": 172,
+            "label": "ce-003-narrative-travel-tag",
+            "prompt_tokens": 14927,
+            "reasoning_tokens": 43,
+            "total_tokens": 15099
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "developer_iterative",
+            "completion_tokens": 3130,
+            "label": "ce-003-narrative-travel-tag:attempt-1",
+            "prompt_tokens": 17874,
+            "reasoning_tokens": 356,
+            "total_tokens": 21004
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-3-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 9,
+            "total_tokens": 16937
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "iterative-cycle-4-introduced:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16908,
+            "reasoning_tokens": 15,
+            "total_tokens": 16943
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "spec_oracle",
+            "completion_tokens": 269,
+            "label": "ce-004-narrative-soft-constraint",
+            "prompt_tokens": 18869,
+            "reasoning_tokens": 63,
+            "total_tokens": 19138
+          },
+          {
+            "cached_prompt_tokens": 4992,
+            "category": "developer_iterative",
+            "completion_tokens": 3109,
+            "label": "ce-004-narrative-soft-constraint:attempt-1",
+            "prompt_tokens": 22091,
+            "reasoning_tokens": 339,
+            "total_tokens": 25200
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-4-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 9,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 38,
+            "label": "iterative-cycle-4-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 18,
+            "total_tokens": 16933
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-5-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 9,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 12672,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-5-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 9,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 11648,
+            "category": "spec_oracle",
+            "completion_tokens": 217,
+            "label": "ce-006-soft-rules-compose",
+            "prompt_tokens": 18009,
+            "reasoning_tokens": 67,
+            "total_tokens": 18226
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_iterative",
+            "completion_tokens": 3025,
+            "label": "ce-006-soft-rules-compose:attempt-1",
+            "prompt_tokens": 21196,
+            "reasoning_tokens": 95,
+            "total_tokens": 24221
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "iterative-cycle-6-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 10,
+            "total_tokens": 16925
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-6-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16895,
+            "reasoning_tokens": 9,
+            "total_tokens": 16924
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 25,
+            "label": "iterative-cycle-7-introduced:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16888,
+            "reasoning_tokens": 9,
+            "total_tokens": 16913
+          },
+          {
+            "cached_prompt_tokens": 9600,
+            "category": "spec_oracle",
+            "completion_tokens": 177,
+            "label": "ce-007-duplicate-soft-signal",
+            "prompt_tokens": 17829,
+            "reasoning_tokens": 45,
+            "total_tokens": 18006
+          },
+          {
+            "cached_prompt_tokens": 1920,
+            "category": "developer_iterative",
+            "completion_tokens": 3791,
+            "label": "ce-007-duplicate-soft-signal:attempt-1",
+            "prompt_tokens": 21182,
+            "reasoning_tokens": 395,
+            "total_tokens": 24973
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-7-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-7-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-7-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 9,
+            "total_tokens": 16956
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 78,
+            "label": "iterative-cycle-8-introduced:ce-008-narrative-negation",
+            "prompt_tokens": 16929,
+            "reasoning_tokens": 62,
+            "total_tokens": 17007
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "iterative-cycle-8-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 15,
+            "total_tokens": 16969
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "iterative-cycle-8-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 14,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 12672,
+            "category": "runtime_oracle",
+            "completion_tokens": 52,
+            "label": "iterative-cycle-8-coverage-check:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 32,
+            "total_tokens": 16979
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "iterative-cycle-9-introduced:ce-009-narrative-cannot-override-hard-policy",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 25,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 60,
+            "label": "iterative-cycle-9-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 40,
+            "total_tokens": 16994
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "iterative-cycle-9-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 14,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "iterative-cycle-9-coverage-check:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 15,
+            "total_tokens": 16962
+          },
+          {
+            "cached_prompt_tokens": 11648,
+            "category": "spec_oracle",
+            "completion_tokens": 214,
+            "label": "ce-010-missing-safety-data-escalates",
+            "prompt_tokens": 18682,
+            "reasoning_tokens": 113,
+            "total_tokens": 18896
+          },
+          {
+            "cached_prompt_tokens": 17792,
+            "category": "developer_iterative",
+            "completion_tokens": 3814,
+            "label": "ce-010-missing-safety-data-escalates:attempt-1",
+            "prompt_tokens": 22535,
+            "reasoning_tokens": 82,
+            "total_tokens": 26349
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-10-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 54,
+            "label": "iterative-cycle-10-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 34,
+            "total_tokens": 16988
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-10-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 9,
+            "total_tokens": 16956
+          },
+          {
+            "cached_prompt_tokens": 9600,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-11-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-11-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-11-coverage-check:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 9,
+            "total_tokens": 16956
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "spec_oracle",
+            "completion_tokens": 165,
+            "label": "ce-012-invalid-rule-escalates",
+            "prompt_tokens": 18784,
+            "reasoning_tokens": 46,
+            "total_tokens": 18949
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "developer_iterative",
+            "completion_tokens": 4928,
+            "label": "ce-012-invalid-rule-escalates:attempt-1",
+            "prompt_tokens": 23011,
+            "reasoning_tokens": 283,
+            "total_tokens": 27939
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 33,
+            "label": "iterative-cycle-12-attempt-1:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 13,
+            "total_tokens": 16967
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-12-attempt-1:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "iterative-cycle-12-attempt-1:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 14,
+            "total_tokens": 16961
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 38,
+            "label": "iterative-cycle-13-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 18,
+            "total_tokens": 16972
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 41,
+            "label": "iterative-cycle-13-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 21,
+            "total_tokens": 16975
+          },
+          {
+            "cached_prompt_tokens": 1408,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-13-coverage-check:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 9,
+            "total_tokens": 16956
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-cycle-14-coverage-check:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 34,
+            "label": "iterative-cycle-14-coverage-check:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 14,
+            "total_tokens": 16968
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "iterative-cycle-14-coverage-check:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 10,
+            "total_tokens": 16957
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 53,
+            "label": "iterative-final:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 33,
+            "total_tokens": 16987
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-final:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16768,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "iterative-final:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 9,
+            "total_tokens": 16956
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 35,
+            "label": "sketch_ce:reference:ce-003-narrative-travel-tag",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 15,
+            "total_tokens": 16969
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "sketch_ce:reference:ce-004-narrative-soft-constraint",
+            "prompt_tokens": 16934,
+            "reasoning_tokens": 9,
+            "total_tokens": 16963
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 30,
+            "label": "sketch_ce:reference:ce-007-duplicate-soft-signal",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 10,
+            "total_tokens": 16957
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 48,
+            "label": "sketch_ce:hidden:hidden-travel-synonym",
+            "prompt_tokens": 16925,
+            "reasoning_tokens": 28,
+            "total_tokens": 16973
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 33,
+            "label": "sketch_ce:hidden:hidden-neutral-note",
+            "prompt_tokens": 16919,
+            "reasoning_tokens": 17,
+            "total_tokens": 16952
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 29,
+            "label": "sketch_ce:hidden:hidden-duplicate-soft-synonym",
+            "prompt_tokens": 16924,
+            "reasoning_tokens": 9,
+            "total_tokens": 16953
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 59,
+            "label": "sketch_ce:hidden:hidden-negated-travel",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 43,
+            "total_tokens": 16986
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 39,
+            "label": "sketch_ce:hidden:hidden-hard-narrative-conflict",
+            "prompt_tokens": 16921,
+            "reasoning_tokens": 23,
+            "total_tokens": 16960
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 69,
+            "label": "sketch_ce:hidden:hidden-multi-tag-synonym",
+            "prompt_tokens": 16927,
+            "reasoning_tokens": 49,
+            "total_tokens": 16996
+          },
+          {
+            "cached_prompt_tokens": 16256,
+            "category": "runtime_oracle",
+            "completion_tokens": 45,
+            "label": "sketch_ce:hidden:hidden-scoped-negation-multi",
+            "prompt_tokens": 16928,
+            "reasoning_tokens": 25,
+            "total_tokens": 16973
+          }
+        ],
+        "overall": {
+          "cached_prompt_tokens": 720128,
+          "calls": 66,
+          "completion_tokens": 32526,
+          "prompt_tokens": 1158978,
+          "reasoning_tokens": 3586,
+          "total_tokens": 1191504
+        }
+      }
+    }
+  },
+  "candidate_pool": {
+    "count": 14,
+    "manifest": {
+      "candidate_ids": [
+        "ce-001-allergy-override",
+        "ce-002-over-constrained-abstention",
+        "ce-003-narrative-travel-tag",
+        "ce-004-narrative-soft-constraint",
+        "ce-005-soft-rule-never-filters",
+        "ce-006-soft-rules-compose",
+        "ce-007-duplicate-soft-signal",
+        "ce-008-narrative-negation",
+        "ce-009-narrative-cannot-override-hard-policy",
+        "ce-010-missing-safety-data-escalates",
+        "ce-011-empty-catalog-escalates",
+        "ce-012-invalid-rule-escalates",
+        "ce-013-effective-citation-scope",
+        "ce-014-post-soft-tiebreak"
+      ],
+      "control_rule": "After discovery closes, replay the exact promoted stream and evolved sketch checkpoints through both rebuild controls without exposing rejected candidates.",
+      "name": "CatSynth adaptive open-world candidate pool v2",
+      "promotion_rule": "Probe candidates once in listed order against the retained Sketch-CE incumbent plus the cumulative promoted corpus. Promote exactly those whose checked fields fail. Never send a passing coverage probe to the Developer.",
+      "protocol_revision": "The candidate source, hash, order, promotion rule, and publication gate are unchanged from v1. V2 restores the previously established twelve-repair safety budget, permits ordinary pure Python map/filter built-ins in generated code, sends one shared breed catalog per repair request instead of duplicating it inside every failure, and surfaces terminal provider errors. V1 stopped at replay-all epoch 7 after a NameError from the omitted map built-in, one genuine regression attempt, and four usageLimitExceeded errors that the adapter had misreported as empty completions.",
+      "publication_gate": "Treat the result as a useful counterexample comparison only if at least five candidates are genuinely promoted and every arm reaches the full cumulative visible gate. Hidden cases remain evaluation-only.",
+      "source": "cases.json",
+      "source_sha256": "4834b28251ba5729283fd6539160f5ff06dd5c6b02326b31520878834019b2bc",
+      "stop_rule": "Complete the pool unless an arm exceeds twelve Developer repair calls for one promoted epoch or the harness detects leakage, fixture-specific code, model fallback, or a malformed artifact."
+    }
+  },
+  "created_at": "2026-07-13T02:14:45.387124+00:00",
+  "discovery": {
+    "candidates": [
+      {
+        "id": "ce-001-allergy-override",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-002-over-constrained-abstention",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-003-narrative-travel-tag",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-004-narrative-soft-constraint",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-005-soft-rule-never-filters",
+        "status": "coverage-not-promoted"
+      },
+      {
+        "id": "ce-006-soft-rules-compose",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-007-duplicate-soft-signal",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-008-narrative-negation",
+        "status": "coverage-not-promoted"
+      },
+      {
+        "id": "ce-009-narrative-cannot-override-hard-policy",
+        "status": "coverage-not-promoted"
+      },
+      {
+        "id": "ce-010-missing-safety-data-escalates",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-011-empty-catalog-escalates",
+        "status": "coverage-not-promoted"
+      },
+      {
+        "id": "ce-012-invalid-rule-escalates",
+        "status": "promoted"
+      },
+      {
+        "id": "ce-013-effective-citation-scope",
+        "status": "coverage-not-promoted"
+      },
+      {
+        "id": "ce-014-post-soft-tiebreak",
+        "status": "coverage-not-promoted"
+      }
+    ],
+    "coverage_count": 6,
+    "promoted_count": 8,
+    "promoted_ids": [
+      "ce-001-allergy-override",
+      "ce-002-over-constrained-abstention",
+      "ce-003-narrative-travel-tag",
+      "ce-004-narrative-soft-constraint",
+      "ce-006-soft-rules-compose",
+      "ce-007-duplicate-soft-signal",
+      "ce-010-missing-safety-data-escalates",
+      "ce-012-invalid-rule-escalates"
+    ],
+    "publication_gate_met": true
+  },
+  "inference": {
+    "effort": "low",
+    "environment_access": false,
+    "model_fallback": false,
+    "personality": "none",
+    "summary": "none",
+    "tools": false
+  },
+  "max_repairs_per_epoch": 12,
+  "mode": "prospective_adaptive_open_world",
+  "model": "gpt-5.4-mini",
+  "provider": "codex-app-server",
+  "run_id": "20260713T013622Z"
+}

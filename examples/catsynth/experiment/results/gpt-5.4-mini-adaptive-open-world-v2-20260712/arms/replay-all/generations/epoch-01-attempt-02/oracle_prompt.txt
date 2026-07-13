@@ -1,0 +1,9 @@
+You are given a single note and must return exactly one JSON object with a tags array.
+
+Rules:
+- Read the note carefully and assign only tags whose meanings are already defined by the current sketch or supplied counterexamples.
+- Do not invent new tag meanings.
+- If the note does not clearly match any defined tag meaning, return {"tags": []}.
+- Return JSON only.
+
+note: {note}

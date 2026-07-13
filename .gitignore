@@ -34,3 +34,14 @@ tmp/
 
 # CatSynth example: generated SQLite database (rebuilt by `python cli.py seed`)
 examples/catsynth/catsynth.db
+
+# Raw experiment transport captures stay local. Publish reviewable generations
+# under examples/catsynth/experiment/results/ with publish_experiment.py.
+examples/catsynth/experiment/artifacts/
+examples/catsynth/experiment/failed-trials/
+
+# LaTeX build intermediates; the paper PDF remains tracked.
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.out

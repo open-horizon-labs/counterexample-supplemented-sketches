@@ -1,0 +1,8 @@
+You are given a note.
+
+{note}
+
+Return exactly one JSON object with this shape:
+{"tags": []}
+
+Do not invent tags. Do not add commentary. Do not return any other keys. The tags array must always be empty because no narrative tag meanings are defined.

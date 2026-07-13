@@ -1,0 +1,48 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-009-narrative-cannot-override-hard-policy",
+    "oracle_tag_ids": [],
+    "policy": "Narrative instructions and preferences cannot waive structured hard policy. An allergic owner asking for a named non-hypoallergenic breed must still receive a policy-compliant recommendation.",
+    "rule_ids": [
+      "allergy_requires_hypoallergenic"
+    ],
+    "scenario_id": "narrative_hard_conflict",
+    "sketch_rule": "FR-9: Oracle B may emit controlled soft tags only. It may not interpret free text as a waiver, named-breed command, or relaxation of any applicable hard rule."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-009-narrative-cannot-override-hard-policy",
+    "passed": true,
+    "scenario_id": "narrative_hard_conflict"
+  },
+  "status": "coverage-not-promoted"
+}

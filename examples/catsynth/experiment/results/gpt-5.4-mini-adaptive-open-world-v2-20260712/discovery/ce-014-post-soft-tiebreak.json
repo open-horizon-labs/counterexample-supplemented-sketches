@@ -1,0 +1,45 @@
+{
+  "counterexample": {
+    "breed_names": [
+      "Abyssinian",
+      "British Shorthair"
+    ],
+    "expected": {
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-014-post-soft-tiebreak",
+    "policy": "Apply all hard filtering and soft adjustments before deterministic name tie-breaking. Alphabetical order resolves only the final adjusted-score tie.",
+    "rule_ids": [
+      "novice_discourage_high_energy"
+    ],
+    "scenario_id": "post_soft_tiebreak",
+    "sketch_rule": "FR-14: Rank by final score after every hard filter and deduplicated soft penalty, then by normalized breed name ascending. Do not choose a base-score tie winner before soft policy is applied."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-014-post-soft-tiebreak",
+    "passed": true,
+    "scenario_id": "post_soft_tiebreak"
+  },
+  "status": "coverage-not-promoted"
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CatSynth — Agentic Synthesis Loop</title>
+  <title>CatSynth — Method Walkthrough</title>
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
@@ -12,23 +12,23 @@
       <span class="logo">🐈</span>
       <div>
         <h1>CatSynth</h1>
-        <p class="tag">Agentic synthesis against counterexample-supplemented sketches — a runnable slice</p>
+        <p class="tag">A synthetic, runnable walkthrough of counterexample-supplemented sketches</p>
       </div>
     </div>
-    <nav class="tabs">
-      <button class="tab active" data-tab="home">Home</button>
-      <button class="tab" data-tab="review">Review</button>
-      <button class="tab" data-tab="playground">Playground</button>
-      <button class="tab" data-tab="gate">Gate</button>
-      <button class="tab" data-tab="corpus">Corpus (E)</button>
-      <button class="tab" data-tab="rules">Rules</button>
-      <button class="tab" data-tab="sketch">Sketch (S)</button>
+    <nav class="tabs" role="tablist" aria-label="CatSynth walkthrough">
+      <button class="tab active" data-tab="home" role="tab" aria-controls="home" aria-selected="true">Home</button>
+      <button class="tab" data-tab="review" role="tab" aria-controls="review" aria-selected="false">Review</button>
+      <button class="tab" data-tab="playground" role="tab" aria-controls="playground" aria-selected="false">Playground</button>
+      <button class="tab" data-tab="gate" role="tab" aria-controls="gate" aria-selected="false">Gate</button>
+      <button class="tab" data-tab="corpus" role="tab" aria-controls="corpus" aria-selected="false">Corpus (E)</button>
+      <button class="tab" data-tab="rules" role="tab" aria-controls="rules" aria-selected="false">Rules</button>
+      <button class="tab" data-tab="sketch" role="tab" aria-controls="sketch" aria-selected="false">Sketch (S)</button>
     </nav>
   </header>
 
   <main>
     <!-- HOME -->
-    <section id="home" class="panel active">
+    <section id="home" class="panel active" role="tabpanel">
       <div class="home-hero">
         <h2>Agentic synthesis against counterexample-supplemented sketches</h2>
         <p class="home-lede">Coding agents fail when a broad prompt hides a constraint the human already
@@ -36,23 +36,25 @@
           shape, <strong>counterexamples</strong> name the tempting wrong output, deterministic
           <strong>anchors</strong> keep results on-policy, and an adversarial <strong>gate</strong> proves
           the wrong repair fails.</p>
-        <p class="home-sub">Below is one real case followed end-to-end through the loop. Each step links to
+        <p class="home-sub">Below is one synthetic case followed end-to-end through the loop. Each step links to
           the live tab that runs it — read top to bottom, then click through.</p>
+        <p class="synthetic-note"><strong>Illustrative data:</strong> breed attributes and policy rows are
+          simplified fixtures for demonstrating the method, not pet-selection or medical advice.</p>
       </div>
 
       <div class="home-case">
         <span class="chip">Worked case · FR-1</span>
         An owner has <strong>allergies</strong> and wants a <em>“big, fluffy, affectionate lap cat.”</em>
-        The tempting answer is <strong>Persian</strong> — it fits every preference. The correct answer is
-        <strong>Siberian</strong>: equally big, fluffy, and affectionate, but hypoallergenic. Watch the loop
-        catch the difference.
+        The tempting output is <strong>Persian</strong> — it fits every preference. In the synthetic policy
+        table, the expected output is <strong>Siberian</strong>, the matching breed marked
+        <code>hypoallergenic=true</code>. Watch the gate catch the difference.
       </div>
 
       <ol class="home-steps">
         <li class="home-step">
           <div class="step-head"><span class="step-num">1</span>
             <h3>Sketch (S) — state the intended shape</h3>
-            <span class="paper-ref">paper §2.1</span></div>
+            <span class="paper-ref">Sketch S</span></div>
           <p>The sketch is a <strong>partial solution shape</strong>, not full code: which operations the
             resolver may return (<code>recommend</code> / <code>abstain</code> / <code>escalate</code>),
             their priority order, which fields are policy-bearing, and the repairs it must
@@ -64,7 +66,7 @@
         <li class="home-step">
           <div class="step-head"><span class="step-num">2</span>
             <h3>Anchors (K) — bind the result to known code</h3>
-            <span class="paper-ref">paper §2.3</span></div>
+            <span class="paper-ref">Anchors K</span></div>
           <p>Known-code anchors are the conventions the resolver must reuse instead of inventing: the
             <code>Recommendation</code> output shape <code>{operation, breed, cited_rules}</code> and the
             local <strong>rule tables</strong> evaluated by one generic rule engine. A <code>forbid</code>
@@ -76,7 +78,7 @@
         <li class="home-step">
           <div class="step-head"><span class="step-num">3</span>
             <h3>Resolve — the coding-agent flow fills the holes</h3>
-            <span class="paper-ref">paper §2.4</span></div>
+            <span class="paper-ref">Oracles A/B</span></div>
           <p>The resolver executes the sketch's holes: <strong>Oracle A</strong> (deterministic code) applies
             the hard/soft rules and ranks by preference; <strong>Oracle B</strong> turns a free-text note
             into <em>soft</em> constraints only and can never relax a hard rule. Toggle
@@ -90,18 +92,18 @@
         <li class="home-step">
           <div class="step-head"><span class="step-num">4</span>
             <h3>Counterexample → Corpus (E) — name the wrong repair</h3>
-            <span class="paper-ref">paper §2.2</span></div>
+            <span class="paper-ref">Corpus E</span></div>
           <p>A counterexample is an adversarial case that names a <strong>plausible wrong implementation</strong>
-            and becomes a permanent test. When a reviewer corrects Persian → Siberian, the case is promoted
-            into the golden corpus: the expected output, the tempting repair (Persian), and the violated rule.
-            The corpus is the growing record of mistakes the harness must never repeat.</p>
+            and becomes a durable test when saved in the repository corpus source. This demo seeds that source
+            into local SQLite; extra UI promotions are local experiments. The seeded entry records the expected
+            output, the tempting repair (Persian), and the violated rule.</p>
           <button class="btn btn-sm" data-goto="corpus">Open Corpus (E) →</button>
         </li>
 
         <li class="home-step">
           <div class="step-head"><span class="step-num">5</span>
             <h3>Verify — the gate must fail the tempting patch</h3>
-            <span class="paper-ref">paper §2.5</span></div>
+            <span class="paper-ref">Gate G</span></div>
           <p>Verification is adversarial: a useful check passes the intended behavior <em>and</em> fails the
             tempting wrong patch. The gate runs two checks over the corpus — <strong>replay</strong> (did we
             close the owner's state gap?) and <strong>semantic compare</strong> (do the policy-bearing fields
@@ -120,7 +122,7 @@
     </section>
 
     <!-- REVIEW -->
-    <section id="review" class="panel">
+    <section id="review" class="panel" role="tabpanel">
       <div class="two-col">
         <aside class="sidebar">
           <div class="sidebar-head">
@@ -152,8 +154,8 @@
     </section>
 
     <!-- PLAYGROUND -->
-    <section id="playground" class="panel">
-      <h2>Playground — send a fake request</h2>
+    <section id="playground" class="panel" role="tabpanel">
+      <h2>Playground — test an owner profile</h2>
       <p class="hint">Build an ad-hoc owner profile and see what the resolver returns. Add a free-text note to exercise <strong>Oracle B</strong> — backed by the deterministic mock or your local Ollama model.</p>
       <div class="two-col pg-two-col">
         <div class="detail">
@@ -208,8 +210,8 @@
                     <span class="seg-main">mock</span>
                     <span class="seg-sub">deterministic keywords · no LLM</span>
                   </button>
-                  <button type="button" data-backend="ollama" class="seg">
-                    <span class="seg-main">ollama</span>
+                  <button type="button" data-backend="local" class="seg">
+                    <span class="seg-main">local API</span>
                     <span class="seg-sub">your local LLM reads the note</span>
                   </button>
                 </div>
@@ -219,12 +221,12 @@
               </div>
 
               <div id="pg-model-wrap" style="display:none">
-                <label>Ollama model</label>
-                <select name="ollama_model" id="pg-model"></select>
+                <label>Model</label>
+                <select name="llm_model" id="pg-model"></select>
               </div>
             </div>
             <div class="row"><button class="btn primary" type="submit" id="pg-submit">Send request →</button>
-              <span id="pg-ollama-status" class="form-note"></span></div>
+              <span id="pg-llm-status" class="form-note"></span></div>
           </form>
         </div>
         <div class="detail" id="pg-result">
@@ -234,7 +236,7 @@
     </section>
 
     <!-- GATE -->
-    <section id="gate" class="panel">
+    <section id="gate" class="panel" role="tabpanel">
       <div class="gate-controls">
         <h2>Gate G — replay + semantic compare over the promoted corpus</h2>
         <div class="row">
@@ -251,21 +253,21 @@
     </section>
 
     <!-- CORPUS -->
-    <section id="corpus" class="panel">
+    <section id="corpus" class="panel" role="tabpanel">
       <h2>Golden corpus (E) — promoted counterexamples</h2>
       <p class="hint">Each promoted case names the expected output, the tempting wrong repair, the violated rule, and the sketch clause it supplements.</p>
       <div id="corpus-list"></div>
     </section>
 
     <!-- RULES -->
-    <section id="rules" class="panel">
+    <section id="rules" class="panel" role="tabpanel">
       <h2>Owner-trait rulesets (local policy tables)</h2>
       <p class="hint"><strong>forbid</strong> = hard rule (removes the breed). <strong>discourage</strong> = soft rule (penalizes it in ranking).</p>
       <div id="rules-list"></div>
     </section>
 
     <!-- SKETCH -->
-    <section id="sketch" class="panel">
+    <section id="sketch" class="panel" role="tabpanel">
       <h2>Sketch (S)</h2>
       <div id="sketch-body" class="markdown"></div>
     </section>
