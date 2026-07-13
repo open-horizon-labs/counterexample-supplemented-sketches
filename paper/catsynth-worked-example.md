@@ -208,7 +208,7 @@ CE4 ranking:    PASS
 gate:           5/5
 ```
 
-The final retained Sketch-CE implementation passes 18/21 hidden cases. It misses two multi-tag
+The final retained Sketch-CE implementation has an 18/21 hidden-suite pass rate. It misses two multi-tag
 cases because no promoted discovery has yet defined `avoid_vocal`, and it misses one normalized
 severe-allergy variant. Those failures show where another open-world counterexample could extend
 the current sketch.
@@ -255,7 +255,7 @@ state.
 | Final strategy LOC | 224 | 228 | 298 |
 | Final decision nodes | 77 | 70 | 110 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden cases | 15/21 | 19/21 | 18/21 |
+| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
 
 Tokens through acceptance include Developer edits, prompt-mediated Runtime Oracle checks, and
 Specification Oracle rule proposals. The final visible and hidden evaluation is reported
@@ -263,7 +263,7 @@ separately. The candidate cases were external inputs. Sketch-CE paid to classify
 general rules for the failures; the controls inherited the resulting promotion schedule without
 paying for candidate classification or rule proposal. The totals therefore have different
 boundaries and are not end-to-end price rankings. Retained Sketch-CE used less Developer work
-and produced less churn. Evolved-sketch rebuild had the best hidden score.
+and produced less churn. Evolved-sketch rebuild had the highest hidden-suite pass rate.
 Sketch-CE's final strategy was the largest and had the most decision nodes, so this run shows
 less rework during evolution, not better final maintainability.
 

@@ -8,7 +8,7 @@ techniques.
 The closed-world experiment starts with an immutable complete specification and
 empty implementation files. GPT-5.4-mini initially passed 11/21 gate cases. Three
 repair calls brought the full gate to 21/21. Post-acceptance evaluation passed
-20/20 visible cases and 21/21 hidden cases.
+20/20 visible cases and a 21/21 hidden-suite pass rate.
 
 | Measure | Spec-first |
 |---|---:|
@@ -20,7 +20,7 @@ repair calls brought the full gate to 21/21. Post-acceptance evaluation passed
 | Post-acceptance evaluation tokens | 239,929 |
 | Total recorded tokens, including evaluation | 851,448 |
 | Visible evaluation | 20/20 |
-| Hidden evaluation | 21/21 |
+| Hidden-suite pass rate | 21/21 |
 
 [Read every spec-first generation and the complete results.](results/gpt-5.4-mini-spec-first-20260712/README.md)
 
@@ -62,7 +62,7 @@ All three paths use the same GPT-5.4-mini model and low-effort inference control
 | Final decision nodes | 77 | 70 | 110 |
 | Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden cases | 15/21 | 19/21 | 18/21 |
+| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
 
 Tokens through acceptance are the sum of Developer calls that edit the artifacts, Runtime Oracle
 calls that execute prompt-mediated policy during probes and gates, and Specification Oracle calls
@@ -72,7 +72,8 @@ The candidate cases came from outside the system. Sketch-CE paid to classify the
 rules for the failures. Replay-all and evolved-sketch rebuild inherited the resulting promotion
 schedule, so their totals omit candidate classification and rule proposal. The totals are real
 consumption with different boundaries, not comparable end-to-end prices. Retained Sketch-CE used
-less Developer work and produced less churn. Evolved-sketch rebuild had the best hidden score.
+less Developer work and produced less churn. Evolved-sketch rebuild had the highest hidden-suite
+pass rate.
 Sketch-CE's final strategy was larger and had more decision nodes than either rebuild, so the
 experiment does not establish better final maintainability.
 
@@ -89,7 +90,7 @@ Each generated state contains:
   gate results, Developer usage, and file diffs.
 
 The result directories also contain every discovery outcome, final visible and
-hidden results, token ledgers, quality metrics, and inference settings.
+hidden-suite results, token ledgers, quality metrics, and inference settings.
 
 Raw JSON-RPC transport transcripts remain local. They repeated the same source
 files and results several times without making the causal history easier to

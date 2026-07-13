@@ -56,12 +56,12 @@ CatSynth, a synthetic browser application and a captured coding-agent experiment
 experiment gives the Developer one active failure at a time, lets it revise the sketch,
 deterministic code, and prompt together, and gates every revision against the full promoted
 corpus.  A closed-world run separately gives the same model a complete immutable specification;
-it reaches 20/20 visible and 21/21 hidden cases in four Developer calls and 611,519 model tokens
+it reaches 20/20 visible and a 21/21 hidden-suite pass rate in four Developer calls and 611,519 model tokens
 through visible acceptance.  In the open-world run, eight of fourteen externally supplied cases
 fail and are promoted.  Tokens through visible acceptance are 891,880 for replay-all, 828,628
 for evolved-sketch rebuild, and 1,021,822 for retained Sketch--CE.  The controls inherit the
 promotion schedule and omit candidate classification and rule proposal, so these totals are not end-to-end price
-rankings.  All three pass eight visible cases; their hidden scores are 15/21, 19/21, and 18/21
+rankings.  All three pass eight visible cases; their hidden-suite pass rates are 15/21, 19/21, and 18/21
 respectively.  These are inspectable runs, not general performance claims.
 \end{abstract}
 
@@ -853,7 +853,7 @@ produce the approved ranking.  That independent failure becomes the fourth count
 
 The main decision is not ``iteration or one shot.''  It is whether the governing policy is
 already complete.  In a separate closed-world run, the model receives an immutable complete
-specification and empty implementation files.  It reaches 20/20 visible and 21/21 hidden cases
+specification and empty implementation files.  It reaches 20/20 visible and a 21/21 hidden-suite pass rate
 after four Developer calls.  Reaching visible acceptance consumes 611,519 model tokens: 132,632
 for Developer calls and 478,887 for prompt-mediated Runtime Oracle checks.  Post-acceptance
 visible and hidden evaluation consumes another 239,929, for 851,448 recorded tokens in total.
@@ -869,8 +869,8 @@ Oracle tokens.  Its candidate cases are external inputs: the extra cost comes fr
 them and proposing general rules for the failures, not from generating them.  The controls
 inherit the resulting promotion schedule, so these totals have different accounting boundaries
 and are not end-to-end price rankings.  Post-acceptance evaluation adds about 170,000 tokens to
-each path.  Their hidden scores are 18/21, 15/21, and 19/21 respectively.  Sketch--CE reduces
-implementation work and churn in this run, but does not achieve the best hidden score.  Its final
+each path.  Their hidden-suite pass rates are 18/21, 15/21, and 19/21 respectively.  Sketch--CE reduces
+implementation work and churn in this run, but does not achieve the highest hidden-suite pass rate.  Its final
 strategy is also the largest and most branch-heavy: 298 lines and 110 decision nodes, versus
 224/77 for replay-all and 228/70 for evolved-sketch rebuild.  The result supports less rework
 during evolution, not better final maintainability.

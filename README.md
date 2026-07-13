@@ -70,7 +70,7 @@ There are two main situations:
   encounters concrete failures. Use Sketch-CE to evolve the sketch and implementation together.
 
 CatSynth captures both with the same `gpt-5.4-mini` model and low-effort controls. In the
-closed-world run, spec-first reached 20/20 visible and 21/21 hidden cases with 4 Developer calls
+closed-world run, spec-first reached 20/20 visible and a 21/21 hidden-suite pass rate with 4 Developer calls
 and 611,519 model tokens through visible acceptance, including 132,632 Developer tokens and
 478,887 Runtime Oracle tokens. That is the better approach when its premise is true.
 
@@ -109,7 +109,7 @@ The experiment replayed that eight-case discovery stream through three paths:
 | Final decision nodes | 77 | 70 | 110 |
 | Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden cases | 15/21 | 19/21 | 18/21 |
+| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
 
 The first row is the cost to reach the visible acceptance gate: Developer calls that edit the
 sketch, code, and prompt; Runtime Oracle calls that execute prompt-mediated policy while testing;
@@ -122,7 +122,7 @@ implementation and proposed rules for the failures. The controls were handed the
 promotion schedule, so they did not pay to classify the candidates or propose those rules. Their
 totals therefore have different accounting boundaries and are not a clean end-to-end price
 ranking. Retaining the implementation reduced Developer work and churn; evolved-sketch rebuild
-had the best hidden score. Sketch-CE's final strategy was also the largest and had the most
+had the highest hidden-suite pass rate. Sketch-CE's final strategy was also the largest and had the most
 decision nodes, so low cumulative churn is evidence of less rework, not better final
 maintainability. The result supports a narrow claim about implementation continuity, not
 universal cost, correctness, or code-quality superiority.

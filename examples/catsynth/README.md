@@ -47,7 +47,7 @@ every revision.
 ## Closed world versus open world
 
 If the complete governing policy can be written before implementation, use spec-first. The
-captured `gpt-5.4-mini` spec-first run reached 20/20 visible and 21/21 hidden cases with 4
+captured `gpt-5.4-mini` spec-first run reached 20/20 visible and a 21/21 hidden-suite pass rate with 4
 Developer calls and 611,519 model tokens through visible acceptance: 132,632 for Developer and
 478,887 for Runtime Oracle checks.
 
@@ -109,7 +109,7 @@ then evaluated through replay-all and evolved-sketch rebuild controls.
 | Final decision nodes | 77 | 70 | 110 |
 | Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden cases | 15/21 | 19/21 | 18/21 |
+| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
 
 Every generation directory contains the complete `SKETCH.md`, `strategy.py`, and
 `oracle_prompt.txt`, plus compact failure, gate, usage, and diff metadata. The repository does
@@ -124,7 +124,7 @@ rules for promoted failures; the controls inherited the resulting promotion sche
 paying those two costs. Their totals
 therefore have different boundaries and are not clean end-to-end prices. Retaining state used less
 Developer work, incurred less cumulative churn, and had no extra repairs or prior regressions.
-Evolved-sketch rebuild had the best hidden score. Sketch-CE's final strategy was the largest and most branch-heavy, so the churn
+Evolved-sketch rebuild had the highest hidden-suite pass rate. Sketch-CE's final strategy was the largest and most branch-heavy, so the churn
 result shows less rework, not better final maintainability. Read the [experiment overview](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
 for the design, results, and claim boundary.
 

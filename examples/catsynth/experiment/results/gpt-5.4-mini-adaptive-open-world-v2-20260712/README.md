@@ -53,7 +53,7 @@ and provider fallback disabled.
 | Final decision nodes | 77 | 70 | 110 |
 | Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
-| Hidden cases | 15/21 | 19/21 | 18/21 |
+| Hidden-suite pass rate | 15/21 | 19/21 | 18/21 |
 
 Retaining the implementation cut Developer tokens by 45.6% relative to replay
 all and 41.4% relative to rebuilding from the evolved sketch. It cut artifact
@@ -73,7 +73,7 @@ the resulting promotion schedule and did not pay for candidate classification or
 The recorded totals are therefore real but asymmetric: they answer what each captured path
 consumed, not what three independent end-to-end systems would cost.
 
-Evolved-sketch rebuild had the best hidden score. All three paths missed two
+Evolved-sketch rebuild had the highest hidden-suite pass rate. All three paths missed two
 hidden multi-tag cases because no promoted case had yet defined the
 `avoid_vocal` narrative policy. Those failures are examples of what the next
 open-world counterexample could add.

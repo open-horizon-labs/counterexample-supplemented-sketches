@@ -358,7 +358,7 @@ def markdown_report(report: dict[str, Any]) -> str:
             f"{arm['evaluation']['visible_passed']}/{arm['evaluation']['visible_total']}"
             for arm in arms
         ]),
-        ("Hidden cases", [
+        ("Hidden-suite pass rate", [
             f"{arm['evaluation']['hidden_passed']}/{arm['evaluation']['hidden_total']}"
             for arm in arms
         ]),
