@@ -3,7 +3,7 @@
 **Paper PDF:** [`paper/main.pdf`](paper/main.pdf)  
 **Paper source:** [`paper/main.tex`](paper/main.tex)  
 **Bibliography:** [`paper/references.bib`](paper/references.bib)  
-**Worked example:** [`examples/rostersynth-kiosk/`](examples/rostersynth-kiosk/)
+**Worked examples:** [`examples/rostersynth-kiosk/`](examples/rostersynth-kiosk/) (CLI) · [`examples/catsynth/`](examples/catsynth/) (runnable web UI)
 
 Hold a sketch, a growing corpus `E`, and the code/prompt surfaces accountable through gates, not chat history. When validation fails, promote the failure into `E`, edit the sketch, code, or prompts, and rerun until green. Solar-Lezama sketching and CEGIS are lineage; the contribution here is the agentic loop with dual oracles and replay/compare validation. This repository is a reference implementation only. The roster domain is a worked example.
 
@@ -90,6 +90,22 @@ Then inspect the source artifacts directly:
 
 The RosterSynth name is the reference-implementation label for this worked example. It is not the technique.
 
+## Runnable UI example: CatSynth
+
+[`examples/catsynth/`](examples/catsynth/) is a second worked example that trades the CLI for a **local web UI** and a friendlier domain: recommend a cat breed for an owner profile. It swaps the paper's enterprise harness (Docker/Lambda/SQS/Bedrock) for a local SQLite database and a FastAPI app, so you can click through the same loop — Sketch, Corpus `E`, Oracle A/B, and the replay/compare Gate — in a browser.
+
+The focal counterexample is the same lesson in a different domain: an allergic owner who wants a "big, fluffy, affectionate lap cat." The tempting repair (Persian) closes the preference gap and passes replay, but compare rejects it on the `breed` field because non-hypoallergenic breeds are forbidden. The policy repair (Siberian) is big, fluffy, affectionate, and hypoallergenic.
+
+```bash
+cd examples/catsynth
+pip install -r requirements.txt
+python cli.py seed            # create + seed SQLite (add --no-wiki for offline)
+python cli.py gate            # policy mode -> PASS
+python cli.py serve           # open http://127.0.0.1:8000
+```
+
+The domain is interchangeable; CatSynth is just a more relatable worked example of the same method. See [`examples/catsynth/README.md`](examples/catsynth/README.md) for the tab-by-tab UI tour and Ollama-backed Oracle B option.
+
 ## Reproduce the artifact
 
 From the repo root:
@@ -130,6 +146,10 @@ examples/
   rostersynth-kiosk/                     # worked example supporting the paper
     source/                              # sketch, scenarios, cassettes, code, prompts
     tests/                               # self-contained checks for the worked example
+  catsynth/                              # runnable web-UI worked example (FastAPI + SQLite)
+    catsynth/                            # backend: oracles, resolver, gate, models, static UI
+    sketch/                              # the sketch document (S)
+    tests/                               # model-free gate checks
   task-line-parser/                      # smallest didactic slice
 flows/                                   # reusable agent-flow prompts
 build/rostersynth-kiosk-graph.json       # extracted provenance graph

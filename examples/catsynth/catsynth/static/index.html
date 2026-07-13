@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CatSynth — Agentic Synthesis Loop</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="logo">🐈</span>
+      <div>
+        <h1>CatSynth</h1>
+        <p class="tag">Agentic synthesis against counterexample-supplemented sketches — a runnable slice</p>
+      </div>
+    </div>
+    <nav class="tabs">
+      <button class="tab active" data-tab="home">Home</button>
+      <button class="tab" data-tab="review">Review</button>
+      <button class="tab" data-tab="playground">Playground</button>
+      <button class="tab" data-tab="gate">Gate</button>
+      <button class="tab" data-tab="corpus">Corpus (E)</button>
+      <button class="tab" data-tab="rules">Rules</button>
+      <button class="tab" data-tab="sketch">Sketch (S)</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="home" class="panel active">
+      <div class="home-hero">
+        <h2>Agentic synthesis against counterexample-supplemented sketches</h2>
+        <p class="home-lede">Coding agents fail when a broad prompt hides a constraint the human already
+          knows. This harness makes the constraint explicit: a <strong>sketch</strong> names the intended
+          shape, <strong>counterexamples</strong> name the tempting wrong output, deterministic
+          <strong>anchors</strong> keep results on-policy, and an adversarial <strong>gate</strong> proves
+          the wrong repair fails.</p>
+        <p class="home-sub">Below is one real case followed end-to-end through the loop. Each step links to
+          the live tab that runs it — read top to bottom, then click through.</p>
+      </div>
+
+      <div class="home-case">
+        <span class="chip">Worked case · FR-1</span>
+        An owner has <strong>allergies</strong> and wants a <em>“big, fluffy, affectionate lap cat.”</em>
+        The tempting answer is <strong>Persian</strong> — it fits every preference. The correct answer is
+        <strong>Siberian</strong>: equally big, fluffy, and affectionate, but hypoallergenic. Watch the loop
+        catch the difference.
+      </div>
+
+      <ol class="home-steps">
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">1</span>
+            <h3>Sketch (S) — state the intended shape</h3>
+            <span class="paper-ref">paper §2.1</span></div>
+          <p>The sketch is a <strong>partial solution shape</strong>, not full code: which operations the
+            resolver may return (<code>recommend</code> / <code>abstain</code> / <code>escalate</code>),
+            their priority order, which fields are policy-bearing, and the repairs it must
+            <em>not</em> make. For FR-1 the load-bearing clause is “preference match never overrides a hard
+            rule,” so a non-hypoallergenic breed is a forbidden repair for an allergic owner.</p>
+          <button class="btn btn-sm" data-goto="sketch">Open the Sketch →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">2</span>
+            <h3>Anchors (K) — bind the result to known code</h3>
+            <span class="paper-ref">paper §2.3</span></div>
+          <p>Known-code anchors are the conventions the resolver must reuse instead of inventing: the
+            <code>Recommendation</code> output shape <code>{operation, breed, cited_rules}</code> and the
+            local <strong>rule tables</strong> evaluated by one generic rule engine. A <code>forbid</code>
+            rule removes a breed (hard); a <code>discourage</code> rule only penalizes it in ranking (soft).
+            FR-1's hard rule is <code>allergy_requires_hypoallergenic</code>.</p>
+          <button class="btn btn-sm" data-goto="rules">Open the Rules →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">3</span>
+            <h3>Resolve — the coding-agent flow fills the holes</h3>
+            <span class="paper-ref">paper §2.4</span></div>
+          <p>The resolver executes the sketch's holes: <strong>Oracle A</strong> (deterministic code) applies
+            the hard/soft rules and ranks by preference; <strong>Oracle B</strong> turns a free-text note
+            into <em>soft</em> constraints only and can never relax a hard rule. Toggle
+            <strong>policy</strong> vs <strong>naive</strong>: policy obeys the rules and returns Siberian;
+            naive ignores them and returns the tempting Persian — the wrong implementation the loop exists to
+            catch.</p>
+          <button class="btn btn-sm" data-goto="review">Open Review →</button>
+          <button class="btn btn-sm" data-goto="playground">Try the Playground →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">4</span>
+            <h3>Counterexample → Corpus (E) — name the wrong repair</h3>
+            <span class="paper-ref">paper §2.2</span></div>
+          <p>A counterexample is an adversarial case that names a <strong>plausible wrong implementation</strong>
+            and becomes a permanent test. When a reviewer corrects Persian → Siberian, the case is promoted
+            into the golden corpus: the expected output, the tempting repair (Persian), and the violated rule.
+            The corpus is the growing record of mistakes the harness must never repeat.</p>
+          <button class="btn btn-sm" data-goto="corpus">Open Corpus (E) →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">5</span>
+            <h3>Verify — the gate must fail the tempting patch</h3>
+            <span class="paper-ref">paper §2.5</span></div>
+          <p>Verification is adversarial: a useful check passes the intended behavior <em>and</em> fails the
+            tempting wrong patch. The gate runs two checks over the corpus — <strong>replay</strong> (did we
+            close the owner's state gap?) and <strong>semantic compare</strong> (do the policy-bearing fields
+            match?). Run it in naive mode and watch replay <em>accept</em> Persian while compare
+            <em>rejects</em> it on the <code>breed</code> field.</p>
+          <button class="btn btn-sm" data-goto="gate">Open the Gate →</button>
+        </li>
+      </ol>
+
+      <div class="home-lesson">
+        <h3>The lesson in one line</h3>
+        <p>A state-valid repair can still be a policy violation. Replay and semantic compare fail differently,
+          and both are needed — that is why the counterexample and the gate, not the happy path, define
+          “correct.”</p>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section id="review" class="panel">
+      <div class="two-col">
+        <aside class="sidebar">
+          <div class="sidebar-head">
+            <h2>Scenarios (x)</h2>
+          </div>
+          <div class="toggle-group">
+            <div class="tg-label">Resolver strategy <span class="tg-tech">Oracle A · H(x)</span></div>
+            <div class="segmented stacked" id="mode-toggle">
+              <button data-mode="policy" class="seg active">
+                <span class="seg-main">policy</span>
+                <span class="seg-sub">obeys the owner-trait rules</span>
+              </button>
+              <button data-mode="naive" class="seg">
+                <span class="seg-main">naive</span>
+                <span class="seg-sub">ignores the rules · the tempting repair</span>
+              </button>
+            </div>
+            <p class="tg-caption">Both are deterministic code. The only difference is whether the rule
+              tables are applied. <strong>policy</strong> is the sketch's real strategy;
+              <strong>naive</strong> is the plausible-but-wrong repair the gate is built to catch.</p>
+          </div>
+          <ul id="scenario-list" class="scenario-list"></ul>
+        </aside>
+
+        <div class="detail" id="review-detail">
+          <p class="muted">Select a scenario to see the owner profile and the resolver's proposed recommendation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAYGROUND -->
+    <section id="playground" class="panel">
+      <h2>Playground — send a fake request</h2>
+      <p class="hint">Build an ad-hoc owner profile and see what the resolver returns. Add a free-text note to exercise <strong>Oracle B</strong> — backed by the deterministic mock or your local Ollama model.</p>
+      <div class="two-col pg-two-col">
+        <div class="detail">
+          <form id="pg-form" class="correction" style="margin-top:0;border-top:none;padding-top:0">
+            <div class="pg-grid">
+              <div><label>Allergies</label>
+                <select name="allergies"><option>none</option><option>mild</option><option>severe</option></select></div>
+              <div><label>Work hours</label>
+                <select name="work_hours"><option>home</option><option selected>normal</option><option>long</option></select></div>
+              <div><label>Home size</label>
+                <select name="home_size"><option selected>house</option><option>apartment</option></select></div>
+              <div><label>Activity level</label>
+                <select name="activity_level"><option>low</option><option selected>moderate</option><option>high</option></select></div>
+              <div><label>Noise tolerance</label>
+                <select name="noise_tolerance"><option selected>high</option><option>low</option></select></div>
+              <div><label>Experience</label>
+                <select name="experience"><option selected>experienced</option><option>novice</option></select></div>
+              <div><label>Wants size</label>
+                <select name="wants_size"><option value="">(no preference)</option><option>small</option><option>medium</option><option>large</option></select></div>
+              <div class="checks">
+                <label class="inline"><input type="checkbox" name="young_children" /> young children</label>
+                <label class="inline"><input type="checkbox" name="wants_affection" /> wants affectionate</label>
+                <label class="inline"><input type="checkbox" name="wants_fluffy" /> wants fluffy</label>
+              </div>
+            </div>
+            <label>Narrative note (free text → Oracle B)</label>
+            <textarea name="narrative_note" placeholder="e.g. I travel a lot and want a calm, quiet cat that won't get lonely."></textarea>
+
+            <div class="pg-controls">
+              <div class="toggle-group">
+                <div class="tg-label">Resolver strategy <span class="tg-tech">Oracle A · H(x)</span></div>
+                <div class="segmented stacked" id="pg-mode">
+                  <button type="button" data-mode="policy" class="seg active">
+                    <span class="seg-main">policy</span>
+                    <span class="seg-sub">obeys the owner-trait rules</span>
+                  </button>
+                  <button type="button" data-mode="naive" class="seg">
+                    <span class="seg-main">naive</span>
+                    <span class="seg-sub">ignores the rules · tempting repair</span>
+                  </button>
+                </div>
+                <p class="tg-caption">Deterministic either way. <strong>policy</strong> applies the hard
+                  <code>forbid</code> and soft <code>discourage</code> rules and can abstain;
+                  <strong>naive</strong> ranks purely on preference match, so it will happily return a
+                  forbidden breed — the case the gate rejects.</p>
+              </div>
+
+              <div class="toggle-group">
+                <div class="tg-label">Note interpreter <span class="tg-tech">Oracle B</span></div>
+                <div class="segmented stacked" id="pg-backend">
+                  <button type="button" data-backend="mock" class="seg active">
+                    <span class="seg-main">mock</span>
+                    <span class="seg-sub">deterministic keywords · no LLM</span>
+                  </button>
+                  <button type="button" data-backend="ollama" class="seg">
+                    <span class="seg-main">ollama</span>
+                    <span class="seg-sub">your local LLM reads the note</span>
+                  </button>
+                </div>
+                <p class="tg-caption">Turns the free-text note into <em>soft</em> preferences only — it can
+                  nudge ranking but never overrides a hard rule. The gate always uses <strong>mock</strong>
+                  so it stays reproducible.</p>
+              </div>
+
+              <div id="pg-model-wrap" style="display:none">
+                <label>Ollama model</label>
+                <select name="ollama_model" id="pg-model"></select>
+              </div>
+            </div>
+            <div class="row"><button class="btn primary" type="submit" id="pg-submit">Send request →</button>
+              <span id="pg-ollama-status" class="form-note"></span></div>
+          </form>
+        </div>
+        <div class="detail" id="pg-result">
+          <p class="muted">Fill in a profile and send it to see the recommendation, the rules in force, and the Oracle B trace.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GATE -->
+    <section id="gate" class="panel">
+      <div class="gate-controls">
+        <h2>Gate G — replay + semantic compare over the promoted corpus</h2>
+        <div class="row">
+          <button class="btn primary" id="run-gate-policy">Run gate (policy)</button>
+          <button class="btn" id="run-gate-naive">Run gate (naive / tempting)</button>
+        </div>
+        <p class="hint">Policy mode should pass. Naive mode ignores the owner-trait rules — watch the gate reject the tempting repair on the <code>breed</code> field while replay still accepts it.</p>
+      </div>
+      <div id="gate-results"></div>
+      <div class="runs">
+        <h3>Recent gate runs (provenance)</h3>
+        <div id="gate-runs"></div>
+      </div>
+    </section>
+
+    <!-- CORPUS -->
+    <section id="corpus" class="panel">
+      <h2>Golden corpus (E) — promoted counterexamples</h2>
+      <p class="hint">Each promoted case names the expected output, the tempting wrong repair, the violated rule, and the sketch clause it supplements.</p>
+      <div id="corpus-list"></div>
+    </section>
+
+    <!-- RULES -->
+    <section id="rules" class="panel">
+      <h2>Owner-trait rulesets (local policy tables)</h2>
+      <p class="hint"><strong>forbid</strong> = hard rule (removes the breed). <strong>discourage</strong> = soft rule (penalizes it in ranking).</p>
+      <div id="rules-list"></div>
+    </section>
+
+    <!-- SKETCH -->
+    <section id="sketch" class="panel">
+      <h2>Sketch (S)</h2>
+      <div id="sketch-body" class="markdown"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
