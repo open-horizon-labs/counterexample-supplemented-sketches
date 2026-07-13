@@ -12,9 +12,13 @@ repair calls brought the full gate to 21/21. Post-acceptance evaluation passed
 
 | Measure | Spec-first |
 |---|---:|
+| **Tokens through visible acceptance** | **611,519** |
 | Developer calls | 4 |
 | Developer tokens | 132,632 |
-| All model tokens | 851,448 |
+| Runtime Oracle tokens through acceptance | 478,887 |
+| Specification Oracle tokens | 0 |
+| Post-acceptance evaluation tokens | 239,929 |
+| Total recorded tokens, including evaluation | 851,448 |
 | Visible evaluation | 20/20 |
 | Hidden evaluation | 21/21 |
 
@@ -44,19 +48,33 @@ All three paths use the same GPT-5.4-mini model and low-effort inference control
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
+| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
-| All model tokens | 1,061,834 | 998,307 | 1,191,504 |
+| Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
+| Specification Oracle tokens | 0 | 0 | 146,768 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
+| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
 | Extra repairs | 6 | 7 | 0 |
 | Prior regressions on first attempt | 2 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
+| Final strategy LOC | 224 | 228 | 298 |
+| Final decision nodes | 77 | 70 | 110 |
+| Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
 | Hidden cases | 15/21 | 19/21 | 18/21 |
 
-Retained Sketch-CE uses less Developer work and produces less churn in this run.
-It does not use the fewest total model tokens because it also pays for candidate
-probes, Specification-Oracle promotion, and additional cumulative gates.
-Evolved-sketch rebuild has the best hidden score.
+Tokens through acceptance are the sum of Developer calls that edit the artifacts, Runtime Oracle
+calls that execute prompt-mediated policy during probes and gates, and Specification Oracle calls
+that propose rules from promoted failures. Post-acceptance evaluation is reported separately.
+
+The candidate cases came from outside the system. Sketch-CE paid to classify them and propose
+rules for the failures. Replay-all and evolved-sketch rebuild inherited the resulting promotion
+schedule, so their totals omit candidate classification and rule proposal. The totals are real
+consumption with different boundaries, not comparable end-to-end prices. Retained Sketch-CE used
+less Developer work and produced less churn. Evolved-sketch rebuild had the best hidden score.
+Sketch-CE's final strategy was larger and had more decision nodes than either rebuild, so the
+experiment does not establish better final maintainability.
 
 [Read every open-world generation and the complete results.](results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
 
@@ -101,7 +119,8 @@ uv run --with-requirements requirements.txt \
 ## Claim boundary
 
 These are two runs with one model and synthetic policy. The spec-first run starts
-with information the open-world run must discover, so the absolute token totals
-answer different questions. The open-world controls inherit the promoted stream
-without paying its discovery cost. The results demonstrate the mechanism and
-the observed trade-offs; they are not a benchmark or a universal ranking.
+with rules that the open-world run must infer from externally supplied failures,
+so the absolute token totals answer different questions. The open-world controls
+inherit the promotion schedule without paying to evaluate the candidate cases or
+propose sketch changes for the failures. The results demonstrate the mechanism
+and the observed trade-offs; they are not a benchmark or a universal ranking.

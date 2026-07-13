@@ -304,6 +304,29 @@ def developer_bucket(arm: dict[str, Any], name: str) -> dict[str, Any]:
 def markdown_report(report: dict[str, Any]) -> str:
     names = ("replay_all", "reviewed_sketch", "sketch_ce")
     arms = [report["arms"][name] for name in names]
+    post_acceptance_tokens = [
+        sum(
+            call["total_tokens"]
+            for call in arm["tokens"]["calls"]
+            if ":reference:" in call["label"] or ":hidden:" in call["label"]
+        )
+        for arm in arms
+    ]
+    runtime_acceptance_tokens = [
+        arm["tokens"]["by_category"].get("runtime_oracle", {}).get("total_tokens", 0)
+        - post
+        for arm, post in zip(arms, post_acceptance_tokens)
+    ]
+    specification_tokens = [
+        arm["tokens"]["by_category"].get("spec_oracle", {}).get("total_tokens", 0)
+        for arm in arms
+    ]
+    acceptance_tokens = [
+        developer_bucket(arm, name).get("total_tokens", 0) + runtime + specification
+        for arm, name, runtime, specification in zip(
+            arms, names, runtime_acceptance_tokens, specification_tokens
+        )
+    ]
     lines = [
         "# Prospective adaptive open-world comparison",
         "",
@@ -317,13 +340,20 @@ def markdown_report(report: dict[str, Any]) -> str:
         "|---|---:|---:|---:|",
     ]
     rows = [
+        ("Tokens through visible acceptance", acceptance_tokens),
         ("Developer calls", [developer_bucket(arm, name).get("calls", 0) for arm, name in zip(arms, names)]),
         ("Developer tokens", [developer_bucket(arm, name).get("total_tokens", 0) for arm, name in zip(arms, names)]),
-        ("All model tokens in arm", [arm["tokens"]["overall"]["total_tokens"] for arm in arms]),
+        ("Runtime Oracle tokens through acceptance", runtime_acceptance_tokens),
+        ("Specification Oracle tokens", specification_tokens),
+        ("Post-acceptance evaluation tokens", post_acceptance_tokens),
+        ("Total recorded tokens, including evaluation", [arm["tokens"]["overall"]["total_tokens"] for arm in arms]),
         ("Repair attempts", [arm["metrics"]["repair_attempts"] for arm in arms]),
         ("Rebuilds", [arm["metrics"]["rebuilds"] for arm in arms]),
         ("First-attempt prior regressions", [arm["metrics"]["prior_regressions_on_first_attempt"] for arm in arms]),
         ("Artifact churn lines", [arm["metrics"]["artifact_churn_lines"] for arm in arms]),
+        ("Final strategy LOC", [arm["quality"]["strategy_loc"] for arm in arms]),
+        ("Final decision nodes", [arm["quality"]["decision_nodes"] for arm in arms]),
+        ("Final changed lines from baseline", [arm["quality"]["changed_lines_from_baseline"] for arm in arms]),
         ("Visible promoted cases", [
             f"{arm['evaluation']['visible_passed']}/{arm['evaluation']['visible_total']}"
             for arm in arms
@@ -340,14 +370,18 @@ def markdown_report(report: dict[str, Any]) -> str:
         lines.append(f"| `{item['id']}` | {item['status']} |")
     lines.extend([
         "",
-        "Only failures were promoted or sent to a Developer. Replay-all received the initial",
+        "The candidate cases were external inputs. Only failures were promoted or sent to a",
+        "Developer. Replay-all received the initial",
         "sketch plus the cumulative promoted corpus. Evolved-sketch rebuild received only the",
         "Sketch-CE sketch checkpoint. Hidden cases were evaluated after visible acceptance and",
         "were never repair input.",
-        "Developer tokens isolate implementation work. All-model tokens also include runtime",
-        "Oracle gates; Sketch-CE additionally includes candidate probes and Specification-Oracle",
-        "promotion. The controls inherit the discovered stream and therefore are not end-to-end",
-        "discovery-cost alternatives.",
+        "Tokens through acceptance include Developer edits, Runtime Oracle checks, and",
+        "Specification Oracle rule proposals. Post-acceptance evaluation is separate.",
+        "Sketch-CE pays to evaluate the external candidates and propose rules for failures.",
+        "The controls inherit the resulting promotion schedule, so their totals have a narrower",
+        "boundary and are not end-to-end price alternatives.",
+        "Lower cumulative churn measures less rework, not final maintainability. The final",
+        "Sketch-CE strategy is larger and has more decision nodes than either rebuild.",
     ])
     return "\n".join(lines) + "\n"
 

@@ -48,7 +48,8 @@ every revision.
 
 If the complete governing policy can be written before implementation, use spec-first. The
 captured `gpt-5.4-mini` spec-first run reached 20/20 visible and 21/21 hidden cases with 4
-Developer calls and 132,632 Developer tokens.
+Developer calls and 611,519 model tokens through visible acceptance: 132,632 for Developer and
+478,887 for Runtime Oracle checks.
 
 Use Sketch-CE when that complete specification is not available because policy is still being
 discovered. Replay-all and evolved-sketch rebuild are experimental controls for that open-world
@@ -95,11 +96,18 @@ then evaluated through replay-all and evolved-sketch rebuild controls.
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
+| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
-| All model tokens in arm | 1,061,834 | 998,307 | 1,191,504 |
+| Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
+| Specification Oracle tokens | 0 | 0 | 146,768 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
+| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
 | Extra repair attempts | 6 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
+| Final strategy LOC | 224 | 228 | 298 |
+| Final decision nodes | 77 | 70 | 110 |
+| Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
 | Hidden cases | 15/21 | 19/21 | 18/21 |
 
@@ -107,9 +115,17 @@ Every generation directory contains the complete `SKETCH.md`, `strategy.py`, and
 `oracle_prompt.txt`, plus compact failure, gate, usage, and diff metadata. The repository does
 not include repeated transport transcripts.
 
-Retaining state used less Developer work and produced fewer regressions and changed lines in
-this run. It did not minimize total model tokens, and evolved-sketch rebuild had the best hidden
-score. Read the [experiment overview](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
+Tokens through acceptance include every Developer, Runtime Oracle, and Specification Oracle call
+before the visible gate passed. Post-acceptance visible and hidden evaluation is separate. Cached
+input and reasoning are included subsets of the provider's input/output total, not extra tokens.
+
+The candidate cases were external inputs. Sketch-CE paid to classify them and propose general
+rules for promoted failures; the controls inherited the resulting promotion schedule without
+paying those two costs. Their totals
+therefore have different boundaries and are not clean end-to-end prices. Retaining state used less
+Developer work, incurred less cumulative churn, and had no extra repairs or prior regressions.
+Evolved-sketch rebuild had the best hidden score. Sketch-CE's final strategy was the largest and most branch-heavy, so the churn
+result shows less rework, not better final maintainability. Read the [experiment overview](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
 for the design, results, and claim boundary.
 
 ## What the promoted counterexamples add

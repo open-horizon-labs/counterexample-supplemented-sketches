@@ -14,10 +14,17 @@ afterward and were never repair input.
 
 | Measure | Spec-first |
 |---|---:|
+| **Tokens through visible acceptance** | **611,519** |
 | Developer calls | 4 |
 | Developer repair calls | 3 |
 | Developer tokens | 132,632 |
-| All model tokens | 851,448 |
+| Runtime Oracle calls through acceptance | 28 |
+| Runtime Oracle tokens through acceptance | 478,887 |
+| Specification Oracle calls | 0 |
+| Specification Oracle tokens | 0 |
+| Post-acceptance evaluation calls | 14 |
+| Post-acceptance evaluation tokens | 239,929 |
+| Total recorded tokens, including evaluation | 851,448 |
 | Visible cases | 20/20 |
 | Hidden cases | 21/21 |
 
@@ -25,6 +32,12 @@ The first implementation passed 11 of 21 gate cases including the initial
 anchor. The next repair passed 12/21, the next passed 20/21, and the third repair
 closed the final scoped-negation failure at 21/21. The separate post-acceptance
 evaluation reports 20 visible cases because it excludes the initial anchor.
+
+Tokens through visible acceptance include every model call needed to generate, repair, and run
+the visible gate. Developer used 132,632 tokens; prompt-mediated Runtime Oracle checks used
+478,887. The immutable complete specification needed no Specification Oracle. The final visible
+and hidden score consumed another 239,929 Runtime Oracle tokens after acceptance. Provider totals
+count input plus output; cached input and reasoning are included subsets, not added again.
 
 This is the expected headline: when the complete specification is actually
 available, spec-first is the simpler frame and performed better here. It used

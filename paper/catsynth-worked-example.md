@@ -243,17 +243,29 @@ state.
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
+| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
-| Total arm tokens | 1,061,834 | 998,307 | 1,191,504 |
+| Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
+| Specification Oracle tokens | 0 | 0 | 146,768 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
+| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
 | Extra repair attempts | 6 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
+| Final strategy LOC | 224 | 228 | 298 |
+| Final decision nodes | 77 | 70 | 110 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
 | Hidden cases | 15/21 | 19/21 | 18/21 |
 
-Retained Sketch-CE used less Developer work and produced less churn in this run. It did not use
-the fewest total model tokens because it also paid for candidate probes, Specification-Oracle
-promotion, and additional cumulative gates. Evolved-sketch rebuild had the best hidden score.
+Tokens through acceptance include Developer edits, prompt-mediated Runtime Oracle checks, and
+Specification Oracle rule proposals. The final visible and hidden evaluation is reported
+separately. The candidate cases were external inputs. Sketch-CE paid to classify them and propose
+general rules for the failures; the controls inherited the resulting promotion schedule without
+paying for candidate classification or rule proposal. The totals therefore have different
+boundaries and are not end-to-end price rankings. Retained Sketch-CE used less Developer work
+and produced less churn. Evolved-sketch rebuild had the best hidden score.
+Sketch-CE's final strategy was the largest and had the most decision nodes, so this run shows
+less rework during evolution, not better final maintainability.
 
 This is one model, one candidate order, and one sample per path. It supports a bounded claim about
 implementation continuity in this run, not universal cost or correctness superiority.

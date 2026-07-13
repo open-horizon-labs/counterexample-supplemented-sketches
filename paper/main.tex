@@ -56,11 +56,13 @@ CatSynth, a synthetic browser application and a captured coding-agent experiment
 experiment gives the Developer one active failure at a time, lets it revise the sketch,
 deterministic code, and prompt together, and gates every revision against the full promoted
 corpus.  A closed-world run separately gives the same model a complete immutable specification;
-it reaches 20/20 visible and 21/21 hidden cases in four Developer calls.  In the open-world run,
-eight of fourteen proposed cases fail and are promoted.  Retained Sketch--CE uses 217,576
-Developer tokens, versus 400,081 for replaying all discovered cases and 371,050 for rebuilding
-from the evolved sketch.  All three pass eight visible cases; their hidden scores are 15/21,
-19/21, and 18/21 respectively.  These are inspectable runs, not general performance claims.
+it reaches 20/20 visible and 21/21 hidden cases in four Developer calls and 611,519 model tokens
+through visible acceptance.  In the open-world run, eight of fourteen externally supplied cases
+fail and are promoted.  Tokens through visible acceptance are 891,880 for replay-all, 828,628
+for evolved-sketch rebuild, and 1,021,822 for retained Sketch--CE.  The controls inherit the
+promotion schedule and omit candidate classification and rule proposal, so these totals are not end-to-end price
+rankings.  All three pass eight visible cases; their hidden scores are 15/21, 19/21, and 18/21
+respectively.  These are inspectable runs, not general performance claims.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
@@ -852,16 +854,26 @@ produce the approved ranking.  That independent failure becomes the fourth count
 The main decision is not ``iteration or one shot.''  It is whether the governing policy is
 already complete.  In a separate closed-world run, the model receives an immutable complete
 specification and empty implementation files.  It reaches 20/20 visible and 21/21 hidden cases
-after four Developer calls and 132,632 Developer tokens.  When that premise is true, spec-first
-is the simpler approach.
+after four Developer calls.  Reaching visible acceptance consumes 611,519 model tokens: 132,632
+for Developer calls and 478,887 for prompt-mediated Runtime Oracle checks.  Post-acceptance
+visible and hidden evaluation consumes another 239,929, for 851,448 recorded tokens in total.
+When the closed-world premise is true, spec-first is the simpler approach.
 
 The open-world run adds two controls to isolate retained state.  Replay-all rebuilds from the
 initial sketch and all promoted cases known at each epoch.  Evolved-sketch rebuild receives the
 current sketch but never the full counterexample corpus; after a failed gate it receives the
-visible failure packets.  Retained Sketch--CE uses 9 Developer calls and 217,576 Developer
-tokens, replay-all uses 15 and 400,081, and evolved-sketch rebuild uses 16 and 371,050.  Their
-hidden scores are 18/21, 15/21, and 19/21.  Sketch--CE reduces implementation work and churn in
-this run, but does not achieve the best hidden score or the lowest total model-token count.
+visible failure packets.  Tokens through visible acceptance are 1,021,822 for retained
+Sketch--CE, 891,880 for replay-all, and 828,628 for evolved-sketch rebuild.  The Sketch--CE total
+comprises 217,576 Developer tokens, 657,478 Runtime Oracle tokens, and 146,768 Specification
+Oracle tokens.  Its candidate cases are external inputs: the extra cost comes from evaluating
+them and proposing general rules for the failures, not from generating them.  The controls
+inherit the resulting promotion schedule, so these totals have different accounting boundaries
+and are not end-to-end price rankings.  Post-acceptance evaluation adds about 170,000 tokens to
+each path.  Their hidden scores are 18/21, 15/21, and 19/21 respectively.  Sketch--CE reduces
+implementation work and churn in this run, but does not achieve the best hidden score.  Its final
+strategy is also the largest and most branch-heavy: 298 lines and 110 decision nodes, versus
+224/77 for replay-all and 228/70 for evolved-sketch rebuild.  The result supports less rework
+during evolution, not better final maintainability.
 
 % ---------------------------------------------------------------------------
 \section{Applying the method}
@@ -1004,7 +1016,8 @@ domain rule someone can name.
         one model and candidate order.  The closed-world run begins with information the
         open-world run must discover, so their token totals answer different questions.  Within
         the open-world experiment, the rebuild controls inherit the promoted stream without
-        paying its discovery cost.  The observed token ratios and checked results are not a
+        paying to evaluate the external candidates or propose rules for failures.  The observed
+        token ratios and checked results are not a
         benchmark or a causal estimate.
   \item \textbf{Enterprise evidence boundary.}  Readers can inspect the control
         structure in the public companion's sanitized fixtures.  Public evidence
@@ -1036,6 +1049,7 @@ corpus, replay and semantic comparison pass.  Everything outside those encoded c
 predicates still belongs to human review and future promotion.
 
 \bibliographystyle{plain}
+\small
 \bibliography{references}
 
 \end{document}

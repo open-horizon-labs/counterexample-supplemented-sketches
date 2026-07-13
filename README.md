@@ -71,7 +71,8 @@ There are two main situations:
 
 CatSynth captures both with the same `gpt-5.4-mini` model and low-effort controls. In the
 closed-world run, spec-first reached 20/20 visible and 21/21 hidden cases with 4 Developer calls
-and 132,632 Developer tokens. That is the better approach when its premise is true.
+and 611,519 model tokens through visible acceptance, including 132,632 Developer tokens and
+478,887 Runtime Oracle tokens. That is the better approach when its premise is true.
 
 [Read the closed-world spec-first run.](examples/catsynth/experiment/results/gpt-5.4-mini-spec-first-20260712/README.md)
 
@@ -94,20 +95,37 @@ The experiment replayed that eight-case discovery stream through three paths:
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
+| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
-| All model tokens in arm | 1,061,834 | 998,307 | 1,191,504 |
+| Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
+| Specification Oracle tokens | 0 | 0 | 146,768 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
+| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
 | Extra repair attempts | 6 | 7 | 0 |
 | First-attempt prior regressions | 2 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
+| Final strategy LOC | 224 | 228 | 298 |
+| Final decision nodes | 77 | 70 | 110 |
+| Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
 | Hidden cases | 15/21 | 19/21 | 18/21 |
 
-Retaining the implementation reduced Developer tokens and churn in this run. It did not use the
-fewest total model tokens: Sketch-CE also paid for candidate probes, Specification-Oracle
-promotion, and additional cumulative gates. Evolved-sketch rebuild had the best hidden score.
-The result supports a narrower claim about implementation continuity, not universal cost or
-correctness superiority.
+The first row is the cost to reach the visible acceptance gate: Developer calls that edit the
+sketch, code, and prompt; Runtime Oracle calls that execute prompt-mediated policy while testing;
+and Specification Oracle calls that propose general rules for promoted failures. Post-acceptance
+visible and hidden evaluation is reported separately. Provider totals count input plus output;
+cached input and reasoning are included subsets, not added again.
+
+The candidate cases came from outside the system. Sketch-CE evaluated them against its current
+implementation and proposed rules for the failures. The controls were handed the resulting
+promotion schedule, so they did not pay to classify the candidates or propose those rules. Their
+totals therefore have different accounting boundaries and are not a clean end-to-end price
+ranking. Retaining the implementation reduced Developer work and churn; evolved-sketch rebuild
+had the best hidden score. Sketch-CE's final strategy was also the largest and had the most
+decision nodes, so low cumulative churn is evidence of less rework, not better final
+maintainability. The result supports a narrow claim about implementation continuity, not
+universal cost, correctness, or code-quality superiority.
 
 Read the [experiment overview](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/README.md)
 or inspect the [complete compact results](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/results.json).

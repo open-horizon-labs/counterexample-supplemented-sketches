@@ -35,13 +35,23 @@ and provider fallback disabled.
 
 | Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
 |---|---:|---:|---:|
+| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
-| All model tokens in arm | 1,061,834 | 998,307 | 1,191,504 |
+| Runtime Oracle calls through acceptance | 29 | 27 | 39 |
+| Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
+| Specification Oracle calls | 0 | 0 | 8 |
+| Specification Oracle tokens | 0 | 0 | 146,768 |
+| Post-acceptance evaluation calls | 10 | 10 | 10 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
+| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
 | Extra repair attempts | 6 | 7 | 0 |
 | Rebuilds | 9 | 9 | 1 |
 | First-attempt prior regressions | 2 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
+| Final strategy LOC | 224 | 228 | 298 |
+| Final decision nodes | 77 | 70 | 110 |
+| Final changed lines from baseline | 259 | 286 | 333 |
 | Visible promoted cases | 8/8 | 8/8 | 8/8 |
 | Hidden cases | 15/21 | 19/21 | 18/21 |
 
@@ -50,16 +60,28 @@ all and 41.4% relative to rebuilding from the evolved sketch. It cut artifact
 churn by about 70% relative to either rebuild path and produced no extra repair
 turns or first-attempt regressions.
 
-That does not make Sketch-CE cheapest by every measure. It used the most total
-model tokens because this arm paid for candidate probes, Specification-Oracle
-promotion, and additional cumulative gates. The rebuild controls inherited the
-stream that Sketch-CE discovered, so their totals are not independent
-end-to-end discovery costs.
+Tokens through visible acceptance are the sum of the Developer, Runtime Oracle, and Specification
+Oracle rows. Developer calls generate or repair `SKETCH.md`, `strategy.py`, and
+`oracle_prompt.txt`. Runtime Oracle calls execute Oracle B while testing the implementation.
+Specification Oracle calls propose a general sketch rule for each promoted failure. The ledger
+counts provider-reported input plus output; cached input and reasoning are included subsets, not
+added again. The final visible and hidden evaluation happens after acceptance and is separated.
+
+The 14 candidate cases were external inputs. Sketch-CE classified each against its current
+implementation, then used the Specification Oracle for the eight failures. The controls received
+the resulting promotion schedule and did not pay for candidate classification or rule proposal.
+The recorded totals are therefore real but asymmetric: they answer what each captured path
+consumed, not what three independent end-to-end systems would cost.
 
 Evolved-sketch rebuild had the best hidden score. All three paths missed two
 hidden multi-tag cases because no promoted case had yet defined the
 `avoid_vocal` narrative policy. Those failures are examples of what the next
 open-world counterexample could add.
+
+Sketch-CE's lower cumulative churn and lack of repair regressions show that it rewrote less while
+the policy evolved. They do not establish better final maintainability: its final strategy was
+298 lines with 110 decision nodes, versus 224/77 for replay-all and 228/70 for evolved-sketch
+rebuild. This run supports a continuity and rework claim, not a final code-quality claim.
 
 ## Read the generations
 

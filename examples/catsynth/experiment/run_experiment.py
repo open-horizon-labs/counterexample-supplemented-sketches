@@ -1451,6 +1451,32 @@ def quality_metrics(workspace: Path) -> dict[str, Any]:
 def markdown_report(report: dict[str, Any]) -> str:
     it = report["arms"]["iterative"]
     one_shot = report["arms"]["one_shot_repair"]
+    arms = (it, one_shot)
+    post_acceptance = [
+        sum(
+            call["total_tokens"]
+            for call in arm["tokens"]["calls"]
+            if ":reference:" in call["label"] or ":hidden:" in call["label"]
+        )
+        for arm in arms
+    ]
+    runtime_acceptance = [
+        arm["tokens"]["by_category"].get("runtime_oracle", {}).get("total_tokens", 0)
+        - post
+        for arm, post in zip(arms, post_acceptance)
+    ]
+    specification = [
+        arm["tokens"]["by_category"].get("spec_oracle", {}).get("total_tokens", 0)
+        for arm in arms
+    ]
+    developer = [
+        it["tokens"]["by_category"].get("developer_iterative", {}).get("total_tokens", 0),
+        one_shot["tokens"]["by_category"].get("developer_one_shot_repair", {}).get("total_tokens", 0),
+    ]
+    acceptance = [
+        dev + runtime + spec
+        for dev, runtime, spec in zip(developer, runtime_acceptance, specification)
+    ]
     lines = [
         "# Iterative counterexamples vs one-shot + repair",
         "",
@@ -1460,11 +1486,15 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "| Measure | Iterative | One-shot + repair |",
         "|---|---:|---:|",
+        f"| Tokens through visible acceptance | {acceptance[0]} | {acceptance[1]} |",
         f"| Developer calls to visible acceptance | {it['tokens']['by_category'].get('developer_iterative', {}).get('calls', 0)} | {one_shot['tokens']['by_category'].get('developer_one_shot_repair', {}).get('calls', 0)} |",
         f"| Repair calls after initial one-shot | — | {one_shot['repair_attempts']} |",
         f"| Visible failure packets returned | — | {one_shot['visible_failure_feedback_events']} |",
-        f"| Developer tokens to visible acceptance | {it['tokens']['by_category'].get('developer_iterative', {}).get('total_tokens', 0)} | {one_shot['tokens']['by_category'].get('developer_one_shot_repair', {}).get('total_tokens', 0)} |",
-        f"| All arm tokens | {it['tokens']['overall']['total_tokens']} | {one_shot['tokens']['overall']['total_tokens']} |",
+        f"| Developer tokens to visible acceptance | {developer[0]} | {developer[1]} |",
+        f"| Runtime Oracle tokens through acceptance | {runtime_acceptance[0]} | {runtime_acceptance[1]} |",
+        f"| Specification Oracle tokens | {specification[0]} | {specification[1]} |",
+        f"| Post-acceptance evaluation tokens | {post_acceptance[0]} | {post_acceptance[1]} |",
+        f"| Total recorded tokens, including evaluation | {it['tokens']['overall']['total_tokens']} | {one_shot['tokens']['overall']['total_tokens']} |",
         f"| Visible reference cases | {it['evaluation']['visible_passed']}/{it['evaluation']['visible_total']} | {one_shot['evaluation']['visible_passed']}/{one_shot['evaluation']['visible_total']} |",
         f"| Hidden cases | {it['evaluation']['hidden_passed']}/{it['evaluation']['hidden_total']} | {one_shot['evaluation']['hidden_passed']}/{one_shot['evaluation']['hidden_total']} |",
         f"| Strategy LOC | {it['quality']['strategy_loc']} | {one_shot['quality']['strategy_loc']} |",
@@ -1476,8 +1506,8 @@ def markdown_report(report: dict[str, Any]) -> str:
         "the visible gate fails, each later Developer call receives the current files and all",
         "visible failures. Every repair is included in the call and token totals above.",
         "Hidden cases are evaluated only after visible acceptance and are never repair input.",
-        "Specification-Oracle, runtime-Oracle, Developer, and evaluation usage are separated",
-        "by category in `report.json`.",
+        "Tokens through acceptance include Developer, Runtime Oracle, and Specification Oracle",
+        "calls. Post-acceptance visible and hidden evaluation is reported separately.",
         "Every request, response, reported reasoning field, usage record, diff, and gate result is retained",
         "under this run directory. `iterative/generations/` contains the complete readable",
         "implementation and result set for the baseline and every Developer attempt.",
@@ -1583,6 +1613,12 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
     arm["tokens"] = ledger.totals()
     write_json(output / "one-shot-repair" / "summary.json", arm)
     developer = arm["tokens"]["by_category"].get("developer_one_shot_repair", {})
+    post_acceptance_tokens = sum(
+        call["total_tokens"]
+        for call in arm["tokens"]["calls"]
+        if ":reference:" in call["label"] or ":hidden:" in call["label"]
+    )
+    acceptance_tokens = arm["tokens"]["overall"]["total_tokens"] - post_acceptance_tokens
     report = {
         "run_id": run_id,
         "mode": "one_shot_repair_only",
@@ -1607,7 +1643,10 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
         f"- Developer calls to visible acceptance: {developer.get('calls', 0)}",
         f"- Repair calls after the initial one-shot: {arm['repair_attempts']}",
         f"- Visible failure packets returned: {arm['visible_failure_feedback_events']}",
+        f"- Tokens through visible acceptance: {acceptance_tokens}",
         f"- Developer tokens to visible acceptance: {developer.get('total_tokens', 0)}",
+        f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
+        f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
         f"- Hidden evaluation: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
         "",
@@ -1642,6 +1681,12 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
     arm["tokens"] = ledger.totals()
     write_json(output / "spec-first-repair" / "summary.json", arm)
     developer = arm["tokens"]["by_category"].get("developer_spec_first_repair", {})
+    post_acceptance_tokens = sum(
+        call["total_tokens"]
+        for call in arm["tokens"]["calls"]
+        if ":reference:" in call["label"] or ":hidden:" in call["label"]
+    )
+    acceptance_tokens = arm["tokens"]["overall"]["total_tokens"] - post_acceptance_tokens
     report = {
         "run_id": run_id,
         "mode": "spec_first_repair_only",
@@ -1667,7 +1712,10 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
         f"- Developer calls to visible acceptance: {developer.get('calls', 0)}",
         f"- Repair calls after initial spec implementation: {arm['repair_attempts']}",
         f"- Visible failure packets returned: {arm['visible_failure_feedback_events']}",
+        f"- Tokens through visible acceptance: {acceptance_tokens}",
         f"- Developer tokens to visible acceptance: {developer.get('total_tokens', 0)}",
+        f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
+        f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
         f"- Hidden evaluation: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
         "",
