@@ -16,15 +16,30 @@ whenever the Markdown changes so arXiv can compile the paper without running Pan
 
 ## arXiv source package
 
-Submit the PDFLaTeX source for the combined paper, not two independently compiled PDFs. Include:
+Build and validate the upload archive from the repository root:
+
+```bash
+make -C paper arxiv-source
+```
+
+The command rebuilds the canonical paper, creates
+`dist/agentic-synthesis-arxiv-source.zip`, extracts it into a clean directory, and compiles that
+copy three times with PDFLaTeX. It fails on unresolved citations, unresolved references, or
+overfull boxes.
+
+Submit the PDFLaTeX source for the combined paper, not two independently compiled PDFs. The
+generated archive contains only:
 
 - `main.tex`;
-- `main.bbl` or `references.bib`;
+- `main.bbl`;
 - `pandoc-support.tex`;
 - `catsynth-worked-example.tex`;
-- the image files under `figures/` that `main.tex` and the supplement reference.
+- the four referenced PNG files under `figures/catsynth/`.
 
 Do not include `catsynth-supplement.tex`, either generated PDF, or LaTeX build intermediates in
 the arXiv source package. The standalone supplement belongs in the repository or release assets.
 The repository already carries the full experiment traces, so the arXiv submission does not need
 to duplicate them as ancillary files.
+
+Paste the title, authors, abstract, comments, categories, and license from
+[`arxiv-metadata.md`](arxiv-metadata.md). Confirm the coauthor metadata before submitting.

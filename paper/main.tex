@@ -30,49 +30,36 @@
 \newcommand{\strategy}{\mathcal{H}}
 
 \title{Agentic Synthesis against Counterexample-Supplemented Sketches}
-\author{Muness Castle \and Eric Rubeck}
+\author{Muness Castle\\{\small Independent}\\{\small\texttt{muness@muness.com}} \and Eric Rubeck}
 \date{July 2026}
 
 \begin{document}
 \maketitle
+\paperlicense
 
 \begin{abstract}
-Coding agents make plausible repairs cheap.  Teams still need a durable way to carry domain
-corrections into future runs.  A correction should leave more than a passing test or a chat
-note: it should name the rejected repair, the rule that rejects it, and the code or prompt
-surface that must preserve it.
+Coding agents can fix a failing example without preserving the domain rule that made it fail, so
+later generations can repeat the same plausible mistake.  We present agentic synthesis against
+counterexample-supplemented sketches, a repository-native method for systems whose governing
+policy is discovered during implementation.  A human starts with a partial, code-shaped sketch,
+and a coding agent generates the first implementation.  When a concrete failure exposes missing
+or mistaken policy, an operator explicitly approves the corrected behavior and rule.  The agent
+then revises the sketch and repairs or regenerates code and prompt surfaces for that one
+counterexample.  The full archive preserves provenance; a selected regression set gates each
+revision before the next candidate is revealed; and periodic clean regeneration tests whether
+the evolved sketch, rather than prompt history or accumulated examples, carries the learned
+policy.
 
-We use the term \emph{counterexample-supplemented sketch} for the repository artifact and
-\emph{agentic synthesis} for the loop that edits against it.  A human writes a partial
-program-like sketch.  Subject-matter experts correct concrete outputs.  When a candidate
-failure contradicts or extends the sketch, an operator must explicitly approve it as a
-counterexample.  Every accepted counterexample revises the sketch.  A complete archive records
-that history, while a curated subset becomes executable regression checks.  A coding agent edits
-deterministic code and prompt surfaces under the evolved sketch and known-code anchors.
-
-The loop borrows from sketching and counterexample-guided inductive synthesis (CEGIS), but the
-execution surface is different.  Classical sketching and CEGIS can make formal claims when the
-search space, specification, and checker are formal.  Here, the synthesizer is an IDE-shaped
-coding agent whose edits span ordinary source code and LLM prompt surfaces.  The claim stays
-bounded: when the gate passes, the current strategy satisfies the repository's encoded replay
-and comparison predicates for the current regression set.
-
-The originating deployment ran inside a proprietary enterprise harness: a custom Cursor
-extension, \texttt{cursor://}-style commands, and an embedded web application where
-subject-matter experts loaded production examples, corrected outputs, and helped turn those
-corrections into input/output specifications.  We evaluate the public method with CatSynth, a
-synthetic browser application and a captured coding-agent experiment.  The
-experiment gives the Developer one active failure at a time, requires a sketch revision for
-each accepted counterexample, and gates every revision against a regression set.  CatSynth is
-small, so its regression set contains its entire accepted archive.  A closed-world run
-separately gives the same model a complete immutable specification;
-it reaches 20/20 visible and passes 21/21 withheld cases in four Developer calls and 611,519 model tokens
-through visible acceptance.  In the open-world run, eight of fourteen externally supplied cases
-fail and are promoted.  Tokens through visible acceptance are 891,880 for replay-all, 828,628
-for evolved-sketch rebuild, and 1,021,822 for retained Sketch--CE.  The controls inherit the
-promotion schedule and omit candidate classification and rule proposal, so these totals are not end-to-end price
-rankings.  All three pass eight visible cases; their withheld-case results are 15/21, 19/21, and 18/21
-respectively.  These are inspectable runs, not general performance claims.
+We demonstrate the method with CatSynth, a synthetic browser application and captured
+coding-agent experiment.  In one open-world run with GPT-5.4-mini, 8 of 14 frozen candidate cases
+became counterexamples.  The rebuild controls inherited that promotion schedule, and all three
+paths passed the 8 accepted cases.  Rebuilding from the evolved sketch passed 19 of 21 withheld
+cases, compared with 15 of 21 when rebuilding from the initial sketch and replaying all accepted
+examples.  Retaining code across counterexamples required 9 Developer calls and 719 lines of
+cumulative artifact churn, versus 15 calls and 2,394 lines for replay-all, and passed 18 of 21
+withheld cases.  These results provide inspectable evidence that the evolved sketch carried
+reviewed policy and that retaining code reduced rework in this run; with one model and one reveal
+order, they do not establish general superiority or correctness beyond the encoded checks.
 \end{abstract}
 
 % ---------------------------------------------------------------------------
@@ -1149,6 +1136,14 @@ evolved sketches, Developer and Oracle adapters, generated code and prompts, per
 outcomes and diffs, compact token ledgers, browser application, and full experiment histories.
 The artifact is available in the
 \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches}{public repository}.
+
+\section*{Use of generative AI}
+
+The CatSynth experiments use generative AI as described in
+Section~\ref{sec:worked-example} and Appendix~\ref{app:catsynth-supplement}.  OpenAI Codex also
+assisted with experiment orchestration, code and source editing, and prose revision.  The
+authors reviewed the generated code, prompts, analyses, citations, and text and take
+responsibility for this paper.
 
 \bibliographystyle{plain}
 \small

@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "Please cite the paper. If you rely on the code or captured artifacts, cite the software release as well."
+title: "Agentic Synthesis against Counterexample-Supplemented Sketches"
+type: software
+abstract: >-
+  A repository-native method and runnable CatSynth artifact for evolving a
+  partial software sketch through operator-approved counterexamples,
+  coding-agent repairs, and regression gates.
+authors:
+  - family-names: Castle
+    given-names: Muness
+    affiliation: Independent
+    email: muness@muness.com
+  - family-names: Rubeck
+    given-names: Eric
+license: MIT
+repository-code: "https://github.com/open-horizon-labs/counterexample-supplemented-sketches"
+keywords:
+  - agentic synthesis
+  - coding agents
+  - counterexamples
+  - program synthesis
+  - regression testing
+  - software engineering
+preferred-citation:
+  type: article
+  title: "Agentic Synthesis against Counterexample-Supplemented Sketches"
+  authors:
+    - family-names: Castle
+      given-names: Muness
+      affiliation: Independent
+    - family-names: Rubeck
+      given-names: Eric
+  year: 2026
+  status: preprint
+  license: CC-BY-4.0
+  url: "https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/paper/main.pdf"

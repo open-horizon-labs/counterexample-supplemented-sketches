@@ -338,3 +338,9 @@ to other models, adapters, tasks, or accounting boundaries.
   arXiv.
 - [`examples/task-line-parser/`](examples/task-line-parser/) is a smaller dependency-free sketch
   and counterexample exercise.
+
+## License
+
+Repository material outside [`paper/`](paper/) is licensed under the
+[MIT License](LICENSE). The papers, their source files, and original figures are licensed under
+[CC BY 4.0](paper/LICENSE). Third-party material is excluded where identified.
