@@ -1,0 +1,71 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "operation": "abstain",
+      "oracle_tags": []
+    },
+    "id": "ce-002-over-constrained-abstention",
+    "policy": "Hard rules compose. When no breed survives all applicable forbid rules, abstain and cite every applicable hard rule instead of relaxing policy to force a recommendation.",
+    "rule_ids": [
+      "allergy_requires_hypoallergenic",
+      "apartment_no_high_energy",
+      "children_require_good_with_children",
+      "long_hours_no_high_sociability",
+      "severe_allergy_low_shedding"
+    ],
+    "scenario_id": "over_constrained",
+    "sketch_rule": "FR-2: Hard forbid rules compose. Support profile triggers eq and is_true, and cat predicates is_false and gte on low < moderate < high. If filtering leaves no breed, ABSTAIN and cite every applicable hard rule. Never relax a hard rule to force a recommendation."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "operation": "abstain",
+      "oracle_tags": []
+    },
+    "id": "ce-002-over-constrained-abstention",
+    "mismatches": {
+      "operation": {
+        "actual": "escalate",
+        "checked": true,
+        "expected": "abstain",
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "over_constrained"
+  },
+  "status": "promoted"
+}

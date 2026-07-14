@@ -1,0 +1,67 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": null,
+      "cited_rules": [
+        "invalid_reviewer_policy"
+      ],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-012-invalid-rule-escalates",
+    "policy": "An applicable policy row with an unsupported operator cannot be silently ignored. Escalate and cite the uninterpretable rule ID so a reviewer can repair the policy source.",
+    "rule_ids": [
+      "invalid_reviewer_policy"
+    ],
+    "scenario_id": "invalid_rule_language",
+    "sketch_rule": "FR-12: If an applicable rule kind, trait operator, cat operator, attribute, or ordinal value is unsupported, ESCALATE and cite that rule ID. Never silently skip uninterpretable policy."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": null,
+      "cited_rules": [
+        "invalid_reviewer_policy"
+      ],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "id": "ce-012-invalid-rule-escalates",
+    "mismatches": {
+      "breed": {
+        "actual": "Persian",
+        "checked": true,
+        "expected": null,
+        "match": false
+      },
+      "cited_rules": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "invalid_reviewer_policy"
+        ],
+        "match": false
+      },
+      "operation": {
+        "actual": "recommend",
+        "checked": true,
+        "expected": "escalate",
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "invalid_rule_language"
+  },
+  "status": "promoted"
+}

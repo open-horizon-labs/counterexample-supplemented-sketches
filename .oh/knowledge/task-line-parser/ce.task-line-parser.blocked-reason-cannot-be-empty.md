@@ -3,7 +3,7 @@ rna:
   kind: counterexample
   id: ce.task-line-parser.blocked-reason-cannot-be-empty
   name: "Blocked reason requires text"
-  selector: "examples/task-line-parser/counterexamples.md:21-32"
+  selector: "examples/task-line-parser/counterexamples.md:32-43"
   relationships:
     - kind: tests_tempting_patch
       target: accept a blank blocked reason after `|`

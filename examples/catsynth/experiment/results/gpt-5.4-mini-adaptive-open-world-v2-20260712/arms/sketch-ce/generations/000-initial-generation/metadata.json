@@ -1,0 +1,57 @@
+{
+  "active_failure": null,
+  "arm": "sketch-ce",
+  "corpus_ids": [],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -8,43 +8,82 @@\n ```\n \n Return a dictionary containing `operation`, `breed`, `cited_rules`, and\n-`rationale`. `operation` is `recommend`, `abstain`, or `escalate`. The initial\n-strategy returns `recommend` because no policy removes candidates yet.\n+`rationale`.\n \n-Rank breeds by the owner's explicit positive preferences. Use\n-`low = 0`, `moderate = 1`, and `high = 2`; use\n-`small = 0`, `medium = 1`, and `large = 2`. A breed's score is the sum of:\n+## Current policy\n \n-- If `wants_size` has a value, `max(0, 2 - abs(breed_size - wanted_size))`.\n-- If `wants_affection` is true, the breed's ordinal `affection` value plus\n-  `2 - energy`; lower energy is the deterministic calmness proxy.\n-- If `wants_fluffy` is true, `2` when the breed's boolean `fluffy` field is\n-  true and `0` otherwise.\n-- Break ties by breed name.\n+- `operation` is `recommend` when at least one breed candidate is available.\n+- If `breeds` is empty, return `escalate` with `breed = null`.\n+- Do not inspect `scenario_id`.\n+- Do not assign any policy meaning to `rules` or `oracle_tags` yet.\n+- Do not hard-code behavior for named fixtures.\n \n-`rules` and `oracle_tags` are reserved policy inputs. Do not invent their\n-semantics before the sketch or an active counterexample defines them. Never\n-inspect `scenario_id` or hard-code behavior for a named fixture.\n+## Ranking\n \n-Stable input shapes:\n+Rank breeds by the owner's explicit positive preferences using deterministic\n+ordinal encodings:\n \n-- Profiles contain categorical owner traits plus the three explicit preference\n-  fields above and an optional `narrative_note`.\n-- Breeds contain `name`; ordinal `energy`, `shedding`, `grooming`,\n-  `sociability`, `vocal`, and `affection`; `size`; and boolean\n-  `hypoallergenic`, `good_with_children`, and `fluffy`.\n-- Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`,\n-  `cat_attribute`, `cat_op`, and `cat_value`. Operators describe predicates:\n-  `eq`, comma-separated `in`, `is_true`, `is_false`, and ordinal `gte`/`lte`.\n-  The initial sketch intentionally does not say what a matched rule does.\n-- `oracle_tags` is a list of controlled strings. The initial sketch intentionally\n+- `low = 0`, `moderate = 1`, `high = 2`\n+- `small = 0`, `medium = 1`, `large = 2`\n+\n+A breed's score is the sum of:\n+\n+- If `wants_size` has a value, add `max(0, 2 - abs(breed_size - wanted_size))`.\n+- If `wants_affection` is true, add the breed's ordinal `affection` value plus\n+  `2 - energy` as a calmness proxy.\n+- If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is\n+  true, otherwise add `0`.\n+- Break ties by breed name in ascending order.\n+\n+## Output shape\n+\n+Return a dictionary with:\n+\n+- `operation`: one of `recommend`, `abstain`, or `escalate`\n+- `breed`: a breed name string or `null`\n+- `cited_rules`: a list of rule ID strings\n+- `rationale`: a short explanation string\n+\n+For this initial sketch, `cited_rules` is always an empty list because no rule\n+semantics are promoted yet.\n+\n+## Stable input shapes\n+\n+Profiles contain categorical owner traits plus the three explicit preference\n+fields above and an optional `narrative_note`.\n+\n+Breeds contain:\n+\n+- `name`\n+- ordinal `energy`, `shedding`, `grooming`, `sociability`, `vocal`, and\n+  `affection`\n+- `size`\n+- boolean `hypoallergenic`, `good_with_children`, and `fluffy`\n+\n+Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`,\n+`cat_attribute`, `cat_op`, and `cat_value`.\n+\n+Operators describe predicates:\n+\n+- `eq`\n+- comma-separated `in`\n+- `is_true`\n+- `is_false`\n+- ordinal `gte` / `lte`\n+\n+The initial sketch intentionally does not say what a matched rule does.\n+\n+`oracle_tags` is a list of controlled strings. The initial sketch intentionally\n assigns no meaning to any tag.\n+\n+## Narrative prompt contract\n+\n+Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`.\n+It must contain a `{note}` placeholder and request JSON with a `tags` array.\n+At this stage, the only valid response is `{\"tags\": []}`.\n+\n+## Empty-candidate fallback\n \n If a later promoted clause removes every candidate but no promoted clause says\n what to do with the empty set, return `escalate` with no breed. This preserves\n the policy hole for a counterexample instead of silently choosing an answer.\n-\n-Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`. It must\n-contain a `{note}` placeholder and request JSON with a `tags` array. Until a\n-counterexample defines a narrative policy, it must return `{\"tags\": []}` for\n-every note.\n",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -0,0 +1,7 @@\n+You are given one narrative note:\n+{note}\n+\n+Return exactly one JSON object with a single key named \"tags\" whose value is an array.\n+Only use tags whose meanings are defined by the current sketch.\n+At this stage, the sketch defines no narrative tags, so return:\n+{\"tags\": []}\n",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -0,0 +1,83 @@\n+def recommend(profile, breeds, rules, oracle_tags):\n+    \"\"\"Deterministic initial CatSynth recommendation strategy.\n+\n+    This implementation follows the current sketch:\n+    - rank breeds by explicit owner preferences\n+    - do not assign semantics to rules or oracle_tags yet\n+    - never inspect scenario_id\n+    - break ties by breed name\n+    \"\"\"\n+\n+    size_order = {\"small\": 0, \"medium\": 1, \"large\": 2}\n+    ordinal_order = {\"low\": 0, \"moderate\": 1, \"high\": 2}\n+\n+    def norm_bool(value):\n+        return value is True\n+\n+    def norm_size(value):\n+        return size_order.get(value, None)\n+\n+    def norm_ord(value):\n+        return ordinal_order.get(value, None)\n+\n+    def score_breed(breed):\n+        score = 0\n+\n+        wanted_size = norm_size(profile.get(\"wants_size\"))\n+        breed_size = norm_size(breed.get(\"size\"))\n+        if wanted_size is not None and breed_size is not None:\n+            score += max(0, 2 - abs(breed_size - wanted_size))\n+\n+        if norm_bool(profile.get(\"wants_affection\")):\n+            affection = norm_ord(breed.get(\"affection\"))\n+            energy = norm_ord(breed.get(\"energy\"))\n+            if affection is not None:\n+                score += affection\n+            if energy is not None:\n+                score += 2 - energy\n+\n+        if norm_bool(profile.get(\"wants_fluffy\")) and breed.get(\"fluffy\") is True:\n+            score += 2\n+\n+        return score\n+\n+    if not breeds:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"No breeds were supplied, so there is no candidate to recommend.\"\n+        }\n+\n+    ranked = []\n+    for breed in breeds:\n+        name = breed.get(\"name\")\n+        if name is None:\n+            continue\n+        ranked.append((score_breed(breed), name, breed))\n+\n+    if not ranked:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"No breed names were available to rank.\"\n+        }\n+\n+    ranked.sort(key=lambda item: (-item[0], item[1]))\n+    _, chosen_name, _chosen_breed = ranked[0]\n+\n+    rationale_parts = [\"Chosen by explicit preference score\"]\n+    if profile.get(\"wants_size\") is not None:\n+        rationale_parts.append(\"size match\")\n+    if profile.get(\"wants_affection\") is True:\n+        rationale_parts.append(\"affection and calmness\")\n+    if profile.get(\"wants_fluffy\") is True:\n+        rationale_parts.append(\"fluffiness\")\n+\n+    return {\n+        \"operation\": \"recommend\",\n+        \"breed\": chosen_name,\n+        \"cited_rules\": [],\n+        \"rationale\": \"; \".join(rationale_parts) + \".\"\n+    }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 1920,
+      "prompt_tokens": 17625,
+      "reasoning_tokens": 338,
+      "total_tokens": 19545
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      }
+    ],
+    "passed": true,
+    "passed_count": 1,
+    "scope": "initial sketch acceptance",
+    "total": 1
+  },
+  "source_generation": "000-initial-generation"
+}

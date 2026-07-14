@@ -8,13 +8,17 @@ model-free. A real client can be swapped in without touching the resolver.
 
 from __future__ import annotations
 
-import os
 from typing import Protocol
 
 from .models import OwnerProfile
+from .openai_compat import (
+    DEFAULT_BASE_URL,
+    DEFAULT_MODEL,
+    OpenAICompatibleClient,
+)
 
-OLLAMA_HOST = os.environ.get("CATSYNTH_OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.environ.get("CATSYNTH_OLLAMA_MODEL", "qwen2.5-coder:14b")
+LLM_BASE_URL = DEFAULT_BASE_URL
+LLM_MODEL = DEFAULT_MODEL
 
 # The controlled vocabulary Oracle B is allowed to emit. Each tag maps to one
 # soft (discourage) pseudo-rule merged into Oracle A's ranking. These are
@@ -66,7 +70,9 @@ class MockLLM:
     name = "mock"
 
     def complete(self, prompt: str) -> str:
-        note = prompt.lower()
+        # Only classify the supplied note. Scanning the instructions would
+        # match every allowed-tag description and create a false-green gate.
+        note = prompt.rsplit('Owner note: "', 1)[-1].rsplit('"', 1)[0].lower()
         tags = []
         if any(k in note for k in ("travel", "away", "gone", "lonely", "alone", "miserable")):
             tags.append("avoid_needy")
@@ -77,36 +83,31 @@ class MockLLM:
         return ",".join(tags) if tags else "NONE"
 
 
-class OllamaLLM:
-    """Prompt-mediated completion backed by a local Ollama server.
+class OpenAICompatibleLLM:
+    """Prompt completion through an OpenAI-compatible local API."""
 
-    Uses the same `complete(prompt) -> str` contract as MockLLM, so it drops
-    straight into the resolver. The gate still defaults to MockLLM to stay
-    deterministic; Ollama is opt-in (e.g. from the Playground).
-    """
-
-    def __init__(self, model: str = OLLAMA_MODEL, host: str = OLLAMA_HOST, timeout: int = 60):
+    def __init__(self, model: str = LLM_MODEL, base_url: str = LLM_BASE_URL,
+                 timeout: int = 300):
         self.model = model
-        self.host = host.rstrip("/")
-        self.timeout = timeout
-        self.name = f"ollama:{model}"
+        self.client = OpenAICompatibleClient(base_url=base_url, model=model, timeout=timeout)
+        self.name = f"openai-compatible:{model}"
 
     def complete(self, prompt: str) -> str:
-        import requests
-        resp = requests.post(
-            f"{self.host}/api/generate",
-            json={"model": self.model, "prompt": prompt, "stream": False,
-                  "options": {"temperature": 0}},
-            timeout=self.timeout,
+        result = self.client.chat(
+            [
+                {"role": "system", "content": "Follow the requested output format exactly."},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=512,
+            temperature=0,
         )
-        resp.raise_for_status()
-        return (resp.json().get("response") or "").strip()
+        return result.content
 
 
-def make_client(name: str = "mock", model: str = OLLAMA_MODEL) -> LLMClient:
-    """Select an Oracle B backend by name ('mock' or 'ollama')."""
-    if name == "ollama":
-        return OllamaLLM(model=model)
+def make_client(name: str = "mock", model: str = LLM_MODEL) -> LLMClient:
+    """Select the deterministic mock or an OpenAI-compatible local backend."""
+    if name in {"local", "openai", "ollama"}:  # ollama remains a CLI compatibility alias
+        return OpenAICompatibleLLM(model=model)
     return MockLLM()
 
 

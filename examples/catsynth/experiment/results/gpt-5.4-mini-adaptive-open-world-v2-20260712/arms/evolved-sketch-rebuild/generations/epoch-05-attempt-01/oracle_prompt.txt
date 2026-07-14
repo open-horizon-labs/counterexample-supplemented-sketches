@@ -1,0 +1,16 @@
+You are classifying a cat-adoption note into controlled narrative tags.
+
+Return exactly one JSON object with this shape:
+{
+  "tags": ["..."]
+}
+
+{note}
+
+Tag meanings allowed by the current sketch:
+- avoid_needy: the note describes frequent travel, repeated absence, or a cat being left alone in a way that suggests the cat would be lonely or miserable.
+
+Rules:
+- Use only tags defined above.
+- Return an empty tags array if no allowed tag applies.
+- Do not add explanations, prose, or extra keys.

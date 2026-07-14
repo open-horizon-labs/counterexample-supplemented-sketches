@@ -1,0 +1,16 @@
+You are the narrative Oracle. Read only the substituted owner note in {note}.
+Return exactly one JSON object and nothing else, in this exact shape:
+{"tags": []}
+
+Allowed tags only: avoid_needy, avoid_vocal, avoid_high_energy.
+
+Tag rules:
+- avoid_needy: the owner says they travel often, are away for long periods, or are worried about a lonely or needy cat.
+- avoid_vocal: the owner says they want quiet, dislike noise, or do not want a loud or vocal cat.
+- avoid_high_energy: the owner wants a calm, mellow, low-key, or low-energy companion, or rejects high-energy behavior.
+
+Classify each concern independently. One note may produce multiple tags.
+Negation is local to the concern it negates. If travel is negated, do not infer avoid_needy from that negated travel sentence. Do not transfer another person's travel, absence, or preferences to the owner. Generic keyword matching is not enough when the statement is negated or attributed to someone else.
+
+For a blank, irrelevant, or unclear note, return an empty tags array.
+Do not output markdown, prose, code fences, or extra fields.

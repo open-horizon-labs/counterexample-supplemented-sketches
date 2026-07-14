@@ -1,6 +1,8 @@
 # Implement From Sketch
 
-Use this flow to implement the method from a sketch: preserve local code style, satisfy the counterexamples, and verify that tempting wrong patches fail.
+Use this flow to generate a replaceable implementation from the current evolved sketch. The
+sketch is the policy source. The regression corpus checks the result; it does not supply missing
+policy.
 
 ## Inputs
 
@@ -8,7 +10,7 @@ Read:
 
 1. the sketch;
 2. known-code anchors;
-3. counterexamples;
+3. the curated regression corpus;
 4. existing tests if present.
 
 ## Rules
@@ -18,9 +20,13 @@ Read:
 - Keep the implementation dependency-free.
 - Return validation errors the way known code does.
 - Implement only sketched behavior.
-- Add tests for every counterexample.
-- If the sketch is ambiguous, choose the behavior required by the counterexamples.
+- Do not infer unstated policy from the CE archive or regression cases.
+- If a regression case requires behavior the sketch does not state, stop and request a sketch
+  revision through the operator-approved CE process before implementing it.
+- Keep the regression corpus small enough to run routinely and strong enough to reject known
+  tempting patches.
 
 ## Output
 
-Produce implementation, tests, and a note naming which counterexample defeats which tempting wrong patch.
+Produce the implementation and a gate report over the regression corpus. Name any behavior that
+could not be regenerated from the sketch alone.

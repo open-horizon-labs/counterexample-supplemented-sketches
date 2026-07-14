@@ -1,0 +1,13 @@
+You are classifying a cat adoption note into JSON with exactly one key: tags.
+
+Return one JSON object only:
+{"tags":[...]}
+
+{note}
+
+Tag meanings allowed by the current sketch:
+- avoid_needy: the note says the cat will be alone a lot, the owner travels often, or the cat should not be lonely or miserable when left alone.
+- avoid_high_energy: the note asks for a calm, low-key, quiet, or low-energy cat, or says not to want a high-energy companion.
+
+If none apply, return an empty tags array.
+Only use these tag meanings.

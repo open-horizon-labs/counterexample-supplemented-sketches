@@ -1,0 +1,928 @@
+{
+  "active_failure": [
+    {
+      "actual": {
+        "breed": "Balinese",
+        "cited_rules": [],
+        "operation": "recommend",
+        "oracle_tags": [
+          "avoid_high_energy"
+        ]
+      },
+      "candidate_breeds": [
+        {
+          "affection": "high",
+          "energy": "low",
+          "fluffy": true,
+          "good_with_children": true,
+          "grooming": "high",
+          "hypoallergenic": false,
+          "name": "Persian",
+          "shedding": "high",
+          "size": "large",
+          "sociability": "moderate",
+          "summary": "",
+          "vocal": "low",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "moderate",
+          "fluffy": true,
+          "good_with_children": true,
+          "grooming": "high",
+          "hypoallergenic": false,
+          "name": "Maine Coon",
+          "shedding": "high",
+          "size": "large",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "moderate",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "moderate",
+          "fluffy": true,
+          "good_with_children": true,
+          "grooming": "moderate",
+          "hypoallergenic": true,
+          "name": "Siberian",
+          "shedding": "moderate",
+          "size": "large",
+          "sociability": "moderate",
+          "summary": "",
+          "vocal": "low",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "low",
+          "fluffy": true,
+          "good_with_children": true,
+          "grooming": "moderate",
+          "hypoallergenic": false,
+          "name": "Ragdoll",
+          "shedding": "moderate",
+          "size": "large",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "low",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "high",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "low",
+          "hypoallergenic": false,
+          "name": "Siamese",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "high",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "moderate",
+          "fluffy": true,
+          "good_with_children": true,
+          "grooming": "moderate",
+          "hypoallergenic": true,
+          "name": "Balinese",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "moderate",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "high",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "high",
+          "hypoallergenic": false,
+          "name": "Sphynx",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "moderate",
+          "wiki_url": ""
+        },
+        {
+          "affection": "moderate",
+          "energy": "moderate",
+          "fluffy": false,
+          "good_with_children": false,
+          "grooming": "low",
+          "hypoallergenic": true,
+          "name": "Russian Blue",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "moderate",
+          "summary": "",
+          "vocal": "low",
+          "wiki_url": ""
+        },
+        {
+          "affection": "moderate",
+          "energy": "low",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "low",
+          "hypoallergenic": false,
+          "name": "British Shorthair",
+          "shedding": "moderate",
+          "size": "large",
+          "sociability": "low",
+          "summary": "",
+          "vocal": "low",
+          "wiki_url": ""
+        },
+        {
+          "affection": "moderate",
+          "energy": "high",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "low",
+          "hypoallergenic": false,
+          "name": "Bengal",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "high",
+          "wiki_url": ""
+        },
+        {
+          "affection": "moderate",
+          "energy": "high",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "low",
+          "hypoallergenic": false,
+          "name": "Abyssinian",
+          "shedding": "low",
+          "size": "medium",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "moderate",
+          "wiki_url": ""
+        },
+        {
+          "affection": "high",
+          "energy": "high",
+          "fluffy": false,
+          "good_with_children": true,
+          "grooming": "low",
+          "hypoallergenic": true,
+          "name": "Devon Rex",
+          "shedding": "low",
+          "size": "small",
+          "sociability": "high",
+          "summary": "",
+          "vocal": "moderate",
+          "wiki_url": ""
+        }
+      ],
+      "checked_fields": [
+        "operation",
+        "breed",
+        "cited_rules",
+        "oracle_tags"
+      ],
+      "expected": {
+        "breed": "Balinese",
+        "cited_rules": [],
+        "operation": "recommend",
+        "oracle_tags": [
+          "avoid_high_energy",
+          "avoid_vocal"
+        ]
+      },
+      "mismatches": {
+        "oracle_tags": {
+          "actual": [
+            "avoid_high_energy"
+          ],
+          "checked": true,
+          "expected": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ],
+          "match": false
+        }
+      },
+      "profile": {
+        "activity_level": "moderate",
+        "allergies": "none",
+        "experience": "experienced",
+        "home_size": "house",
+        "label": "Travel is negated while quiet and calm preferences remain asserted",
+        "narrative_note": "I do not travel and I am never away for work, but I do need a quiet, calm, low-key cat.",
+        "noise_tolerance": "high",
+        "scenario_id": "scoped_negation_multi_tag",
+        "wants_affection": true,
+        "wants_fluffy": false,
+        "wants_size": "medium",
+        "work_hours": "normal",
+        "young_children": false
+      },
+      "rules_supplied": [
+        {
+          "cat_attribute": "hypoallergenic",
+          "cat_op": "is_false",
+          "cat_value": "",
+          "id": "allergy_requires_hypoallergenic",
+          "kind": "forbid",
+          "reason": "Owner has allergies: non-hypoallergenic breeds are forbidden.",
+          "trait": "allergies",
+          "trait_op": "in",
+          "trait_value": "mild,severe"
+        },
+        {
+          "cat_attribute": "energy",
+          "cat_op": "gte",
+          "cat_value": "high",
+          "id": "apartment_no_high_energy",
+          "kind": "forbid",
+          "reason": "Apartment: high-energy breeds need more space than an apartment offers.",
+          "trait": "home_size",
+          "trait_op": "eq",
+          "trait_value": "apartment"
+        },
+        {
+          "cat_attribute": "good_with_children",
+          "cat_op": "is_false",
+          "cat_value": "",
+          "id": "children_require_good_with_children",
+          "kind": "forbid",
+          "reason": "Young children present: breeds not good with children are forbidden.",
+          "trait": "young_children",
+          "trait_op": "is_true",
+          "trait_value": ""
+        },
+        {
+          "cat_attribute": "energy",
+          "cat_op": "approximately",
+          "cat_value": "high",
+          "id": "invalid_reviewer_policy",
+          "kind": "forbid",
+          "reason": "Synthetic malformed policy row used to exercise escalation.",
+          "trait": "experience",
+          "trait_op": "eq",
+          "trait_value": "reviewer_required"
+        },
+        {
+          "cat_attribute": "sociability",
+          "cat_op": "gte",
+          "cat_value": "high",
+          "id": "long_hours_no_high_sociability",
+          "kind": "forbid",
+          "reason": "Long work hours: highly social breeds suffer during long absences.",
+          "trait": "work_hours",
+          "trait_op": "eq",
+          "trait_value": "long"
+        },
+        {
+          "cat_attribute": "energy",
+          "cat_op": "gte",
+          "cat_value": "high",
+          "id": "low_activity_discourage_high_energy",
+          "kind": "discourage",
+          "reason": "Low owner activity: high-energy breeds are discouraged.",
+          "trait": "activity_level",
+          "trait_op": "eq",
+          "trait_value": "low"
+        },
+        {
+          "cat_attribute": "vocal",
+          "cat_op": "gte",
+          "cat_value": "high",
+          "id": "low_noise_discourage_vocal",
+          "kind": "discourage",
+          "reason": "Low noise tolerance: very vocal breeds are discouraged.",
+          "trait": "noise_tolerance",
+          "trait_op": "eq",
+          "trait_value": "low"
+        },
+        {
+          "cat_attribute": "energy",
+          "cat_op": "gte",
+          "cat_value": "high",
+          "id": "novice_discourage_high_energy",
+          "kind": "discourage",
+          "reason": "Novice owner: demanding high-energy breeds are discouraged.",
+          "trait": "experience",
+          "trait_op": "eq",
+          "trait_value": "novice"
+        },
+        {
+          "cat_attribute": "shedding",
+          "cat_op": "gte",
+          "cat_value": "moderate",
+          "id": "severe_allergy_low_shedding",
+          "kind": "forbid",
+          "reason": "Severe allergies: breeds that shed moderately or more are forbidden.",
+          "trait": "allergies",
+          "trait_op": "eq",
+          "trait_value": "severe"
+        }
+      ],
+      "spec_section": "Narrative Oracle: negation is scoped per concern",
+      "test_id": "spec-016-scoped-negation"
+    }
+  ],
+  "arm": "spec-first",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-005-soft-rule-never-filters",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-008-narrative-negation",
+    "ce-009-narrative-cannot-override-hard-policy",
+    "ce-010-missing-safety-data-escalates",
+    "ce-011-empty-catalog-escalates",
+    "ce-012-invalid-rule-escalates",
+    "ce-013-effective-citation-scope",
+    "ce-014-post-soft-tiebreak",
+    "spec-015-multiple-narrative-tags",
+    "spec-016-scoped-negation",
+    "spec-017-normalized-policy-input",
+    "spec-018-nonapplicable-invalid-rule",
+    "spec-019-duplicate-soft-row",
+    "spec-020-rule-order-invariance"
+  ],
+  "developer": {
+    "diffs": {
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -6,11 +6,12 @@\n Allowed tags only: avoid_needy, avoid_vocal, avoid_high_energy.\n \n Tag rules:\n-- avoid_needy: the owner says they travel often, are away for long periods, or are worried about a lonely or needy cat.\n-- avoid_vocal: the owner says they want quiet, dislike noise, or do not want a loud or vocal cat.\n-- avoid_high_energy: the owner wants a calm, mellow, low-key, or low-energy companion, or rejects high-energy behavior.\n+- avoid_needy: the owner says they travel often, are away for long periods, worry about being absent, or are concerned about a lonely or needy cat.\n+- avoid_vocal: the owner says they want quiet, prefer a quiet cat, dislike noise, do not want a loud or vocal cat, or ask for a calm/low-noise household companion.\n+- avoid_high_energy: the owner wants a calm, mellow, low-key, relaxed, or low-energy companion, or rejects high-energy behavior.\n \n Classify each concern independently. One note may produce multiple tags.\n+A note that says both \"quiet\" and \"calm\" should emit both avoid_vocal and avoid_high_energy.\n Negation is local to the concern it negates. If travel is negated, do not infer avoid_needy from that negated travel sentence. Do not transfer another person's travel, absence, or preferences to the owner. Generic keyword matching is not enough when the statement is negated or attributed to someone else.\n \n For a blank, irrelevant, or unclear note, return an empty tags array.\n",
+      "strategy.diff": ""
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1408,
+      "completion_tokens": 2810,
+      "prompt_tokens": 23543,
+      "reasoning_tokens": 164,
+      "total_tokens": 26353
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Siamese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siamese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-005-soft-rule-never-filters",
+        "passed": true,
+        "scenario_id": "soft_not_hard"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "passed": true,
+        "scenario_id": "duplicate_soft_signal"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-008-narrative-negation",
+        "passed": true,
+        "scenario_id": "narrative_negation"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-009-narrative-cannot-override-hard-policy",
+        "passed": true,
+        "scenario_id": "narrative_hard_conflict"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-010-missing-safety-data-escalates",
+        "passed": true,
+        "scenario_id": "missing_safety_data"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-011-empty-catalog-escalates",
+        "passed": true,
+        "scenario_id": "empty_catalog"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "invalid_reviewer_policy"
+          ],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "invalid_reviewer_policy"
+          ],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-012-invalid-rule-escalates",
+        "passed": true,
+        "scenario_id": "invalid_rule_language"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-013-effective-citation-scope",
+        "passed": true,
+        "scenario_id": "citation_scope"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-014-post-soft-tiebreak",
+        "passed": true,
+        "scenario_id": "post_soft_tiebreak"
+      },
+      {
+        "actual": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "id": "spec-015-multiple-narrative-tags",
+        "passed": true,
+        "scenario_id": "multi_tag_narrative"
+      },
+      {
+        "actual": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "id": "spec-016-scoped-negation",
+        "passed": true,
+        "scenario_id": "scoped_negation_multi_tag"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-017-normalized-policy-input",
+        "passed": true,
+        "scenario_id": "normalized_policy_input"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-018-nonapplicable-invalid-rule",
+        "passed": true,
+        "scenario_id": "invalid_rule_nonapplicable"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-019-duplicate-soft-row",
+        "passed": true,
+        "scenario_id": "duplicate_soft_rows"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-020-rule-order-invariance",
+        "passed": true,
+        "scenario_id": "rule_order_invariant"
+      }
+    ],
+    "passed": true,
+    "passed_count": 21,
+    "total": 21
+  },
+  "source_generation": "003-spec-repair-03"
+}

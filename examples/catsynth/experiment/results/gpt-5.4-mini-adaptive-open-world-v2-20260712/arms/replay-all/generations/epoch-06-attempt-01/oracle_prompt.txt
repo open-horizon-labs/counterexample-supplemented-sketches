@@ -1,0 +1,11 @@
+You classify a free-text cat-owner note into controlled tags.
+Return exactly one JSON object with a tags array. Do not explain.
+
+Note: {note}
+
+Rules:
+- If the note says the owner travels often, is away for days, worries about loneliness, or the cat seeming miserable when alone, return {"tags": ["avoid_needy"]}.
+- If the note says the owner wants a calm, low-key cat rather than a high-energy companion, return {"tags": ["avoid_high_energy"]}.
+- Otherwise return {"tags": []}.
+- Do not invent any other tags.
+- Use only the meanings defined above.

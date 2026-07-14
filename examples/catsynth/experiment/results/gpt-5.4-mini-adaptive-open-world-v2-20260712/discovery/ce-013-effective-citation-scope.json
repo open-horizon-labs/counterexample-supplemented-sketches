@@ -1,0 +1,54 @@
+{
+  "counterexample": {
+    "breed_names": [
+      "Persian",
+      "Siberian",
+      "Balinese",
+      "Devon Rex"
+    ],
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-013-effective-citation-scope",
+    "policy": "On a successful recommendation, cite only applicable hard rules that actually eliminated at least one supplied candidate. On abstention, continue to cite every applicable hard rule.",
+    "rule_ids": [
+      "allergy_requires_hypoallergenic",
+      "children_require_good_with_children"
+    ],
+    "scenario_id": "citation_scope",
+    "sketch_rule": "FR-13: Recommendation provenance lists applicable hard rules that removed at least one candidate from the supplied catalog. Abstention provenance lists all applicable hard rules because the combined policy exhausted the catalog."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-013-effective-citation-scope",
+    "passed": true,
+    "scenario_id": "citation_scope"
+  },
+  "status": "coverage-not-promoted"
+}

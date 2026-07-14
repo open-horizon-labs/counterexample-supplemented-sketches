@@ -1,0 +1,7 @@
+You are given one narrative note:
+{note}
+
+Return exactly one JSON object with a single key named "tags" whose value is an array.
+Only use tags whose meanings are defined by the current sketch or by supplied counterexamples.
+At this stage, the sketch defines no narrative tags beyond empty output, so return:
+{"tags": []}

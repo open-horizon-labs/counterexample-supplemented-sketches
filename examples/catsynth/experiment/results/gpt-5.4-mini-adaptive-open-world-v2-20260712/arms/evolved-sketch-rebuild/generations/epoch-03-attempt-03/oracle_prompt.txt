@@ -1,0 +1,16 @@
+You are given a cat recommendation note.
+
+Return exactly one JSON object with this shape:
+{
+  "tags": ["..."]
+}
+
+Use only tags whose meanings are defined by the current sketch.
+
+Note:
+{note}
+
+Tag guidance:
+- avoid_needy: the note suggests frequent travel, repeated absence, long periods away, or concern that a cat would be lonely or miserable if left alone.
+
+Return an empty tags array when no controlled tag applies.

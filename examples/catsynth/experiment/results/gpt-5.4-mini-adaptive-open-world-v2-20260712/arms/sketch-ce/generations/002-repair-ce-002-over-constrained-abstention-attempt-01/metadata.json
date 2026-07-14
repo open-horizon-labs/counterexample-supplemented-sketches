@@ -1,0 +1,237 @@
+{
+  "active_failure": {
+    "actual": {
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "operation": "escalate",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-2: Hard forbid rules compose. Support profile triggers eq and is_true, and cat predicates is_false and gte on low < moderate < high. If filtering leaves no breed, ABSTAIN and cite every applicable hard rule. Never relax a hard rule to force a recommendation.",
+    "expected": {
+      "breed": null,
+      "cited_rules": [
+        "allergy_requires_hypoallergenic",
+        "apartment_no_high_energy",
+        "children_require_good_with_children",
+        "long_hours_no_high_sociability",
+        "severe_allergy_low_shedding"
+      ],
+      "operation": "abstain",
+      "oracle_tags": []
+    },
+    "id": "ce-002-over-constrained-abstention",
+    "mismatches": {
+      "operation": {
+        "actual": "escalate",
+        "checked": true,
+        "expected": "abstain",
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "moderate",
+      "allergies": "severe",
+      "experience": "experienced",
+      "home_size": "apartment",
+      "label": "Severe allergies + apartment + long hours + young children",
+      "narrative_note": null,
+      "noise_tolerance": "high",
+      "scenario_id": "over_constrained",
+      "wants_affection": true,
+      "wants_fluffy": false,
+      "wants_size": null,
+      "work_hours": "long",
+      "young_children": true
+    },
+    "relevant_oracle_tag_rules": [],
+    "relevant_rule_rows": [
+      {
+        "cat_attribute": "hypoallergenic",
+        "cat_op": "is_false",
+        "cat_value": "",
+        "id": "allergy_requires_hypoallergenic",
+        "kind": "forbid",
+        "reason": "Owner has allergies: non-hypoallergenic breeds are forbidden.",
+        "trait": "allergies",
+        "trait_op": "in",
+        "trait_value": "mild,severe"
+      },
+      {
+        "cat_attribute": "energy",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "apartment_no_high_energy",
+        "kind": "forbid",
+        "reason": "Apartment: high-energy breeds need more space than an apartment offers.",
+        "trait": "home_size",
+        "trait_op": "eq",
+        "trait_value": "apartment"
+      },
+      {
+        "cat_attribute": "good_with_children",
+        "cat_op": "is_false",
+        "cat_value": "",
+        "id": "children_require_good_with_children",
+        "kind": "forbid",
+        "reason": "Young children present: breeds not good with children are forbidden.",
+        "trait": "young_children",
+        "trait_op": "is_true",
+        "trait_value": ""
+      },
+      {
+        "cat_attribute": "sociability",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "long_hours_no_high_sociability",
+        "kind": "forbid",
+        "reason": "Long work hours: highly social breeds suffer during long absences.",
+        "trait": "work_hours",
+        "trait_op": "eq",
+        "trait_value": "long"
+      },
+      {
+        "cat_attribute": "shedding",
+        "cat_op": "gte",
+        "cat_value": "moderate",
+        "id": "severe_allergy_low_shedding",
+        "kind": "forbid",
+        "reason": "Severe allergies: breeds that shed moderately or more are forbidden.",
+        "trait": "allergies",
+        "trait_op": "eq",
+        "trait_value": "severe"
+      }
+    ],
+    "reviewer_policy": "Hard rules compose. When no breed survives all applicable forbid rules, abstain and cite every applicable hard rule instead of relaxing policy to force a recommendation.",
+    "scenario_id": "over_constrained"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -13,6 +13,8 @@\n ## Core policy\n \n - If `breeds` is empty, return `escalate` with `breed = null`.\n+- If hard rules eliminate every supplied breed, return `abstain` with\n+  `breed = null` and cite the applicable hard rule IDs.\n - Do not inspect `scenario_id`.\n - Do not hard-code behavior for named fixtures.\n - Preserve deterministic behavior across identical inputs.\n@@ -40,8 +42,9 @@\n When a hard rule removes one or more breeds, include the applicable rule IDs in\n `cited_rules`.\n \n-If hard rules remove every breed, return `escalate` with `breed = null` and the\n-applicable hard rule IDs in `cited_rules`.\n+If hard rules remove every breed, return `abstain` with `breed = null` and the\n+applicable hard rule IDs in `cited_rules`. This is a safe no-solution signal,\n+not an escalation.\n \n ## Ranking after filtering\n \n@@ -96,6 +99,10 @@\n \n ## Empty-candidate fallback\n \n-If filtering removes every candidate, return `escalate` with no breed and cite\n+If `breeds` is empty, return `escalate` with no breed because there is no\n+catalog to evaluate.\n+\n+If filtering removes every candidate, return `abstain` with no breed and cite\n the hard rules that caused removal. This keeps the hard-rule behavior explicit\n-instead of silently choosing from forbidden breeds.\n+instead of silently choosing from forbidden breeds or escalating a solvable\n+no-match case.\n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -5,7 +5,11 @@\n     - Apply promoted hard rules first.\n     - Forbid rules remove breeds that match the rule's cat predicate when the\n       profile matches the rule's trait trigger.\n-    - Then rank the remaining breeds by explicit owner preferences.\n+    - If hard rules eliminate every breed, abstain and cite the applicable hard\n+      rule IDs.\n+    - If breeds is empty, escalate because there is no supplied catalog to\n+      evaluate.\n+    - Then rank any remaining breeds by explicit owner preferences.\n     - Never inspect scenario_id.\n     - Do not use oracle_tags for selection.\n     \"\"\"\n@@ -138,10 +142,10 @@\n \n     if not filtered:\n         return {\n-            \"operation\": \"escalate\",\n+            \"operation\": \"abstain\",\n             \"breed\": None,\n             \"cited_rules\": applicable_forbid_ids,\n-            \"rationale\": \"All supplied breeds were removed by applicable hard rules.\"\n+            \"rationale\": \"All supplied breeds were removed by applicable hard rules, so no safe recommendation remains.\"\n         }\n \n     ranked = []\n@@ -153,7 +157,7 @@\n \n     if not ranked:\n         return {\n-            \"operation\": \"escalate\",\n+            \"operation\": \"abstain\",\n             \"breed\": None,\n             \"cited_rules\": applicable_forbid_ids,\n             \"rationale\": \"No breed names were available to rank after applying hard rules.\"\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 2682,
+      "prompt_tokens": 22110,
+      "reasoning_tokens": 122,
+      "total_tokens": 24792
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      }
+    ],
+    "passed": true,
+    "passed_count": 3,
+    "total": 3
+  },
+  "source_generation": "002-repair-ce-002-over-constrained-abstention-attempt-01"
+}

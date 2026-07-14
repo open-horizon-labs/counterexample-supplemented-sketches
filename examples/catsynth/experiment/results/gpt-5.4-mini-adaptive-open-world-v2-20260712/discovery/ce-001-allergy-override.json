@@ -1,0 +1,61 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-001-allergy-override",
+    "policy": "For this synthetic fixture, mild or severe allergies forbid every breed whose hypoallergenic attribute is false. Hard policy filters candidates before preference ranking.",
+    "rule_ids": [
+      "allergy_requires_hypoallergenic"
+    ],
+    "scenario_id": "allergy_lapcat",
+    "sketch_rule": "FR-1: A forbid rule applies when the profile trait matches its trigger. For trait_op=in, trait_value is a comma-separated set. A matching cat predicate identifies a violation to remove; cat_op=is_false matches false. Filter violations before preference ranking and cite the applicable hard rule."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Siberian",
+      "cited_rules": [
+        "allergy_requires_hypoallergenic"
+      ],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-001-allergy-override",
+    "mismatches": {
+      "breed": {
+        "actual": "Persian",
+        "checked": true,
+        "expected": "Siberian",
+        "match": false
+      },
+      "cited_rules": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "allergy_requires_hypoallergenic"
+        ],
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "allergy_lapcat"
+  },
+  "status": "promoted"
+}

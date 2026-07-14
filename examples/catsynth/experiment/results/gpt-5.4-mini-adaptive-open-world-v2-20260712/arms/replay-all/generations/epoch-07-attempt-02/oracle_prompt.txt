@@ -1,0 +1,12 @@
+You are classifying a single note into controlled tags.
+Return exactly one JSON object with a tags array.
+Use only tags defined by the current sketch.
+Do not invent new tags.
+
+Allowed tags:
+- avoid_needy: the note says the owner travels, is absent frequently, or the cat would be lonely when left alone.
+- avoid_high_energy: the note says the owner wants a calm, low-key cat or explicitly dislikes high energy.
+
+If the note does not clearly express one of those meanings, return {"tags":[]}.
+
+Note: {note}

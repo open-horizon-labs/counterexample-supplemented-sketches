@@ -1,0 +1,26 @@
+{
+  "name": "CatSynth adaptive open-world candidate pool v2",
+  "protocol_revision": "The candidate source, hash, order, promotion rule, and publication gate are unchanged from v1. V2 restores the previously established twelve-repair safety budget, permits ordinary pure Python map/filter built-ins in generated code, sends one shared breed catalog per repair request instead of duplicating it inside every failure, and surfaces terminal provider errors. V1 stopped at replay-all epoch 7 after a NameError from the omitted map built-in, one genuine regression attempt, and four usageLimitExceeded errors that the adapter had misreported as empty completions.",
+  "source": "cases.json",
+  "source_sha256": "4834b28251ba5729283fd6539160f5ff06dd5c6b02326b31520878834019b2bc",
+  "candidate_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-005-soft-rule-never-filters",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-008-narrative-negation",
+    "ce-009-narrative-cannot-override-hard-policy",
+    "ce-010-missing-safety-data-escalates",
+    "ce-011-empty-catalog-escalates",
+    "ce-012-invalid-rule-escalates",
+    "ce-013-effective-citation-scope",
+    "ce-014-post-soft-tiebreak"
+  ],
+  "promotion_rule": "Probe candidates once in listed order against the retained Sketch-CE incumbent plus the cumulative promoted corpus. Promote exactly those whose checked fields fail. Never send a passing coverage probe to the Developer.",
+  "control_rule": "After discovery closes, replay the exact promoted stream and evolved sketch checkpoints through both rebuild controls without exposing rejected candidates.",
+  "stop_rule": "Complete the pool unless an arm exceeds twelve Developer repair calls for one promoted epoch or the harness detects leakage, fixture-specific code, model fallback, or a malformed artifact.",
+  "publication_gate": "Treat the result as a useful counterexample comparison only if at least five candidates are genuinely promoted and every arm reaches the full cumulative visible gate. Hidden cases remain evaluation-only."
+}

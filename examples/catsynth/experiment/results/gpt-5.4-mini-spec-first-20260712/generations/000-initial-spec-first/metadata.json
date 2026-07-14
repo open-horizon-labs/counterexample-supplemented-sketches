@@ -1,0 +1,719 @@
+{
+  "active_failure": null,
+  "arm": "spec-first",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-005-soft-rule-never-filters",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-008-narrative-negation",
+    "ce-009-narrative-cannot-override-hard-policy",
+    "ce-010-missing-safety-data-escalates",
+    "ce-011-empty-catalog-escalates",
+    "ce-012-invalid-rule-escalates",
+    "ce-013-effective-citation-scope",
+    "ce-014-post-soft-tiebreak",
+    "spec-015-multiple-narrative-tags",
+    "spec-016-scoped-negation",
+    "spec-017-normalized-policy-input",
+    "spec-018-nonapplicable-invalid-rule",
+    "spec-019-duplicate-soft-row",
+    "spec-020-rule-order-invariance"
+  ],
+  "developer": {
+    "diffs": {
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -0,0 +1,16 @@\n+You are the narrative Oracle. Read only the substituted owner note in {note}.\n+Return exactly one JSON object and nothing else, in this exact shape:\n+{\"tags\": []}\n+\n+Allowed tags only: avoid_needy, avoid_vocal, avoid_high_energy.\n+\n+Tag rules:\n+- avoid_needy: the owner says they travel often, are away for long periods, or are worried about a lonely or needy cat.\n+- avoid_vocal: the owner says they want quiet, dislike noise, or do not want a loud or vocal cat.\n+- avoid_high_energy: the owner wants a calm, mellow, low-key, or low-energy companion, or rejects high-energy behavior.\n+\n+Classify each concern independently. One note may produce multiple tags.\n+Negation is local to the concern it negates. If travel is negated, do not infer avoid_needy from that negated travel sentence. Do not transfer another person's travel, absence, or preferences to the owner. Generic keyword matching is not enough when the statement is negated or attributed to someone else.\n+\n+For a blank, irrelevant, or unclear note, return an empty tags array.\n+Do not output markdown, prose, code fences, or extra fields.",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -0,0 +1,251 @@\n+def recommend(profile, breeds, rules, oracle_tags):\n+    def norm_str(value):\n+        if value is None:\n+            return None\n+        if isinstance(value, bool):\n+            return value\n+        if isinstance(value, (int, float)):\n+            return str(value).strip().lower()\n+        return str(value).strip().lower()\n+\n+    def norm_csv_set(value):\n+        if value is None:\n+            return set()\n+        if isinstance(value, (list, tuple, set)):\n+            parts = []\n+            for item in value:\n+                n = norm_str(item)\n+                if n is not None and n != \"\":\n+                    parts.append(n)\n+            return set(parts)\n+        text = str(value)\n+        pieces = text.split(',')\n+        out = set()\n+        for piece in pieces:\n+            n = norm_str(piece)\n+            if n is not None and n != \"\":\n+                out.add(n)\n+        return out\n+\n+    def is_blank(value):\n+        return value is None or (isinstance(value, str) and value.strip() == \"\")\n+\n+    def get_profile_value(obj, key):\n+        if isinstance(obj, dict):\n+            if key in obj:\n+                return obj[key]\n+            nk = norm_str(key)\n+            for k, v in obj.items():\n+                if norm_str(k) == nk:\n+                    return v\n+        return None\n+\n+    def get_breed_attr(breed, attr):\n+        if not isinstance(breed, dict):\n+            return None\n+        candidates = [attr, \"breed_\" + attr, \"cat_\" + attr]\n+        for cand in candidates:\n+            if cand in breed:\n+                return breed[cand]\n+        na = norm_str(attr)\n+        for k, v in breed.items():\n+            if norm_str(k) in (na, \"breed_\" + na, \"cat_\" + na):\n+                return v\n+        return None\n+\n+    def parse_bool(value):\n+        if isinstance(value, bool):\n+            return value\n+        n = norm_str(value)\n+        if n in (\"true\", \"yes\", \"1\"):\n+            return True\n+        if n in (\"false\", \"no\", \"0\"):\n+            return False\n+        return None\n+\n+    def valid_allergies(value):\n+        n = norm_str(value)\n+        return n in (\"none\", \"mild\", \"severe\")\n+\n+    def ordinal_value(attr_value):\n+        n = norm_str(attr_value)\n+        if n == \"low\":\n+            return 0\n+        if n == \"moderate\":\n+            return 1\n+        if n == \"high\":\n+            return 2\n+        return None\n+\n+    def numeric_or_ordinal(value):\n+        if isinstance(value, bool) or value is None:\n+            return None\n+        if isinstance(value, int):\n+            return value\n+        if isinstance(value, float):\n+            return value\n+        n = ordinal_value(value)\n+        if n is not None:\n+            return n\n+        try:\n+            return float(str(value).strip())\n+        except Exception:\n+            return None\n+\n+    def breed_matches_predicate(breed, attr, op, cmp_value):\n+        bv = get_breed_attr(breed, attr)\n+        opn = norm_str(op)\n+        if opn in (\"is_true\", \"is_false\"):\n+            bb = parse_bool(bv)\n+            cv = parse_bool(cmp_value)\n+            if bb is None or cv is None:\n+                return False\n+            return bb is cv if opn == \"is_true\" else bb is not cv\n+        if opn in (\"eq\", \"neq\"):\n+            left = norm_str(bv)\n+            right = norm_str(cmp_value)\n+            if left is None or right is None:\n+                return False\n+            return (left == right) if opn == \"eq\" else (left != right)\n+        if opn in (\"gte\", \"lte\"):\n+            left = numeric_or_ordinal(bv)\n+            right = numeric_or_ordinal(cmp_value)\n+            if left is None or right is None:\n+                return False\n+            return (left >= right) if opn == \"gte\" else (left <= right)\n+        return None\n+\n+    def profile_trigger_true(row):\n+        trait = row.get(\"trait\")\n+        op = norm_str(row.get(\"trait_op\"))\n+        val = row.get(\"trait_value\")\n+        pv = get_profile_value(profile, trait)\n+        if op == \"eq\":\n+            return norm_str(pv) == norm_str(val)\n+        if op == \"in\":\n+            return norm_str(pv) in norm_csv_set(val)\n+        if op == \"is_true\":\n+            return parse_bool(pv) is True\n+        if op == \"is_false\":\n+            return parse_bool(pv) is False\n+        return None\n+\n+    def canonical_predicate(row):\n+        return (norm_str(row.get(\"cat_attribute\")), norm_str(row.get(\"cat_op\")), norm_str(row.get(\"cat_value\")))\n+\n+    if not isinstance(breeds, list) or len(breeds) == 0:\n+        return {\"operation\": \"escalate\", \"breed\": None, \"cited_rules\": [], \"rationale\": \"empty breed catalog\"}\n+\n+    allergies = get_profile_value(profile, \"allergies\")\n+    if not valid_allergies(allergies):\n+        return {\"operation\": \"escalate\", \"breed\": None, \"cited_rules\": [], \"rationale\": \"uninterpretable allergies\"}\n+\n+    applicable_hard = []\n+    hard_matched_ids = set()\n+    surviving = []\n+    for breed in breeds:\n+        surviving.append(breed)\n+\n+    for row in rules or []:\n+        if not isinstance(row, dict):\n+            continue\n+        trigger = profile_trigger_true(row)\n+        if trigger is None:\n+            continue\n+        if trigger is False:\n+            continue\n+        kind = norm_str(row.get(\"kind\"))\n+        attr = row.get(\"cat_attribute\")\n+        op = row.get(\"cat_op\")\n+        val = row.get(\"cat_value\")\n+        rid = row.get(\"id\")\n+        if kind not in (\"forbid\", \"discourage\"):\n+            return {\"operation\": \"escalate\", \"breed\": None, \"cited_rules\": [rid] if rid is not None else [], \"rationale\": \"unsupported applicable rule kind\"}\n+        pred_ok = breed_matches_predicate(breeds[0], attr, op, val)\n+        if pred_ok is None:\n+            return {\"operation\": \"escalate\", \"breed\": None, \"cited_rules\": [rid] if rid is not None else [], \"rationale\": \"unsupported applicable breed predicate\"}\n+        if kind == \"forbid\":\n+            applicable_hard.append((rid, attr, op, val))\n+\n+    hard_rule_ids = []\n+    for rid, attr, op, val in applicable_hard:\n+        matched = False\n+        next_survivors = []\n+        for breed in surviving:\n+            res = breed_matches_predicate(breed, attr, op, val)\n+            if res is True:\n+                matched = True\n+            else:\n+                next_survivors.append(breed)\n+        if matched and rid is not None:\n+            hard_matched_ids.add(rid)\n+        surviving = next_survivors\n+        hard_rule_ids.append(rid)\n+\n+    if len(surviving) == 0:\n+        cited = []\n+        for rid, _, _, _ in applicable_hard:\n+            if rid is not None and rid not in cited:\n+                cited.append(rid)\n+        return {\"operation\": \"abstain\", \"breed\": None, \"cited_rules\": cited, \"rationale\": \"hard policy removes all candidates\"}\n+\n+    soft_preds = set()\n+    for row in rules or []:\n+        if not isinstance(row, dict):\n+            continue\n+        trigger = profile_trigger_true(row)\n+        if trigger is not True:\n+            continue\n+        if norm_str(row.get(\"kind\")) != \"discourage\":\n+            continue\n+        soft_preds.add(canonical_predicate(row))\n+\n+    for tag in oracle_tags or []:\n+        tn = norm_str(tag)\n+        if tn == \"avoid_needy\":\n+            soft_preds.add((\"sociability\", \"gte\", \"high\"))\n+        elif tn == \"avoid_vocal\":\n+            soft_preds.add((\"vocal\", \"gte\", \"high\"))\n+        elif tn == \"avoid_high_energy\":\n+            soft_preds.add((\"energy\", \"gte\", \"high\"))\n+\n+    wants_size = numeric_or_ordinal(get_profile_value(profile, \"wants_size\"))\n+    wants_affection = parse_bool(get_profile_value(profile, \"wants_affection\")) is True\n+    wants_fluffy = parse_bool(get_profile_value(profile, \"wants_fluffy\")) is True\n+\n+    scored = []\n+    for breed in surviving:\n+        score = 0\n+        if wants_size is not None:\n+            bs = numeric_or_ordinal(get_breed_attr(breed, \"size\"))\n+            if bs is not None:\n+                score += max(0, 2 - abs(bs - wants_size))\n+        if wants_affection:\n+            aff = numeric_or_ordinal(get_breed_attr(breed, \"affection\"))\n+            energy = numeric_or_ordinal(get_breed_attr(breed, \"energy\"))\n+            if aff is not None and energy is not None:\n+                score += aff + (2 - energy)\n+        if wants_fluffy and parse_bool(get_breed_attr(breed, \"fluffy\")) is True:\n+            score += 2\n+        penalty = 0\n+        for attr, op, val in soft_preds:\n+            res = breed_matches_predicate(breed, attr, op, val)\n+            if res is True:\n+                penalty += 1\n+        score -= penalty\n+        scored.append((score, norm_str(get_breed_attr(breed, \"name\")) or norm_str(get_breed_attr(breed, \"breed\")) or norm_str(breed.get(\"name\")) or norm_str(breed.get(\"breed\")) or \"\", breed))\n+\n+    scored.sort(key=lambda x: (-x[0], x[1]))\n+    chosen = scored[0][2]\n+    chosen_name = None\n+    if isinstance(chosen, dict):\n+        chosen_name = chosen.get(\"name\") if chosen.get(\"name\") is not None else chosen.get(\"breed\")\n+    if chosen_name is None:\n+        chosen_name = scored[0][1]\n+\n+    cited = []\n+    for rid in hard_matched_ids:\n+        if rid is not None:\n+            cited.append(rid)\n+    cited = sorted(set(cited), key=lambda x: norm_str(x))\n+    return {\"operation\": \"recommend\", \"breed\": chosen_name, \"cited_rules\": cited, \"rationale\": \"highest adjusted score after hard filtering\"}\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 3307,
+      "prompt_tokens": 17746,
+      "reasoning_tokens": 513,
+      "total_tokens": 21053
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Siberian",
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": "Russian Blue",
+          "cited_rules": [
+            "apartment_no_high_energy",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "mismatches": {
+          "breed": {
+            "actual": "Russian Blue",
+            "checked": true,
+            "expected": null,
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [
+              "apartment_no_high_energy",
+              "long_hours_no_high_sociability",
+              "severe_allergy_low_shedding"
+            ],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic",
+              "apartment_no_high_energy",
+              "children_require_good_with_children",
+              "long_hours_no_high_sociability",
+              "severe_allergy_low_shedding"
+            ],
+            "match": false
+          },
+          "operation": {
+            "actual": "recommend",
+            "checked": true,
+            "expected": "abstain",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Siamese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siamese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-005-soft-rule-never-filters",
+        "passed": true,
+        "scenario_id": "soft_not_hard"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "mismatches": {
+          "breed": {
+            "actual": "British Shorthair",
+            "checked": true,
+            "expected": "Bengal",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "duplicate_soft_signal"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-008-narrative-negation",
+        "passed": true,
+        "scenario_id": "narrative_negation"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-009-narrative-cannot-override-hard-policy",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Siberian",
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "narrative_hard_conflict"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-010-missing-safety-data-escalates",
+        "passed": true,
+        "scenario_id": "missing_safety_data"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-011-empty-catalog-escalates",
+        "passed": true,
+        "scenario_id": "empty_catalog"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "invalid_reviewer_policy"
+          ],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "invalid_reviewer_policy"
+          ],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-012-invalid-rule-escalates",
+        "passed": true,
+        "scenario_id": "invalid_rule_language"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-013-effective-citation-scope",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Siberian",
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "citation_scope"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-014-post-soft-tiebreak",
+        "passed": true,
+        "scenario_id": "post_soft_tiebreak"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "id": "spec-015-multiple-narrative-tags",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Balinese",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "multi_tag_narrative"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy",
+            "avoid_vocal"
+          ]
+        },
+        "id": "spec-016-scoped-negation",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Balinese",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "scoped_negation_multi_tag"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-017-normalized-policy-input",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Siberian",
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "normalized_policy_input"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-018-nonapplicable-invalid-rule",
+        "passed": true,
+        "scenario_id": "invalid_rule_nonapplicable"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-019-duplicate-soft-row",
+        "mismatches": {
+          "breed": {
+            "actual": "British Shorthair",
+            "checked": true,
+            "expected": "Bengal",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "duplicate_soft_rows"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "spec-020-rule-order-invariance",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": "Siberian",
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "rule_order_invariant"
+      }
+    ],
+    "passed": false,
+    "passed_count": 11,
+    "total": 21
+  },
+  "source_generation": "000-initial-spec-first"
+}

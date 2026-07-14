@@ -3,7 +3,7 @@ rna:
   kind: counterexample
   id: ce.task-line-parser.pipe-is-only-special-for-blocked
   name: "Pipe is only special for blocked"
-  selector: "examples/task-line-parser/counterexamples.md:45-59"
+  selector: "examples/task-line-parser/counterexamples.md:56-70"
   relationships:
     - kind: tests_tempting_patch
       target: parse `|` as a reason for todo/done statuses

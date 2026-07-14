@@ -1,0 +1,33 @@
+{
+  "active_failure": null,
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-010-missing-safety-data-escalates"
+  ],
+  "developer": {
+    "diffs": {},
+    "error": "ExperimentError: generated strategy may not import modules",
+    "parsed_keys": [],
+    "usage": {
+      "cached_prompt_tokens": 1408,
+      "completion_tokens": 3678,
+      "prompt_tokens": 18682,
+      "reasoning_tokens": 44,
+      "total_tokens": 22360
+    }
+  },
+  "gate": {
+    "cases": [],
+    "error": "ExperimentError: generated strategy may not import modules",
+    "passed": false,
+    "passed_count": 0,
+    "total": 8
+  },
+  "source_generation": "generation"
+}

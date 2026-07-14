@@ -1,0 +1,341 @@
+{
+  "active_failure": {
+    "failures": [
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "Initial sketch only.",
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "mismatches": {
+          "breed": {
+            "actual": "Siberian",
+            "checked": true,
+            "expected": "Persian",
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "low",
+          "allergies": "none",
+          "experience": "novice",
+          "home_size": "house",
+          "label": "First-time owner, quiet home, wants a calm affectionate cat",
+          "narrative_note": null,
+          "noise_tolerance": "low",
+          "scenario_id": "novice_quiet",
+          "wants_affection": true,
+          "wants_fluffy": true,
+          "wants_size": null,
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [],
+        "reviewer_policy": "Initial sketch preference ranking with no learned policy rows.",
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "children_require_good_with_children"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "FR-2: Hard forbid rules compose. Support profile triggers eq and is_true, and cat predicates is_false and gte on low < moderate < high. If filtering leaves no breed, ABSTAIN and cite every applicable hard rule. Never relax a hard rule to force a recommendation.",
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "mismatches": {
+          "breed": {
+            "actual": "Siberian",
+            "checked": true,
+            "expected": null,
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [
+              "allergy_requires_hypoallergenic",
+              "children_require_good_with_children"
+            ],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic",
+              "apartment_no_high_energy",
+              "children_require_good_with_children",
+              "long_hours_no_high_sociability",
+              "severe_allergy_low_shedding"
+            ],
+            "match": false
+          },
+          "operation": {
+            "actual": "recommend",
+            "checked": true,
+            "expected": "abstain",
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "moderate",
+          "allergies": "severe",
+          "experience": "experienced",
+          "home_size": "apartment",
+          "label": "Severe allergies + apartment + long hours + young children",
+          "narrative_note": null,
+          "noise_tolerance": "high",
+          "scenario_id": "over_constrained",
+          "wants_affection": true,
+          "wants_fluffy": false,
+          "wants_size": null,
+          "work_hours": "long",
+          "young_children": true
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [
+          {
+            "cat_attribute": "hypoallergenic",
+            "cat_op": "is_false",
+            "cat_value": "",
+            "id": "allergy_requires_hypoallergenic",
+            "kind": "forbid",
+            "reason": "Owner has allergies: non-hypoallergenic breeds are forbidden.",
+            "trait": "allergies",
+            "trait_op": "in",
+            "trait_value": "mild,severe"
+          },
+          {
+            "cat_attribute": "energy",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "apartment_no_high_energy",
+            "kind": "forbid",
+            "reason": "Apartment: high-energy breeds need more space than an apartment offers.",
+            "trait": "home_size",
+            "trait_op": "eq",
+            "trait_value": "apartment"
+          },
+          {
+            "cat_attribute": "good_with_children",
+            "cat_op": "is_false",
+            "cat_value": "",
+            "id": "children_require_good_with_children",
+            "kind": "forbid",
+            "reason": "Young children present: breeds not good with children are forbidden.",
+            "trait": "young_children",
+            "trait_op": "is_true",
+            "trait_value": ""
+          },
+          {
+            "cat_attribute": "sociability",
+            "cat_op": "gte",
+            "cat_value": "high",
+            "id": "long_hours_no_high_sociability",
+            "kind": "forbid",
+            "reason": "Long work hours: highly social breeds suffer during long absences.",
+            "trait": "work_hours",
+            "trait_op": "eq",
+            "trait_value": "long"
+          },
+          {
+            "cat_attribute": "shedding",
+            "cat_op": "gte",
+            "cat_value": "moderate",
+            "id": "severe_allergy_low_shedding",
+            "kind": "forbid",
+            "reason": "Severe allergies: breeds that shed moderately or more are forbidden.",
+            "trait": "allergies",
+            "trait_op": "eq",
+            "trait_value": "severe"
+          }
+        ],
+        "reviewer_policy": "Hard rules compose. When no breed survives all applicable forbid rules, abstain and cite every applicable hard rule instead of relaxing policy to force a recommendation.",
+        "scenario_id": "over_constrained"
+      }
+    ]
+  },
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -11,7 +11,7 @@\n ## Core policy\n \n - If `breeds` is empty, return `escalate` with `breed = null`.\n-- If hard rules eliminate every supplied breed, return `abstain` with `breed = null` and cite the applicable hard rule IDs.\n+- If hard rules eliminate every supplied breed, return `abstain` with `breed = null` and cite every applicable hard rule ID.\n - Do not inspect `scenario_id`.\n - Do not hard-code behavior for named fixtures.\n - Preserve deterministic behavior across identical inputs.\n@@ -35,22 +35,26 @@\n \n For `in`, `trait_value` and `cat_value` are comma-separated strings. Empty values match nothing.\n \n-When a hard rule removes one or more breeds, include the applicable rule IDs in `cited_rules`.\n+Ordinal comparisons use the stable ordering:\n \n-If hard rules remove every breed, return `abstain` with `breed = null` and the applicable hard rule IDs in `cited_rules`. This is a safe no-solution signal, not an escalation.\n+- `low = 0`, `moderate = 1`, `high = 2`\n+- `small = 0`, `medium = 1`, `large = 2`\n+\n+When a hard rule applies to the profile, include its ID in `cited_rules` even if it removes zero breeds. If hard rules remove every breed, return `abstain` with `breed = null` and the full list of applicable hard rule IDs in `cited_rules`.\n+\n+This is a safe no-solution signal, not an escalation.\n \n ## Ranking after filtering\n \n-Rank the remaining breeds by the owner's explicit positive preferences using stable ordinal encodings:\n-\n-- `low = 0`, `moderate = 1`, `high = 2`\n-- `small = 0`, `medium = 1`, `large = 2`\n+Rank the remaining breeds by the owner's explicit positive preferences using stable ordinal encodings.\n \n A breed's score is the sum of:\n \n - If `wants_size` has a value, add `max(0, 2 - abs(breed_size - wanted_size))`.\n - If `wants_affection` is true, add the breed's ordinal `affection` value plus `2 - energy` as a calmness proxy.\n - If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is true, otherwise add `0`.\n+- If the profile says `noise_tolerance` is low, add extra weight to lower-vocal breeds.\n+- If the profile says `activity_level` is low, add extra weight to lower-energy breeds.\n - If the oracle tag `avoid_needy` is present, subtract the breed's ordinal `sociability` and `affection` values as a soft penalty for cats that are more likely to demand constant attention.\n - Break ties by breed name in ascending order.\n \n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -13,6 +13,23 @@\n             return None\n         if text.isdigit() or (text.startswith('-') and text[1:].isdigit()):\n             return int(text)\n+    return None\n+\n+\n+def _ord(value):\n+    mapping = {\n+        'low': 0,\n+        'moderate': 1,\n+        'high': 2,\n+        'small': 0,\n+        'medium': 1,\n+        'large': 2,\n+    }\n+    parsed = _parse_int(value)\n+    if parsed is not None:\n+        return parsed\n+    if isinstance(value, str):\n+        return mapping.get(value.strip().lower())\n     return None\n \n \n@@ -42,8 +59,8 @@\n \n \n def _matches_ordinal(candidate, op, expected):\n-    left = _parse_int(candidate)\n-    right = _parse_int(expected)\n+    left = _ord(candidate)\n+    right = _ord(expected)\n     if left is None or right is None:\n         return False\n     if op == 'gte':\n@@ -100,24 +117,12 @@\n         if not _profile_matches_rule(profile, rule):\n             continue\n         rule_id = rule.get('id')\n-        hit = False\n+        if rule_id is not None:\n+            cited.append(rule_id)\n         for breed in breeds:\n             if _breed_matches_rule(breed, rule):\n-                hit = True\n                 forbidden.add(breed.get('name'))\n-        if hit and rule_id is not None:\n-            cited.append(rule_id)\n     return forbidden, cited\n-\n-\n-def _ord(value):\n-    parsed = _parse_int(value)\n-    return parsed if parsed is not None else 0\n-\n-\n-def _size_ord(value):\n-    mapping = {'small': 0, 'medium': 1, 'large': 2}\n-    return mapping.get(value, 0)\n \n \n def _score_breed(profile, breed, oracle_tags):\n@@ -125,22 +130,29 @@\n \n     wanted_size = profile.get('wants_size')\n     if wanted_size in ('small', 'medium', 'large'):\n-        score += max(0, 2 - abs(_size_ord(breed.get('size')) - _size_ord(wanted_size)))\n+        score += max(0, 2 - abs(_ord(breed.get('size')) - _ord(wanted_size)))\n \n     if _parse_bool(profile.get('wants_affection')):\n-        score += _ord(breed.get('affection')) + (2 - _ord(breed.get('energy')))\n+        score += (_ord(breed.get('affection')) or 0)\n+        score += max(0, 2 - (_ord(breed.get('energy')) or 0))\n+        score += max(0, 2 - (_ord(breed.get('vocal')) or 0))\n+        if str(profile.get('noise_tolerance')) == 'low':\n+            score += max(0, 2 - (_ord(breed.get('vocal')) or 0))\n+        if str(profile.get('activity_level')) == 'low':\n+            score += max(0, 2 - (_ord(breed.get('energy')) or 0))\n \n     if _parse_bool(profile.get('wants_fluffy')):\n         score += 2 if breed.get('fluffy') is True else 0\n \n     if oracle_tags and 'avoid_needy' in set(oracle_tags):\n-        score -= _ord(breed.get('sociability'))\n-        score -= _ord(breed.get('affection'))\n+        score -= _ord(breed.get('sociability')) or 0\n+        score -= _ord(breed.get('affection')) or 0\n \n     return score\n \n \n def recommend(profile, breeds, rules, oracle_tags):\n+    profile = profile or {}\n     breeds = list(breeds or [])\n     if not breeds:\n         return {\n@@ -150,7 +162,7 @@\n             'rationale': 'No breeds were supplied, so there is no catalog to evaluate.'\n         }\n \n-    forbidden, cited = _hard_forbidden_breeds(profile or {}, breeds, rules or [])\n+    forbidden, cited = _hard_forbidden_breeds(profile, breeds, rules or [])\n     survivors = [breed for breed in breeds if breed.get('name') not in forbidden]\n \n     if not survivors:\n@@ -162,15 +174,17 @@\n         }\n \n     best = None\n-    best_score = None\n+    best_key = None\n     for breed in survivors:\n-        score = _score_breed(profile or {}, breed, oracle_tags or [])\n+        score = _score_breed(profile, breed, oracle_tags or [])\n         key = (score, breed.get('name') or '')\n-        if best is None or key > best_score:\n+        if best is None or key > best_key:\n             best = breed\n-            best_score = key\n+            best_key = key\n \n     rationale_bits = ['Selected the highest-scoring remaining breed after hard-rule filtering.']\n+    if _parse_bool(profile.get('wants_affection')):\n+        rationale_bits.append('Favored affectionate, calmer cats for the owner preferences.')\n     if oracle_tags and 'avoid_needy' in set(oracle_tags):\n         rationale_bits.append('Applied a soft penalty for needier cats.')\n \n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 3305,
+      "prompt_tokens": 22938,
+      "reasoning_tokens": 488,
+      "total_tokens": 26243
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Ragdoll",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "mismatches": {
+          "breed": {
+            "actual": "Ragdoll",
+            "checked": true,
+            "expected": "Persian",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      }
+    ],
+    "passed": false,
+    "passed_count": 3,
+    "total": 4
+  },
+  "source_generation": "generation"
+}

@@ -1,0 +1,380 @@
+{
+  "active_failure": {
+    "failures": [
+      {
+        "actual": "ExperimentError: generated strategy may not import modules",
+        "expected": "valid files that pass the complete visible regression gate",
+        "failure_kind": "developer-output-or-runtime-contract",
+        "id": "one-shot-generated-implementation",
+        "mismatches": {
+          "execution": {
+            "actual": "ExperimentError: generated strategy may not import modules",
+            "expected": "a valid implementation that passes the visible gate",
+            "match": false
+          }
+        }
+      }
+    ]
+  },
+  "arm": "replay-all",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal",
+    "ce-010-missing-safety-data-escalates",
+    "ce-012-invalid-rule-escalates"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -8,8 +8,9 @@\n ```\n \n Return a dictionary containing `operation`, `breed`, `cited_rules`, and\n-`rationale`. `operation` is `recommend`, `abstain`, or `escalate`. The initial\n-strategy returns `recommend` because no policy removes candidates yet.\n+`rationale`. `operation` is `recommend`, `abstain`, or `escalate`.\n+\n+Do not import modules. Keep the implementation self-contained and deterministic.\n \n Rank breeds by the owner's explicit positive preferences. Use\n `low = 0`, `moderate = 1`, and `high = 2`; use\n@@ -22,9 +23,9 @@\n   true and `0` otherwise.\n - Break ties by breed name.\n \n-`rules` and `oracle_tags` are reserved policy inputs. Do not invent their\n-semantics before the sketch or an active counterexample defines them. Never\n-inspect `scenario_id` or hard-code behavior for a named fixture.\n+`rules` and `oracle_tags` are reserved policy inputs. Use only meanings that the\n+sketch or a supplied counterexample has already defined. Never inspect\n+`scenario_id` or hard-code behavior for a named fixture.\n \n Stable input shapes:\n \n@@ -36,15 +37,14 @@\n - Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`,\n   `cat_attribute`, `cat_op`, and `cat_value`. Operators describe predicates:\n   `eq`, comma-separated `in`, `is_true`, `is_false`, and ordinal `gte`/`lte`.\n-  The initial sketch intentionally does not say what a matched rule does.\n-- `oracle_tags` is a list of controlled strings. The initial sketch intentionally\n-assigns no meaning to any tag.\n+  A rule only blocks a breed when it clearly matches and its kind indicates a\n+  blocking policy.\n+- `oracle_tags` is a list of controlled strings. Keep the oracle prompt limited\n+  to JSON tags derived from defined meanings.\n \n If a later promoted clause removes every candidate but no promoted clause says\n what to do with the empty set, return `escalate` with no breed. This preserves\n the policy hole for a counterexample instead of silently choosing an answer.\n \n Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`. It must\n-contain a `{note}` placeholder and request JSON with a `tags` array. Until a\n-counterexample defines a narrative policy, it must return `{\"tags\": []}` for\n-every note.\n+contain a `{note}` placeholder and request JSON with a `tags` array.\n",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -0,0 +1,12 @@\n+You are given a note.\n+\n+{note}\n+\n+Return exactly one JSON object with a tags array.\n+\n+Rules:\n+- Output JSON only.\n+- The object must have exactly one key: tags.\n+- tags must be an array of short strings.\n+- Only use tags that are already defined by the current sketch or supplied counterexamples.\n+- If the note does not clearly match any defined tag meaning, return {\"tags\":[]}.\n",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -0,0 +1,135 @@\n+def recommend(profile, breeds, rules, oracle_tags):\n+    \"\"\"Deterministic cat recommendation with no imports or file access.\"\"\"\n+\n+    size_order = {\"small\": 0, \"medium\": 1, \"large\": 2}\n+    level_order = {\"low\": 0, \"moderate\": 1, \"high\": 2}\n+\n+    def as_bool(value):\n+        return bool(value)\n+\n+    def normalize_text(value):\n+        return \"\" if value is None else str(value)\n+\n+    def parse_csv(value):\n+        text = normalize_text(value).strip()\n+        if not text:\n+            return []\n+        return [part.strip() for part in text.split(\",\") if part.strip()]\n+\n+    def get_profile_value(field):\n+        return profile.get(field)\n+\n+    def get_breed_value(breed, field):\n+        return breed.get(field)\n+\n+    def matches_trait(rule, breed):\n+        trait = rule.get(\"trait\")\n+        op = rule.get(\"trait_op\")\n+        expected = rule.get(\"trait_value\")\n+        actual = get_profile_value(trait) if trait in profile else get_breed_value(breed, trait)\n+\n+        if op == \"eq\":\n+            return normalize_text(actual) == normalize_text(expected)\n+        if op == \"in\":\n+            return normalize_text(actual) in parse_csv(expected)\n+        if op == \"is_true\":\n+            return as_bool(actual)\n+        if op == \"is_false\":\n+            return not as_bool(actual)\n+        if op == \"gte\":\n+            if trait in (\"wants_size\",):\n+                return size_order.get(normalize_text(actual), -1) >= size_order.get(normalize_text(expected), -1)\n+            return level_order.get(normalize_text(actual), -1) >= level_order.get(normalize_text(expected), -1)\n+        if op == \"lte\":\n+            if trait in (\"wants_size\",):\n+                return size_order.get(normalize_text(actual), -1) <= size_order.get(normalize_text(expected), -1)\n+            return level_order.get(normalize_text(actual), -1) <= level_order.get(normalize_text(expected), -1)\n+        return False\n+\n+    def matches_cat(rule, breed):\n+        attr = rule.get(\"cat_attribute\")\n+        op = rule.get(\"cat_op\")\n+        expected = rule.get(\"cat_value\")\n+        actual = get_breed_value(breed, attr)\n+\n+        if op == \"eq\":\n+            return normalize_text(actual) == normalize_text(expected)\n+        if op == \"in\":\n+            return normalize_text(actual) in parse_csv(expected)\n+        if op == \"is_true\":\n+            return as_bool(actual)\n+        if op == \"is_false\":\n+            return not as_bool(actual)\n+        if op == \"gte\":\n+            if attr == \"size\":\n+                return size_order.get(normalize_text(actual), -1) >= size_order.get(normalize_text(expected), -1)\n+            return level_order.get(normalize_text(actual), -1) >= level_order.get(normalize_text(expected), -1)\n+        if op == \"lte\":\n+            if attr == \"size\":\n+                return size_order.get(normalize_text(actual), -1) <= size_order.get(normalize_text(expected), -1)\n+            return level_order.get(normalize_text(actual), -1) <= level_order.get(normalize_text(expected), -1)\n+        return False\n+\n+    def rule_matches(rule, breed):\n+        return matches_trait(rule, breed) and matches_cat(rule, breed)\n+\n+    def rule_blocks_breed(rule, breed):\n+        kind = normalize_text(rule.get(\"kind\")).lower()\n+        if kind in {\"exclude\", \"ban\", \"block\", \"forbid\", \"reject\"}:\n+            return rule_matches(rule, breed)\n+        return False\n+\n+    candidates = []\n+    for breed in breeds or []:\n+        blocked = False\n+        cited = []\n+        for rule in rules or []:\n+            if rule_blocks_breed(rule, breed):\n+                blocked = True\n+                rule_id = rule.get(\"id\")\n+                if rule_id is not None:\n+                    cited.append(str(rule_id))\n+        if not blocked:\n+            candidates.append((breed, cited))\n+\n+    if not candidates:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"No breed remains after applying active blocking rules.\"\n+        }\n+\n+    wanted_size = get_profile_value(\"wants_size\")\n+    size_target = size_order.get(normalize_text(wanted_size), None) if wanted_size else None\n+    wants_affection = as_bool(get_profile_value(\"wants_affection\"))\n+    wants_fluffy = as_bool(get_profile_value(\"wants_fluffy\"))\n+\n+    best_breed = None\n+    best_score = None\n+    best_cited = []\n+\n+    for breed, cited in candidates:\n+        score = 0\n+        breed_size = size_order.get(normalize_text(get_breed_value(breed, \"size\")), -1)\n+        if size_target is not None:\n+            score += max(0, 2 - abs(breed_size - size_target))\n+        if wants_affection:\n+            affection = level_order.get(normalize_text(get_breed_value(breed, \"affection\")), 0)\n+            energy = level_order.get(normalize_text(get_breed_value(breed, \"energy\")), 0)\n+            score += affection + (2 - energy)\n+        if wants_fluffy:\n+            score += 2 if as_bool(get_breed_value(breed, \"fluffy\")) else 0\n+\n+        name = normalize_text(get_breed_value(breed, \"name\"))\n+        if best_breed is None or score > best_score or (score == best_score and name < normalize_text(get_breed_value(best_breed, \"name\"))):\n+            best_breed = breed\n+            best_score = score\n+            best_cited = cited\n+\n+    return {\n+        \"operation\": \"recommend\",\n+        \"breed\": normalize_text(get_breed_value(best_breed, \"name\")),\n+        \"cited_rules\": best_cited,\n+        \"rationale\": \"Selected the highest-scoring available breed using explicit size, affection, and fluffy preferences.\"\n+    }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 4992,
+      "completion_tokens": 2539,
+      "prompt_tokens": 19507,
+      "reasoning_tokens": 357,
+      "total_tokens": 22046
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic",
+              "apartment_no_high_energy",
+              "children_require_good_with_children",
+              "long_hours_no_high_sociability",
+              "severe_allergy_low_shedding"
+            ],
+            "match": false
+          },
+          "operation": {
+            "actual": "escalate",
+            "checked": true,
+            "expected": "abstain",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "mismatches": {
+          "oracle_tags": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "avoid_needy"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Balinese",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "mismatches": {
+          "breed": {
+            "actual": "Balinese",
+            "checked": true,
+            "expected": "Persian",
+            "match": false
+          },
+          "oracle_tags": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "avoid_needy"
+            ],
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Abyssinian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "mismatches": {
+          "breed": {
+            "actual": "Abyssinian",
+            "checked": true,
+            "expected": "British Shorthair",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "passed": true,
+        "scenario_id": "duplicate_soft_signal"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-010-missing-safety-data-escalates",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": null,
+            "match": false
+          },
+          "operation": {
+            "actual": "recommend",
+            "checked": true,
+            "expected": "escalate",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "missing_safety_data"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "invalid_reviewer_policy"
+          ],
+          "operation": "escalate",
+          "oracle_tags": []
+        },
+        "id": "ce-012-invalid-rule-escalates",
+        "mismatches": {
+          "breed": {
+            "actual": "Persian",
+            "checked": true,
+            "expected": null,
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [],
+            "checked": true,
+            "expected": [
+              "invalid_reviewer_policy"
+            ],
+            "match": false
+          },
+          "operation": {
+            "actual": "recommend",
+            "checked": true,
+            "expected": "escalate",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "invalid_rule_language"
+      }
+    ],
+    "passed": false,
+    "passed_count": 2,
+    "total": 9
+  },
+  "source_generation": "generation"
+}

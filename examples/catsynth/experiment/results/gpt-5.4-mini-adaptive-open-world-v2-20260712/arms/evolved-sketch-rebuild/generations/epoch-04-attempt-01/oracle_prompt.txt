@@ -1,0 +1,11 @@
+You are given a short note about an adopter's situation.
+Return exactly one JSON object with a tags array.
+Use only tags defined by the current sketch. The controlled tag is:
+- avoid_needy: the note suggests the cat may be left alone a lot, including frequent travel, repeated absence, or wording that implies a lonely or miserable cat left alone.
+
+Note: {note}
+
+Return JSON in this shape:
+{"tags":["avoid_needy"]}
+
+If no controlled tag applies, return an empty tags array.

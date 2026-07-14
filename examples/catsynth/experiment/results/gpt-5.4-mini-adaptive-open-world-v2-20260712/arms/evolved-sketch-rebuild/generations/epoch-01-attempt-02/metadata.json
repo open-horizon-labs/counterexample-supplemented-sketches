@@ -1,0 +1,171 @@
+{
+  "active_failure": {
+    "failures": [
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic",
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "counterexample_clause": "FR-1: A forbid rule applies when the profile trait matches its trigger. For trait_op=in, trait_value is a comma-separated set. A matching cat predicate identifies a violation to remove; cat_op=is_false matches false. Filter violations before preference ranking and cite the applicable hard rule.",
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "mismatches": {
+          "cited_rules": {
+            "actual": [
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic",
+              "allergy_requires_hypoallergenic"
+            ],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic"
+            ],
+            "match": false
+          }
+        },
+        "profile": {
+          "activity_level": "moderate",
+          "allergies": "mild",
+          "experience": "experienced",
+          "home_size": "house",
+          "label": "Allergic owner wants a big fluffy affectionate lap cat",
+          "narrative_note": null,
+          "noise_tolerance": "high",
+          "scenario_id": "allergy_lapcat",
+          "wants_affection": true,
+          "wants_fluffy": true,
+          "wants_size": "large",
+          "work_hours": "normal",
+          "young_children": false
+        },
+        "relevant_oracle_tag_rules": [],
+        "relevant_rule_rows": [
+          {
+            "cat_attribute": "hypoallergenic",
+            "cat_op": "is_false",
+            "cat_value": "",
+            "id": "allergy_requires_hypoallergenic",
+            "kind": "forbid",
+            "reason": "Owner has allergies: non-hypoallergenic breeds are forbidden.",
+            "trait": "allergies",
+            "trait_op": "in",
+            "trait_value": "mild,severe"
+          }
+        ],
+        "reviewer_policy": "For this synthetic fixture, mild or severe allergies forbid every breed whose hypoallergenic attribute is false. Hard policy filters candidates before preference ranking.",
+        "scenario_id": "allergy_lapcat"
+      }
+    ]
+  },
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -35,7 +35,7 @@\n \n For `in`, `trait_value` and `cat_value` are comma-separated strings. Empty values match nothing.\n \n-When a hard rule removes one or more breeds, include the applicable rule IDs in `cited_rules`.\n+When a hard rule removes one or more breeds, include each applicable rule ID in `cited_rules` once, preserving first-seen order.\n \n If hard rules remove every breed, return `escalate` with `breed = null` and the applicable hard rule IDs in `cited_rules`.\n \n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -3,10 +3,6 @@\n \n _LEVELS = {\"low\": 0, \"moderate\": 1, \"high\": 2}\n _SIZES = {\"small\": 0, \"medium\": 1, \"large\": 2}\n-\n-\n-def _as_bool(value):\n-    return value is True\n \n \n def _split_csv(value):\n@@ -62,8 +58,8 @@\n     if op in (\"gte\", \"lte\"):\n         if actual is None:\n             return False\n-        a = _LEVELS.get(actual) if attr in (\"energy\", \"shedding\", \"grooming\", \"sociability\", \"vocal\", \"affection\") else _SIZES.get(actual)\n-        b = _LEVELS.get(expected) if expected in _LEVELS else _SIZES.get(expected)\n+        a = _coerce_ord(actual, _LEVELS if attr in (\"energy\", \"shedding\", \"grooming\", \"sociability\", \"vocal\", \"affection\") else _SIZES)\n+        b = _coerce_ord(expected, _LEVELS if expected in _LEVELS else _SIZES)\n         if a is None or b is None:\n             return False\n         return a >= b if op == \"gte\" else a <= b\n@@ -95,6 +91,13 @@\n     return score\n \n \n+def _append_unique(items, value):\n+    if value is None:\n+        return\n+    if value not in items:\n+        items.append(value)\n+\n+\n def recommend(profile, breeds, rules, oracle_tags):\n     if not breeds:\n         return {\n@@ -114,10 +117,11 @@\n             if not _hard_forbid_rule(rule):\n                 continue\n             if _matches_profile(profile, rule) and _matches_cat(breed, rule):\n-                blocked.append(rule.get(\"id\"))\n+                _append_unique(blocked, rule.get(\"id\"))\n         if blocked:\n             removed_any = True\n-            cited.extend(blocked)\n+            for rule_id in blocked:\n+                _append_unique(cited, rule_id)\n         else:\n             remaining.append(breed)\n \n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 16256,
+      "completion_tokens": 2351,
+      "prompt_tokens": 21678,
+      "reasoning_tokens": 167,
+      "total_tokens": 24029
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      }
+    ],
+    "passed": true,
+    "passed_count": 2,
+    "total": 2
+  },
+  "source_generation": "generation"
+}

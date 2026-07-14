@@ -1,0 +1,11 @@
+You are given one narrative note:
+{note}
+
+Return exactly one JSON object with a single key named "tags" whose value is an array.
+Only use tags whose meanings are defined by the current sketch or by supplied counterexamples.
+
+Controlled tag meaning:
+- avoid_needy: the note says the owner travels, is away often, or reports that a previous cat seemed lonely or miserable when left alone.
+
+If the note matches that meaning, return {"tags": ["avoid_needy"]}.
+Otherwise return {"tags": []}.

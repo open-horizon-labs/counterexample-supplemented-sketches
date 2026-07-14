@@ -1,0 +1,299 @@
+{
+  "active_failure": {
+    "actual": {
+      "breed": "Bengal",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-7: Merge structured discourage rows and narrative soft tags by semantic predicate. Identical cat_attribute/cat_op/cat_value predicates incur one penalty total, even when both surfaces express them.",
+    "expected": {
+      "breed": "Bengal",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_high_energy"
+      ]
+    },
+    "id": "ce-007-duplicate-soft-signal",
+    "mismatches": {
+      "oracle_tags": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "avoid_high_energy"
+        ],
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "low",
+      "allergies": "none",
+      "experience": "experienced",
+      "home_size": "house",
+      "label": "Structured and narrative inputs express the same energy concern",
+      "narrative_note": "I want a calm, low-key cat rather than a high-energy companion.",
+      "noise_tolerance": "high",
+      "scenario_id": "duplicate_soft_signal",
+      "wants_affection": false,
+      "wants_fluffy": false,
+      "wants_size": "medium",
+      "work_hours": "normal",
+      "young_children": false
+    },
+    "relevant_oracle_tag_rules": [
+      {
+        "cat_attribute": "energy",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "nb_avoid_high_energy",
+        "kind": "discourage",
+        "reason": "Narrative note: owner wants a low-key cat; high-energy breeds discouraged."
+      }
+    ],
+    "relevant_rule_rows": [
+      {
+        "cat_attribute": "energy",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "low_activity_discourage_high_energy",
+        "kind": "discourage",
+        "reason": "Low owner activity: high-energy breeds are discouraged.",
+        "trait": "activity_level",
+        "trait_op": "eq",
+        "trait_value": "low"
+      }
+    ],
+    "reviewer_policy": "Structured policy and a narrative tag can express the same soft concern. Deduplicate soft adjustments by the semantic predicate (cat_attribute, cat_op, cat_value) so the same concern is applied once across surfaces.",
+    "scenario_id": "duplicate_soft_signal"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose",
+    "ce-007-duplicate-soft-signal"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -51,8 +51,10 @@\n - If `wants_size` has a value, add `max(0, 2 - abs(breed_size - wanted_size))`.\n - If `wants_affection` is true, add the breed's ordinal `affection` value plus `2 - energy` as a calmness proxy.\n - If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is true, otherwise add `0`.\n-- Apply every distinct applicable `discourage` rule as a soft penalty during ranking. Each matching soft rule contributes `1` point of penalty, and penalties compose across different rules.\n-- If the oracle tag `avoid_needy` is present, subtract `1` only when the breed's `sociability` is high or greater; this is a small soft penalty, not a filter.\n+- Apply every distinct applicable `discourage` rule as a soft penalty during ranking, but deduplicate soft penalties by semantic predicate. The same `(cat_attribute, cat_op, cat_value)` concern is only counted once even when it appears in both structured rules and narrative tags.\n+- Narrative tags may introduce the same soft predicates as structured rules. Their penalties also deduplicate against one another by semantic predicate.\n+- If the oracle tag `avoid_needy` is present, it maps to the predicate `sociability gte high` and adds a one-point soft penalty unless that predicate was already counted.\n+- If the oracle tag `avoid_high_energy` is present, it maps to the predicate `energy gte high` and adds a one-point soft penalty unless that predicate was already counted.\n - Break ties by breed name in ascending order.\n \n ## Output shape\n@@ -64,7 +66,7 @@\n - `cited_rules`: a list of rule ID strings\n - `rationale`: a short explanation string\n \n-`oracle_tags` only affects selection through controlled meanings defined in this sketch. The current controlled narrative tag is `avoid_needy`.\n+`oracle_tags` only affects selection through controlled meanings defined in this sketch. The current controlled narrative tags are `avoid_needy` and `avoid_high_energy`.\n \n ## Stable input shapes\n \n@@ -83,7 +85,10 @@\n \n Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`.\n It must contain a `{note}` placeholder and request JSON with a `tags` array.\n-The controlled output currently includes `avoid_needy` for notes about frequent travel, repeated absence, or a lonely or miserable cat left alone.\n+The controlled output currently includes:\n+\n+- `avoid_needy` for notes about frequent travel, repeated absence, or a lonely or miserable cat left alone.\n+- `avoid_high_energy` for notes about wanting a calm, low-key, quiet, or low-energy cat, or explicitly not wanting a high-energy companion.\n \n ## Empty-candidate fallback\n \n",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -4,8 +4,10 @@\n Return exactly one JSON object with a single key named \"tags\" whose value is an array.\n Only use tags whose meanings are defined by the current sketch or by supplied counterexamples.\n \n-Controlled tag meaning:\n+Controlled tag meanings:\n - avoid_needy: the note says the owner travels, is away often, or reports that a previous cat seemed lonely or miserable when left alone.\n+- avoid_high_energy: the note says the owner wants a calm, low-key, quiet, or low-energy cat, or explicitly does not want a high-energy companion.\n \n-If the note matches that meaning, return {\"tags\": [\"avoid_needy\"]}.\n+If the note matches one meaning, return the corresponding tag.\n+If it matches both meanings, return both tags.\n Otherwise return {\"tags\": []}.\n",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -8,10 +8,11 @@\n     - If breeds is empty, escalate because there is no catalog to evaluate.\n     - Rank remaining breeds by explicit owner preferences.\n     - Apply every distinct applicable discourage rule as a soft penalty during\n-      ranking. Distinct soft discourages compose; they do not filter candidates.\n+      ranking, but deduplicate soft penalties by semantic predicate so the same\n+      concern is only counted once even if it appears in both structured rules\n+      and narrative tags.\n     - Consume controlled soft tags from oracle_tags only as described in the\n-      sketch. At present, avoid_needy means apply a one-point soft penalty to\n-      breeds whose sociability is high or greater.\n+      sketch.\n     - Never inspect scenario_id.\n     - Do not hard-code named fixtures.\n     \"\"\"\n@@ -90,6 +91,15 @@\n             return left <= right\n         return False\n \n+    def soft_predicates_from_tags(tags):\n+        predicates = []\n+        for tag in tags or []:\n+            if tag == \"avoid_needy\":\n+                predicates.append((\"sociability\", \"gte\", \"high\"))\n+            elif tag == \"avoid_high_energy\":\n+                predicates.append((\"energy\", \"gte\", \"high\"))\n+        return predicates\n+\n     def score_breed(breed):\n         score = 0\n \n@@ -110,17 +120,42 @@\n             score += 2\n \n         soft_penalty = 0\n-        if \"avoid_needy\" in (oracle_tags or []):\n-            sociability = norm_ord(breed.get(\"sociability\"))\n-            if sociability is not None and sociability >= ordinal_order[\"high\"]:\n-                soft_penalty += 1\n+        seen_soft_predicates = set()\n \n         for rule in rules or []:\n             if rule.get(\"kind\") != \"discourage\":\n                 continue\n             if not profile_matches(rule):\n                 continue\n-            if cat_matches(rule, breed):\n+            if not cat_matches(rule, breed):\n+                continue\n+            predicate = (rule.get(\"cat_attribute\"), rule.get(\"cat_op\"), rule.get(\"cat_value\"))\n+            if predicate not in seen_soft_predicates:\n+                seen_soft_predicates.add(predicate)\n+                soft_penalty += 1\n+\n+        for predicate in soft_predicates_from_tags(oracle_tags):\n+            attr, op, value = predicate\n+            target = breed.get(attr)\n+            matched = False\n+            if op == \"gte\":\n+                left = norm_ord(target) if target in ordinal_order else target\n+                right = norm_ord(value) if value in ordinal_order else value\n+                matched = left is not None and right is not None and left >= right\n+            elif op == \"lte\":\n+                left = norm_ord(target) if target in ordinal_order else target\n+                right = norm_ord(value) if value in ordinal_order else value\n+                matched = left is not None and right is not None and left <= right\n+            elif op == \"eq\":\n+                matched = target == value\n+            elif op == \"in\":\n+                matched = target in split_csv(value)\n+            elif op == \"is_true\":\n+                matched = target is True\n+            elif op == \"is_false\":\n+                matched = target is False\n+            if matched and predicate not in seen_soft_predicates:\n+                seen_soft_predicates.add(predicate)\n                 soft_penalty += 1\n \n         score -= soft_penalty\n@@ -190,10 +225,8 @@\n         rationale_parts.append(\"affection and calmness\")\n     if profile.get(\"wants_fluffy\") is True:\n         rationale_parts.append(\"fluffiness\")\n-    if any(r.get(\"kind\") == \"discourage\" for r in (rules or [])):\n+    if any(r.get(\"kind\") == \"discourage\" for r in (rules or [])) or (oracle_tags or []):\n         rationale_parts.append(\"soft discouragements were applied during ranking\")\n-    if \"avoid_needy\" in (oracle_tags or []):\n-        rationale_parts.append(\"applied a small penalty to highly social breeds\")\n     if applicable_forbid_ids:\n         rationale_parts.append(\"hard rules applied\")\n \n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 3791,
+      "prompt_tokens": 21182,
+      "reasoning_tokens": 395,
+      "total_tokens": 24973
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      },
+      {
+        "actual": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Bengal",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_high_energy"
+          ]
+        },
+        "id": "ce-007-duplicate-soft-signal",
+        "passed": true,
+        "scenario_id": "duplicate_soft_signal"
+      }
+    ],
+    "passed": true,
+    "passed_count": 7,
+    "total": 7
+  },
+  "source_generation": "006-repair-ce-007-duplicate-soft-signal-attempt-01"
+}

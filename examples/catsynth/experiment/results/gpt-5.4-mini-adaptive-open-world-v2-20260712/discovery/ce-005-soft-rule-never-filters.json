@@ -1,0 +1,44 @@
+{
+  "counterexample": {
+    "breed_names": [
+      "Siamese"
+    ],
+    "expected": {
+      "breed": "Siamese",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-005-soft-rule-never-filters",
+    "policy": "A discourage rule is a one-point ranking penalty, never a filter. If every available candidate receives a soft penalty, the best remaining candidate is still recommended rather than abstaining.",
+    "rule_ids": [
+      "low_noise_discourage_vocal"
+    ],
+    "scenario_id": "soft_not_hard",
+    "sketch_rule": "FR-5: Applicable kind=discourage rows subtract one point from matching candidates. They never remove a candidate, trigger abstention, or appear in cited_rules."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "Siamese",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Siamese",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-005-soft-rule-never-filters",
+    "passed": true,
+    "scenario_id": "soft_not_hard"
+  },
+  "status": "coverage-not-promoted"
+}

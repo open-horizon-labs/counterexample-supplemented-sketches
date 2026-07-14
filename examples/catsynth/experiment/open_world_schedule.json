@@ -1,0 +1,58 @@
+[
+  {
+    "epoch": 1,
+    "case_id": "ce-001-allergy-override",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "Preference ranking may never override an applicable hard forbid rule.",
+    "approved_clause": "FR-OW1: Applicable hard forbid rules filter the supplied catalog before preference scoring. A matching cat predicate removes that candidate. On a successful recommendation, cite hard rules that removed at least one candidate."
+  },
+  {
+    "epoch": 2,
+    "case_id": "ce-002-over-constrained-abstention",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "Hard rules compose and policy exhaustion must not be repaired by relaxing them.",
+    "approved_clause": "FR-OW2: Apply every applicable hard forbid rule. If a non-empty supplied catalog has no survivor, ABSTAIN and cite every applicable hard rule ID. Never relax policy to force a recommendation."
+  },
+  {
+    "epoch": 3,
+    "case_id": "ce-005-soft-rule-never-filters",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "Soft policy changes ranking but cannot remove candidates.",
+    "approved_clause": "FR-OW3: Each applicable kind=discourage row contributes a one-point ranking penalty to matching survivors. Soft rows never filter, trigger abstention, or appear in cited_rules. Different applicable soft rows compose."
+  },
+  {
+    "epoch": 4,
+    "case_id": "ce-006-soft-rules-compose",
+    "loop_type": "single",
+    "feedback_destination": "implementation",
+    "decision": "The existing soft-rule clause already requires all applicable rows to compose; repair implementation only.",
+    "approved_clause": null
+  },
+  {
+    "epoch": 5,
+    "case_id": "ce-004-narrative-soft-constraint",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "The narrative Oracle needs one controlled travel tag and deterministic soft meaning.",
+    "approved_clause": "FR-OW4: Oracle B reads only narrative_note and emits controlled JSON tags. Frequent travel, long absence, or concern about a lonely cat emits avoid_needy. During deterministic ranking, avoid_needy adds the soft predicate sociability gte high with a one-point penalty. It never changes hard policy."
+  },
+  {
+    "epoch": 6,
+    "case_id": "ce-008-narrative-negation",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "The previously approved travel rule is too broad and must respect assertion scope.",
+    "approved_clause": "FR-OW4 revision: Generic keyword presence is insufficient. Respect explicit negation and attribution; another person's travel or absence does not describe the owner. This revision narrows FR-OW4 and takes precedence over its earlier wording."
+  },
+  {
+    "epoch": 7,
+    "case_id": "ce-007-duplicate-soft-signal",
+    "loop_type": "double",
+    "feedback_destination": "governing_sketch",
+    "decision": "Structured policy and narrative may express the same concern and must not multiply it.",
+    "approved_clause": "FR-OW5: A narrative request for a calm or low-key companion emits avoid_high_energy, mapped to energy gte high. Merge structured discourage rows and narrative tags by normalized semantic predicate (cat_attribute, cat_op, cat_value), applying each predicate once across surfaces."
+  }
+]

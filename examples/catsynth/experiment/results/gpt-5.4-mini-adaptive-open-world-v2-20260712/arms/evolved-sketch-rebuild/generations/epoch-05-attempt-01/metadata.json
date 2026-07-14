@@ -1,0 +1,198 @@
+{
+  "active_failure": null,
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -0,0 +1,16 @@\n+You are classifying a cat-adoption note into controlled narrative tags.\n+\n+Return exactly one JSON object with this shape:\n+{\n+  \"tags\": [\"...\"]\n+}\n+\n+{note}\n+\n+Tag meanings allowed by the current sketch:\n+- avoid_needy: the note describes frequent travel, repeated absence, or a cat being left alone in a way that suggests the cat would be lonely or miserable.\n+\n+Rules:\n+- Use only tags defined above.\n+- Return an empty tags array if no allowed tag applies.\n+- Do not add explanations, prose, or extra keys.",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -0,0 +1,185 @@\n+def recommend(profile, breeds, rules, oracle_tags):\n+    \"\"\"Deterministic cat recommendation strategy.\"\"\"\n+\n+    def get(obj, key, default=None):\n+        if isinstance(obj, dict):\n+            return obj.get(key, default)\n+        return default\n+\n+    def to_bool(value):\n+        return value is True\n+\n+    def ordinal(value, kind):\n+        if kind == \"level\":\n+            mapping = {\"low\": 0, \"moderate\": 1, \"high\": 2}\n+        else:\n+            mapping = {\"small\": 0, \"medium\": 1, \"large\": 2}\n+        return mapping.get(value, None)\n+\n+    def split_csv(value):\n+        if value is None:\n+            return []\n+        if not isinstance(value, str):\n+            value = str(value)\n+        parts = [piece.strip() for piece in value.split(\",\")]\n+        return [piece for piece in parts if piece]\n+\n+    def matches_trait(profile_value, op, target):\n+        if op == \"eq\":\n+            return profile_value == target\n+        if op == \"in\":\n+            options = split_csv(target)\n+            return profile_value in options\n+        if op == \"is_true\":\n+            return profile_value is True\n+        if op == \"is_false\":\n+            return profile_value is False\n+        if op in (\"gte\", \"lte\"):\n+            left = ordinal(profile_value, \"level\")\n+            right = ordinal(target, \"level\")\n+            if left is None or right is None:\n+                return False\n+            if op == \"gte\":\n+                return left >= right\n+            return left <= right\n+        return False\n+\n+    def matches_cat(breed_value, op, target, attribute):\n+        if op == \"eq\":\n+            return breed_value == target\n+        if op == \"in\":\n+            options = split_csv(target)\n+            return breed_value in options\n+        if op == \"is_true\":\n+            return breed_value is True\n+        if op == \"is_false\":\n+            return breed_value is False\n+        if op in (\"gte\", \"lte\"):\n+            kind = \"level\"\n+            if attribute == \"size\":\n+                kind = \"size\"\n+            left = ordinal(breed_value, kind)\n+            right = ordinal(target, kind)\n+            if left is None or right is None:\n+                return False\n+            if op == \"gte\":\n+                return left >= right\n+            return left <= right\n+        return False\n+\n+    def is_hard_rule(rule):\n+        return get(rule, \"kind\") == \"forbid\"\n+\n+    def is_soft_rule(rule):\n+        return get(rule, \"kind\") == \"discourage\"\n+\n+    if not breeds:\n+        return {\n+            \"operation\": \"escalate\",\n+            \"breed\": None,\n+            \"cited_rules\": [],\n+            \"rationale\": \"No catalog was supplied, so there is nothing to rank.\",\n+        }\n+\n+    profile = profile or {}\n+    oracle_tags = oracle_tags or []\n+\n+    remaining = []\n+    cited_hard_rules = []\n+\n+    for breed in breeds:\n+        removed = False\n+        breed_hard_rule_ids = []\n+        for rule in rules or []:\n+            if not is_hard_rule(rule):\n+                continue\n+            trait = get(rule, \"trait\")\n+            trait_op = get(rule, \"trait_op\")\n+            trait_value = get(rule, \"trait_value\")\n+            cat_attribute = get(rule, \"cat_attribute\")\n+            cat_op = get(rule, \"cat_op\")\n+            cat_value = get(rule, \"cat_value\")\n+            if not matches_trait(get(profile, trait), trait_op, trait_value):\n+                continue\n+            if not matches_cat(get(breed, cat_attribute), cat_op, cat_value, cat_attribute):\n+                continue\n+            removed = True\n+            breed_hard_rule_ids.append(get(rule, \"id\"))\n+        if removed:\n+            for rid in breed_hard_rule_ids:\n+                if rid not in cited_hard_rules:\n+                    cited_hard_rules.append(rid)\n+        else:\n+            remaining.append(breed)\n+\n+    if not remaining:\n+        return {\n+            \"operation\": \"abstain\",\n+            \"breed\": None,\n+            \"cited_rules\": cited_hard_rules,\n+            \"rationale\": \"All supplied breeds were removed by hard rules.\",\n+        }\n+\n+    wanted_size = get(profile, \"wants_size\")\n+    wanted_size_ordinal = ordinal(wanted_size, \"size\") if wanted_size is not None else None\n+    wants_affection = to_bool(get(profile, \"wants_affection\"))\n+    wants_fluffy = to_bool(get(profile, \"wants_fluffy\"))\n+    avoid_needy = \"avoid_needy\" in oracle_tags\n+\n+    scored = []\n+    for breed in remaining:\n+        score = 0\n+        if wanted_size_ordinal is not None:\n+            breed_size = ordinal(get(breed, \"size\"), \"size\")\n+            if breed_size is not None:\n+                score += max(0, 2 - abs(breed_size - wanted_size_ordinal))\n+        if wants_affection:\n+            affection = ordinal(get(breed, \"affection\"), \"level\")\n+            energy = ordinal(get(breed, \"energy\"), \"level\")\n+            if affection is not None:\n+                score += affection\n+            if energy is not None:\n+                score += 2 - energy\n+        if wants_fluffy and get(breed, \"fluffy\") is True:\n+            score += 2\n+        for rule in rules or []:\n+            if not is_soft_rule(rule):\n+                continue\n+            trait = get(rule, \"trait\")\n+            trait_op = get(rule, \"trait_op\")\n+            trait_value = get(rule, \"trait_value\")\n+            cat_attribute = get(rule, \"cat_attribute\")\n+            cat_op = get(rule, \"cat_op\")\n+            cat_value = get(rule, \"cat_value\")\n+            if not matches_trait(get(profile, trait), trait_op, trait_value):\n+                continue\n+            if not matches_cat(get(breed, cat_attribute), cat_op, cat_value, cat_attribute):\n+                continue\n+            score -= 1\n+        if avoid_needy:\n+            sociability = ordinal(get(breed, \"sociability\"), \"level\")\n+            if sociability is not None and sociability >= 2:\n+                score -= 1\n+        scored.append((score, get(breed, \"name\", \"\"), breed))\n+\n+    scored.sort(key=lambda item: (-item[0], item[1]))\n+    best_score, best_name, best_breed = scored[0]\n+\n+    rationale_bits = []\n+    if wanted_size_ordinal is not None:\n+        rationale_bits.append(\"matched size preference\")\n+    if wants_affection:\n+        rationale_bits.append(\"balanced affection and calmness\")\n+    if wants_fluffy:\n+        rationale_bits.append(\"honored fluffy preference\")\n+    if avoid_needy:\n+        rationale_bits.append(\"applied avoid_needy narrative tag\")\n+    if not rationale_bits:\n+        rationale_bits.append(\"best fit after hard-rule filtering\")\n+\n+    return {\n+        \"operation\": \"recommend\",\n+        \"breed\": best_name,\n+        \"cited_rules\": cited_hard_rules,\n+        \"rationale\": \"; \".join(rationale_bits),\n+    }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 16768,
+      "completion_tokens": 2902,
+      "prompt_tokens": 18454,
+      "reasoning_tokens": 56,
+      "total_tokens": 21356
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      }
+    ],
+    "passed": true,
+    "passed_count": 6,
+    "total": 6
+  },
+  "source_generation": "generation"
+}

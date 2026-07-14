@@ -1,0 +1,56 @@
+{
+  "counterexample": {
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "id": "ce-004-narrative-soft-constraint",
+    "oracle_tag_ids": [
+      "avoid_needy"
+    ],
+    "policy": "The controlled tag avoid_needy is a one-point soft penalty for breeds whose sociability is high or greater. Base ranking remains the initial sketch formula: only wants_size, wants_affection, and wants_fluffy add preference score. Default profile traits such as activity_level, noise_tolerance, and experience add no score unless a promoted rule or tag explicitly gives them semantics. The tag changes ranking but may not filter candidates or relax hard rules.",
+    "rule_ids": [],
+    "scenario_id": "narrative_travel",
+    "sketch_rule": "FR-4: Base preference ranking uses only wants_size, wants_affection, and wants_fluffy; default activity_level, noise_tolerance, experience, and other profile traits add no preference score without a promoted clause. During deterministic ranking, avoid_needy applies a one-point soft penalty to breeds with sociability >= high. It never filters candidates or relaxes hard rules."
+  },
+  "evaluation_before_promotion": {
+    "actual": {
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "expected": {
+      "breed": "Persian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "id": "ce-004-narrative-soft-constraint",
+    "mismatches": {
+      "breed": {
+        "actual": "British Shorthair",
+        "checked": true,
+        "expected": "Persian",
+        "match": false
+      }
+    },
+    "passed": false,
+    "scenario_id": "narrative_travel"
+  },
+  "status": "promoted"
+}

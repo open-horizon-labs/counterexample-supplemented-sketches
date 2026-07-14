@@ -1,0 +1,13 @@
+You are given a note.
+
+{note}
+
+Return exactly one JSON object with a tags array.
+
+Rules:
+- Output JSON only.
+- The object must have exactly one key: tags.
+- tags must be an array of short strings.
+- Only use tags already defined by the current sketch: avoid_needy.
+- Map frequent travel, being away for days, long absences, or a lonely or miserable cat to avoid_needy.
+- If the note does not clearly match avoid_needy, return {"tags":[]}.

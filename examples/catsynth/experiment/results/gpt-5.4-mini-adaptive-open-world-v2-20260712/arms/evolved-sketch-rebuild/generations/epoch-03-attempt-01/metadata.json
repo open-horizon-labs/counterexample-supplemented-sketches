@@ -1,0 +1,180 @@
+{
+  "active_failure": null,
+  "arm": "evolved-sketch-rebuild",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -88,4 +88,4 @@\n \n If `breeds` is empty, return `escalate` with no breed because there is no catalog to evaluate.\n \n-If filtering removes every candidate, return `abstain` with no breed and cite the hard rules that caused removal. This keeps the hard-rule behavior explicit instead of silently choosing from forbidden breeds or escalating a solvable no-match case.\n+If filtering removes every candidate, return `abstain` with no breed and cite the hard rules that caused removal. This keeps the hard-rule behavior explicit instead of silently choosing from forbidden breeds or escalating a solvable no-match case.",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -0,0 +1,16 @@\n+You are given a cat recommendation note.\n+\n+Return exactly one JSON object with this shape:\n+{\n+  \"tags\": [\"...\"]\n+}\n+\n+Use only tags whose meanings are defined by the current sketch.\n+\n+Note:\n+{note}\n+\n+Tag guidance:\n+- avoid_needy: the note suggests frequent travel, repeated absence, long periods away, or concern that a cat would be lonely or miserable if left alone.\n+\n+Return an empty tags array when no controlled tag applies.",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -0,0 +1,182 @@\n+def _parse_bool(value):\n+    return value is True or (isinstance(value, str) and value.lower() == 'true')\n+\n+\n+def _parse_int(value):\n+    if isinstance(value, bool) or value is None:\n+        return None\n+    if isinstance(value, int):\n+        return value\n+    if isinstance(value, str):\n+        text = value.strip()\n+        if text == '':\n+            return None\n+        if text.isdigit() or (text.startswith('-') and text[1:].isdigit()):\n+            return int(text)\n+    return None\n+\n+\n+def _csv_set(value):\n+    if not isinstance(value, str) or value.strip() == '':\n+        return set()\n+    return set(part.strip() for part in value.split(',') if part.strip() != '')\n+\n+\n+def _matches_eq(candidate, expected):\n+    return candidate == expected\n+\n+\n+def _matches_in(candidate, expected_csv):\n+    allowed = _csv_set(expected_csv)\n+    if not allowed:\n+        return False\n+    return str(candidate) in allowed\n+\n+\n+def _matches_is_true(candidate):\n+    return candidate is True\n+\n+\n+def _matches_is_false(candidate):\n+    return candidate is False\n+\n+\n+def _matches_ordinal(candidate, op, expected):\n+    left = _parse_int(candidate)\n+    right = _parse_int(expected)\n+    if left is None or right is None:\n+        return False\n+    if op == 'gte':\n+        return left >= right\n+    if op == 'lte':\n+        return left <= right\n+    return False\n+\n+\n+def _profile_matches_rule(profile, rule):\n+    trait = rule.get('trait')\n+    op = rule.get('trait_op')\n+    expected = rule.get('trait_value')\n+    value = profile.get(trait)\n+\n+    if op == 'eq':\n+        return _matches_eq(value, expected)\n+    if op == 'in':\n+        return _matches_in(value, expected)\n+    if op == 'is_true':\n+        return _matches_is_true(value)\n+    if op == 'is_false':\n+        return _matches_is_false(value)\n+    if op in ('gte', 'lte'):\n+        return _matches_ordinal(value, op, expected)\n+    return False\n+\n+\n+def _breed_matches_rule(breed, rule):\n+    attr = rule.get('cat_attribute')\n+    op = rule.get('cat_op')\n+    expected = rule.get('cat_value')\n+    value = breed.get(attr)\n+\n+    if op == 'eq':\n+        return _matches_eq(value, expected)\n+    if op == 'in':\n+        return _matches_in(value, expected)\n+    if op == 'is_true':\n+        return _matches_is_true(value)\n+    if op == 'is_false':\n+        return _matches_is_false(value)\n+    if op in ('gte', 'lte'):\n+        return _matches_ordinal(value, op, expected)\n+    return False\n+\n+\n+def _hard_forbidden_breeds(profile, breeds, rules):\n+    forbidden = set()\n+    cited = []\n+    for rule in rules or []:\n+        if rule.get('kind') != 'forbid':\n+            continue\n+        if not _profile_matches_rule(profile, rule):\n+            continue\n+        rule_id = rule.get('id')\n+        hit = False\n+        for breed in breeds:\n+            if _breed_matches_rule(breed, rule):\n+                hit = True\n+                forbidden.add(breed.get('name'))\n+        if hit and rule_id is not None:\n+            cited.append(rule_id)\n+    return forbidden, cited\n+\n+\n+def _ord(value):\n+    parsed = _parse_int(value)\n+    return parsed if parsed is not None else 0\n+\n+\n+def _size_ord(value):\n+    mapping = {'small': 0, 'medium': 1, 'large': 2}\n+    return mapping.get(value, 0)\n+\n+\n+def _score_breed(profile, breed, oracle_tags):\n+    score = 0\n+\n+    wanted_size = profile.get('wants_size')\n+    if wanted_size in ('small', 'medium', 'large'):\n+        score += max(0, 2 - abs(_size_ord(breed.get('size')) - _size_ord(wanted_size)))\n+\n+    if _parse_bool(profile.get('wants_affection')):\n+        score += _ord(breed.get('affection')) + (2 - _ord(breed.get('energy')))\n+\n+    if _parse_bool(profile.get('wants_fluffy')):\n+        score += 2 if breed.get('fluffy') is True else 0\n+\n+    if oracle_tags and 'avoid_needy' in set(oracle_tags):\n+        score -= _ord(breed.get('sociability'))\n+        score -= _ord(breed.get('affection'))\n+\n+    return score\n+\n+\n+def recommend(profile, breeds, rules, oracle_tags):\n+    breeds = list(breeds or [])\n+    if not breeds:\n+        return {\n+            'operation': 'escalate',\n+            'breed': None,\n+            'cited_rules': [],\n+            'rationale': 'No breeds were supplied, so there is no catalog to evaluate.'\n+        }\n+\n+    forbidden, cited = _hard_forbidden_breeds(profile or {}, breeds, rules or [])\n+    survivors = [breed for breed in breeds if breed.get('name') not in forbidden]\n+\n+    if not survivors:\n+        return {\n+            'operation': 'abstain',\n+            'breed': None,\n+            'cited_rules': cited,\n+            'rationale': 'All supplied breeds were removed by applicable hard rules.'\n+        }\n+\n+    best = None\n+    best_score = None\n+    for breed in survivors:\n+        score = _score_breed(profile or {}, breed, oracle_tags or [])\n+        key = (score, breed.get('name') or '')\n+        if best is None or key > best_score:\n+            best = breed\n+            best_score = key\n+\n+    rationale_bits = ['Selected the highest-scoring remaining breed after hard-rule filtering.']\n+    if oracle_tags and 'avoid_needy' in set(oracle_tags):\n+        rationale_bits.append('Applied a soft penalty for needier cats.')\n+\n+    return {\n+        'operation': 'recommend',\n+        'breed': best.get('name'),\n+        'cited_rules': cited,\n+        'rationale': ' '.join(rationale_bits)\n+    }\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1408,
+      "completion_tokens": 2717,
+      "prompt_tokens": 18418,
+      "reasoning_tokens": 148,
+      "total_tokens": 21135
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "mismatches": {
+          "breed": {
+            "actual": "Siberian",
+            "checked": true,
+            "expected": "Persian",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "children_require_good_with_children"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "mismatches": {
+          "breed": {
+            "actual": "Siberian",
+            "checked": true,
+            "expected": null,
+            "match": false
+          },
+          "cited_rules": {
+            "actual": [
+              "allergy_requires_hypoallergenic",
+              "children_require_good_with_children"
+            ],
+            "checked": true,
+            "expected": [
+              "allergy_requires_hypoallergenic",
+              "apartment_no_high_energy",
+              "children_require_good_with_children",
+              "long_hours_no_high_sociability",
+              "severe_allergy_low_shedding"
+            ],
+            "match": false
+          },
+          "operation": {
+            "actual": "recommend",
+            "checked": true,
+            "expected": "abstain",
+            "match": false
+          }
+        },
+        "passed": false,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Sphynx",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      }
+    ],
+    "passed": false,
+    "passed_count": 2,
+    "total": 4
+  },
+  "source_generation": "generation"
+}

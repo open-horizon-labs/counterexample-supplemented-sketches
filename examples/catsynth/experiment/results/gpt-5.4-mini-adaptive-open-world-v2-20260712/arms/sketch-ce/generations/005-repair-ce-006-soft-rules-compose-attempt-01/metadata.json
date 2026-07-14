@@ -1,0 +1,280 @@
+{
+  "active_failure": {
+    "actual": {
+      "breed": "Abyssinian",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "operation",
+      "breed",
+      "cited_rules",
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-6: Apply every distinct applicable discourage predicate during ranking. Multiple different policy predicates accumulate; ranking uses base score minus the complete soft-penalty total.",
+    "expected": {
+      "breed": "British Shorthair",
+      "cited_rules": [],
+      "operation": "recommend",
+      "oracle_tags": []
+    },
+    "id": "ce-006-soft-rules-compose",
+    "mismatches": {
+      "breed": {
+        "actual": "Abyssinian",
+        "checked": true,
+        "expected": "British Shorthair",
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "low",
+      "allergies": "none",
+      "experience": "novice",
+      "home_size": "house",
+      "label": "Novice, low-activity owner wants a quiet low-key cat",
+      "narrative_note": null,
+      "noise_tolerance": "low",
+      "scenario_id": "soft_rules_compose",
+      "wants_affection": false,
+      "wants_fluffy": false,
+      "wants_size": null,
+      "work_hours": "normal",
+      "young_children": false
+    },
+    "relevant_oracle_tag_rules": [],
+    "relevant_rule_rows": [
+      {
+        "cat_attribute": "vocal",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "low_noise_discourage_vocal",
+        "kind": "discourage",
+        "reason": "Low noise tolerance: very vocal breeds are discouraged.",
+        "trait": "noise_tolerance",
+        "trait_op": "eq",
+        "trait_value": "low"
+      },
+      {
+        "cat_attribute": "energy",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "low_activity_discourage_high_energy",
+        "kind": "discourage",
+        "reason": "Low owner activity: high-energy breeds are discouraged.",
+        "trait": "activity_level",
+        "trait_op": "eq",
+        "trait_value": "low"
+      },
+      {
+        "cat_attribute": "energy",
+        "cat_op": "gte",
+        "cat_value": "high",
+        "id": "novice_discourage_high_energy",
+        "kind": "discourage",
+        "reason": "Novice owner: demanding high-energy breeds are discouraged.",
+        "trait": "experience",
+        "trait_op": "eq",
+        "trait_value": "novice"
+      }
+    ],
+    "reviewer_policy": "Distinct applicable soft rules compose. Each distinct discourage predicate contributes one point; evaluating only the first matching soft rule is incorrect.",
+    "scenario_id": "soft_rules_compose"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag",
+    "ce-004-narrative-soft-constraint",
+    "ce-006-soft-rules-compose"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -51,6 +51,7 @@\n - If `wants_size` has a value, add `max(0, 2 - abs(breed_size - wanted_size))`.\n - If `wants_affection` is true, add the breed's ordinal `affection` value plus `2 - energy` as a calmness proxy.\n - If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is true, otherwise add `0`.\n+- Apply every distinct applicable `discourage` rule as a soft penalty during ranking. Each matching soft rule contributes `1` point of penalty, and penalties compose across different rules.\n - If the oracle tag `avoid_needy` is present, subtract `1` only when the breed's `sociability` is high or greater; this is a small soft penalty, not a filter.\n - Break ties by breed name in ascending order.\n \n",
+      "oracle_prompt.diff": "",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -7,10 +7,11 @@\n       rule IDs.\n     - If breeds is empty, escalate because there is no catalog to evaluate.\n     - Rank remaining breeds by explicit owner preferences.\n+    - Apply every distinct applicable discourage rule as a soft penalty during\n+      ranking. Distinct soft discourages compose; they do not filter candidates.\n     - Consume controlled soft tags from oracle_tags only as described in the\n       sketch. At present, avoid_needy means apply a one-point soft penalty to\n-      breeds whose sociability is high or greater when the note indicates the\n-      owner will be away often or a previous cat seemed lonely when left alone.\n+      breeds whose sociability is high or greater.\n     - Never inspect scenario_id.\n     - Do not hard-code named fixtures.\n     \"\"\"\n@@ -108,11 +109,21 @@\n         if norm_bool(profile.get(\"wants_fluffy\")) and breed.get(\"fluffy\") is True:\n             score += 2\n \n+        soft_penalty = 0\n         if \"avoid_needy\" in (oracle_tags or []):\n             sociability = norm_ord(breed.get(\"sociability\"))\n             if sociability is not None and sociability >= ordinal_order[\"high\"]:\n-                score -= 1\n-\n+                soft_penalty += 1\n+\n+        for rule in rules or []:\n+            if rule.get(\"kind\") != \"discourage\":\n+                continue\n+            if not profile_matches(rule):\n+                continue\n+            if cat_matches(rule, breed):\n+                soft_penalty += 1\n+\n+        score -= soft_penalty\n         return score\n \n     if not breeds:\n@@ -179,6 +190,8 @@\n         rationale_parts.append(\"affection and calmness\")\n     if profile.get(\"wants_fluffy\") is True:\n         rationale_parts.append(\"fluffiness\")\n+    if any(r.get(\"kind\") == \"discourage\" for r in (rules or [])):\n+        rationale_parts.append(\"soft discouragements were applied during ranking\")\n     if \"avoid_needy\" in (oracle_tags or []):\n         rationale_parts.append(\"applied a small penalty to highly social breeds\")\n     if applicable_forbid_ids:\n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1920,
+      "completion_tokens": 3025,
+      "prompt_tokens": 21196,
+      "reasoning_tokens": 95,
+      "total_tokens": 24221
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-004-narrative-soft-constraint",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-006-soft-rules-compose",
+        "passed": true,
+        "scenario_id": "soft_rules_compose"
+      }
+    ],
+    "passed": true,
+    "passed_count": 6,
+    "total": 6
+  },
+  "source_generation": "005-repair-ce-006-soft-rules-compose-attempt-01"
+}

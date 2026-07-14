@@ -29,7 +29,7 @@
       "id": "ce.task-line-parser.first-prefix-only-is-status",
       "kind": "counterexample",
       "name": "First prefix only is status",
-      "selector": "examples/task-line-parser/counterexamples.md:5-20",
+      "selector": "examples/task-line-parser/counterexamples.md:16-31",
       "tempting_patch": "split on every colon and treat a later status-looking prefix as a second status"
     },
     {
@@ -56,7 +56,7 @@
       "id": "ce.task-line-parser.blocked-reason-cannot-be-empty",
       "kind": "counterexample",
       "name": "Blocked reason requires text",
-      "selector": "examples/task-line-parser/counterexamples.md:21-32",
+      "selector": "examples/task-line-parser/counterexamples.md:32-43",
       "tempting_patch": "accept a blank blocked reason after `|`"
     },
     {
@@ -76,7 +76,7 @@
       "id": "ce.task-line-parser.empty-title-rejects",
       "kind": "counterexample",
       "name": "Empty title rejects",
-      "selector": "examples/task-line-parser/counterexamples.md:33-44",
+      "selector": "examples/task-line-parser/counterexamples.md:44-55",
       "tempting_patch": "return an empty task title as a valid record"
     },
     {
@@ -103,7 +103,7 @@
       "id": "ce.task-line-parser.pipe-is-only-special-for-blocked",
       "kind": "counterexample",
       "name": "Pipe is only special for blocked",
-      "selector": "examples/task-line-parser/counterexamples.md:45-59",
+      "selector": "examples/task-line-parser/counterexamples.md:56-70",
       "tempting_patch": "parse `|` as a reason for todo/done statuses"
     },
     {

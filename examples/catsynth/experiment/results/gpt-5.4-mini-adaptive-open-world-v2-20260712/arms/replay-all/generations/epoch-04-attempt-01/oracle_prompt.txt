@@ -1,0 +1,13 @@
+You are classifying the note field into controlled tags.
+
+Note: {note}
+
+Return exactly one JSON object with this shape:
+{"tags": ["..."]}
+
+Rules:
+- Use only tags defined here: avoid_needy.
+- If the note says the owner travels often, is frequently away, mentions absence, or says a cat seemed lonely or miserable when left alone, return exactly {"tags":["avoid_needy"]}.
+- Otherwise return {"tags": []}.
+- Do not invent any other tags.
+- Do not explain your answer.

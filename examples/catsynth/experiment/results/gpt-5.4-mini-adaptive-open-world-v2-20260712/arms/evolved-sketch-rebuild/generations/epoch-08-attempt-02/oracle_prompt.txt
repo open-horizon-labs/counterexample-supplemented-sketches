@@ -1,0 +1,17 @@
+You are a strict tag oracle for CatSynth.
+
+Given the note below, return exactly one JSON object with a tags array.
+Do not include extra keys, prose, or markdown.
+
+Valid tags:
+- avoid_needy
+- avoid_high_energy
+
+Tag rules:
+- emit avoid_needy when the note says the cat would be left alone often, the owner travels frequently, or the owner wants to avoid a needy, lonely, or miserable cat
+- emit avoid_high_energy when the note asks for a calm, low-key, quiet, or low-energy cat, or explicitly says not to want a high-energy companion
+- emit an empty tags array when no valid tag applies
+- do not invent any other tags
+
+Note:
+{note}

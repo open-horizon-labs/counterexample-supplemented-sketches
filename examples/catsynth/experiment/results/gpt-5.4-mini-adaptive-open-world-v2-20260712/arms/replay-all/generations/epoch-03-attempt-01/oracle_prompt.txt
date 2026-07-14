@@ -1,0 +1,16 @@
+You are classifying a single free-text note for a cat recommendation system.
+
+Return exactly one JSON object with this shape:
+{"tags": ["..."]}
+
+Rules:
+- Use only the controlled tags defined here.
+- If the note mentions frequent travel, being away often, long absences, or that a previous/current cat seemed lonely or miserable when the owner was gone, return exactly:
+  {"tags": ["avoid_needy"]}
+- Otherwise return:
+  {"tags": []}
+- Do not invent extra tags.
+- Classify only the supplied note, not the instructions.
+
+Note:
+{note}

@@ -1,0 +1,189 @@
+{
+  "active_failure": {
+    "actual": {
+      "oracle_tags": []
+    },
+    "checked_fields": [
+      "oracle_tags"
+    ],
+    "counterexample_clause": "FR-3: Prompt-mediated narrative interpretation emits only controlled soft tags. Travel, frequent absence, or concern about a lonely cat maps to exactly avoid_needy. The prompt must classify only the supplied note rather than its own instructions. The deterministic meaning of avoid_needy remains an open hole.",
+    "expected": {
+      "oracle_tags": [
+        "avoid_needy"
+      ]
+    },
+    "id": "ce-003-narrative-travel-tag",
+    "mismatches": {
+      "oracle_tags": {
+        "actual": [],
+        "checked": true,
+        "expected": [
+          "avoid_needy"
+        ],
+        "match": false
+      }
+    },
+    "profile": {
+      "activity_level": "moderate",
+      "allergies": "none",
+      "experience": "experienced",
+      "home_size": "house",
+      "label": "Owner travels often; details only in a free-text note",
+      "narrative_note": "I travel for work every few weeks and my last cat seemed miserable and lonely whenever I was gone for days.",
+      "noise_tolerance": "high",
+      "scenario_id": "narrative_travel",
+      "wants_affection": true,
+      "wants_fluffy": false,
+      "wants_size": "medium",
+      "work_hours": "normal",
+      "young_children": false
+    },
+    "relevant_oracle_tag_rules": [],
+    "relevant_rule_rows": [],
+    "reviewer_policy": "Oracle B maps the owner's note only to controlled soft tags. A note about frequent travel, absence, or a lonely cat must produce exactly the tag avoid_needy. This counterexample promotes only the prompt-mediated classification; it does not yet define how deterministic ranking consumes the tag. The prompt may not invent unrelated tags or relax hard rules.",
+    "scenario_id": "narrative_travel"
+  },
+  "arm": "sketch-ce",
+  "corpus_ids": [
+    "ce-001-allergy-override",
+    "ce-002-over-constrained-abstention",
+    "ce-003-narrative-travel-tag"
+  ],
+  "developer": {
+    "diffs": {
+      "SKETCH.diff": "--- before/SKETCH.md\n+++ after/SKETCH.md\n@@ -1,20 +1,17 @@\n # CatSynth sketch\n \n-Implement a deterministic cat recommendation strategy with this public entry\n-point:\n+Implement a deterministic cat recommendation strategy with this public entry point:\n \n ```python\n recommend(profile, breeds, rules, oracle_tags)\n ```\n \n-Return a dictionary containing `operation`, `breed`, `cited_rules`, and\n-`rationale`.\n+Return a dictionary containing `operation`, `breed`, `cited_rules`, and `rationale`.\n \n ## Core policy\n \n - If `breeds` is empty, return `escalate` with `breed = null`.\n-- If hard rules eliminate every supplied breed, return `abstain` with\n-  `breed = null` and cite the applicable hard rule IDs.\n+- If hard rules eliminate every supplied breed, return `abstain` with `breed = null` and cite the applicable hard rule IDs.\n - Do not inspect `scenario_id`.\n - Do not hard-code behavior for named fixtures.\n - Preserve deterministic behavior across identical inputs.\n@@ -36,20 +33,15 @@\n - `is_false`\n - ordinal `gte` / `lte`\n \n-For `in`, `trait_value` and `cat_value` are comma-separated strings. Empty values\n-match nothing.\n+For `in`, `trait_value` and `cat_value` are comma-separated strings. Empty values match nothing.\n \n-When a hard rule removes one or more breeds, include the applicable rule IDs in\n-`cited_rules`.\n+When a hard rule removes one or more breeds, include the applicable rule IDs in `cited_rules`.\n \n-If hard rules remove every breed, return `abstain` with `breed = null` and the\n-applicable hard rule IDs in `cited_rules`. This is a safe no-solution signal,\n-not an escalation.\n+If hard rules remove every breed, return `abstain` with `breed = null` and the applicable hard rule IDs in `cited_rules`. This is a safe no-solution signal, not an escalation.\n \n ## Ranking after filtering\n \n-Rank the remaining breeds by the owner's explicit positive preferences using\n-stable ordinal encodings:\n+Rank the remaining breeds by the owner's explicit positive preferences using stable ordinal encodings:\n \n - `low = 0`, `moderate = 1`, `high = 2`\n - `small = 0`, `medium = 1`, `large = 2`\n@@ -57,10 +49,9 @@\n A breed's score is the sum of:\n \n - If `wants_size` has a value, add `max(0, 2 - abs(breed_size - wanted_size))`.\n-- If `wants_affection` is true, add the breed's ordinal `affection` value plus\n-  `2 - energy` as a calmness proxy.\n-- If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is\n-  true, otherwise add `0`.\n+- If `wants_affection` is true, add the breed's ordinal `affection` value plus `2 - energy` as a calmness proxy.\n+- If `wants_fluffy` is true, add `2` when the breed's boolean `fluffy` field is true, otherwise add `0`.\n+- If the oracle tag `avoid_needy` is present, subtract the breed's ordinal `sociability` and `affection` values as a soft penalty for cats that are more likely to demand constant attention.\n - Break ties by breed name in ascending order.\n \n ## Output shape\n@@ -72,37 +63,29 @@\n - `cited_rules`: a list of rule ID strings\n - `rationale`: a short explanation string\n \n-`oracle_tags` does not affect selection unless a later sketch promotion assigns\n-it meaning.\n+`oracle_tags` only affects selection through controlled meanings defined in this sketch. The current controlled narrative tag is `avoid_needy`.\n \n ## Stable input shapes\n \n-Profiles contain categorical owner traits plus the three explicit preference\n-fields above and an optional `narrative_note`.\n+Profiles contain categorical owner traits plus the three explicit preference fields above and an optional `narrative_note`.\n \n Breeds contain:\n \n - `name`\n-- ordinal `energy`, `shedding`, `grooming`, `sociability`, `vocal`, and\n-  `affection`\n+- ordinal `energy`, `shedding`, `grooming`, `sociability`, `vocal`, and `affection`\n - `size`\n - boolean `hypoallergenic`, `good_with_children`, and `fluffy`\n \n-Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`,\n-`cat_attribute`, `cat_op`, and `cat_value`.\n+Rule rows contain `id`, `trait`, `trait_op`, `trait_value`, `kind`, `cat_attribute`, `cat_op`, and `cat_value`.\n \n ## Narrative prompt contract\n \n Keep prompt-mediated narrative interpretation in `oracle_prompt.txt`.\n It must contain a `{note}` placeholder and request JSON with a `tags` array.\n-At this stage, the only valid response is `{\"tags\": []}`.\n+The controlled output currently includes `avoid_needy` for notes about frequent travel, repeated absence, or a lonely or miserable cat left alone.\n \n ## Empty-candidate fallback\n \n-If `breeds` is empty, return `escalate` with no breed because there is no\n-catalog to evaluate.\n+If `breeds` is empty, return `escalate` with no breed because there is no catalog to evaluate.\n \n-If filtering removes every candidate, return `abstain` with no breed and cite\n-the hard rules that caused removal. This keeps the hard-rule behavior explicit\n-instead of silently choosing from forbidden breeds or escalating a solvable\n-no-match case.\n+If filtering removes every candidate, return `abstain` with no breed and cite the hard rules that caused removal. This keeps the hard-rule behavior explicit instead of silently choosing from forbidden breeds or escalating a solvable no-match case.\n",
+      "oracle_prompt.diff": "--- before/oracle_prompt.txt\n+++ after/oracle_prompt.txt\n@@ -3,5 +3,9 @@\n \n Return exactly one JSON object with a single key named \"tags\" whose value is an array.\n Only use tags whose meanings are defined by the current sketch or by supplied counterexamples.\n-At this stage, the sketch defines no narrative tags beyond empty output, so return:\n-{\"tags\": []}\n+\n+Controlled tag meaning:\n+- avoid_needy: the note says the owner travels, is away often, or reports that a previous cat seemed lonely or miserable when left alone.\n+\n+If the note matches that meaning, return {\"tags\": [\"avoid_needy\"]}.\n+Otherwise return {\"tags\": []}.\n",
+      "strategy.diff": "--- before/strategy.py\n+++ after/strategy.py\n@@ -1,17 +1,18 @@\n def recommend(profile, breeds, rules, oracle_tags):\n     \"\"\"Deterministic CatSynth recommendation strategy.\n \n-    Behavior:\n+    Policy:\n     - Apply promoted hard rules first.\n-    - Forbid rules remove breeds that match the rule's cat predicate when the\n-      profile matches the rule's trait trigger.\n-    - If hard rules eliminate every breed, abstain and cite the applicable hard\n+    - If hard rules eliminate every supplied breed, abstain and cite the hard\n       rule IDs.\n-    - If breeds is empty, escalate because there is no supplied catalog to\n-      evaluate.\n-    - Then rank any remaining breeds by explicit owner preferences.\n+    - If breeds is empty, escalate because there is no catalog to evaluate.\n+    - Rank remaining breeds by explicit owner preferences.\n+    - Consume controlled soft tags from oracle_tags only as described in the\n+      sketch. At present, avoid_needy means prefer cats that are less likely to\n+      demand constant attention when the note indicates the owner will be away\n+      often.\n     - Never inspect scenario_id.\n-    - Do not use oracle_tags for selection.\n+    - Do not hard-code named fixtures.\n     \"\"\"\n \n     size_order = {\"small\": 0, \"medium\": 1, \"large\": 2}\n@@ -107,6 +108,14 @@\n         if norm_bool(profile.get(\"wants_fluffy\")) and breed.get(\"fluffy\") is True:\n             score += 2\n \n+        if \"avoid_needy\" in (oracle_tags or []):\n+            sociability = norm_ord(breed.get(\"sociability\"))\n+            affection = norm_ord(breed.get(\"affection\"))\n+            if sociability is not None:\n+                score -= sociability\n+            if affection is not None:\n+                score -= affection\n+\n         return score\n \n     if not breeds:\n@@ -114,7 +123,7 @@\n             \"operation\": \"escalate\",\n             \"breed\": None,\n             \"cited_rules\": [],\n-            \"rationale\": \"No breeds were supplied, so there is no candidate to recommend.\"\n+            \"rationale\": \"No breeds were supplied, so there is no candidate to evaluate.\"\n         }\n \n     applicable_forbid_ids = []\n@@ -173,6 +182,8 @@\n         rationale_parts.append(\"affection and calmness\")\n     if profile.get(\"wants_fluffy\") is True:\n         rationale_parts.append(\"fluffiness\")\n+    if \"avoid_needy\" in (oracle_tags or []):\n+        rationale_parts.append(\"avoids needy behavior from the narrative tag\")\n     if applicable_forbid_ids:\n         rationale_parts.append(\"hard rules applied\")\n \n"
+    },
+    "error": null,
+    "parsed_keys": [
+      "oracle_prompt",
+      "sketch_md",
+      "strategy_py"
+    ],
+    "usage": {
+      "cached_prompt_tokens": 1408,
+      "completion_tokens": 3130,
+      "prompt_tokens": 17874,
+      "reasoning_tokens": 356,
+      "total_tokens": 21004
+    }
+  },
+  "gate": {
+    "cases": [
+      {
+        "actual": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "initial-preference-ranking",
+        "passed": true,
+        "scenario_id": "novice_quiet"
+      },
+      {
+        "actual": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Siberian",
+          "cited_rules": [
+            "allergy_requires_hypoallergenic"
+          ],
+          "operation": "recommend",
+          "oracle_tags": []
+        },
+        "id": "ce-001-allergy-override",
+        "passed": true,
+        "scenario_id": "allergy_lapcat"
+      },
+      {
+        "actual": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "checked_fields": [
+          "operation",
+          "breed",
+          "cited_rules",
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": null,
+          "cited_rules": [
+            "allergy_requires_hypoallergenic",
+            "apartment_no_high_energy",
+            "children_require_good_with_children",
+            "long_hours_no_high_sociability",
+            "severe_allergy_low_shedding"
+          ],
+          "operation": "abstain",
+          "oracle_tags": []
+        },
+        "id": "ce-002-over-constrained-abstention",
+        "passed": true,
+        "scenario_id": "over_constrained"
+      },
+      {
+        "actual": {
+          "breed": "British Shorthair",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "checked_fields": [
+          "oracle_tags"
+        ],
+        "expected": {
+          "breed": "Persian",
+          "cited_rules": [],
+          "operation": "recommend",
+          "oracle_tags": [
+            "avoid_needy"
+          ]
+        },
+        "id": "ce-003-narrative-travel-tag",
+        "passed": true,
+        "scenario_id": "narrative_travel"
+      }
+    ],
+    "passed": true,
+    "passed_count": 4,
+    "total": 4
+  },
+  "source_generation": "003-repair-ce-003-narrative-travel-tag-attempt-01"
+}
