@@ -9,6 +9,13 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{url}
+\input{pandoc-support}
+
+\hypersetup{
+  pdftitle={Agentic Synthesis against Counterexample-Supplemented Sketches},
+  pdfauthor={Muness Castle and Eric Rubeck},
+  hidelinks
+}
 
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
@@ -24,7 +31,7 @@
 
 \title{Agentic Synthesis against Counterexample-Supplemented Sketches}
 \author{Muness Castle \and Eric Rubeck}
-\date{\today}
+\date{July 2026}
 
 \begin{document}
 \maketitle
@@ -159,8 +166,8 @@ stores the links among them without treating the result as a solver-backed proof
         Oracle~B, prompt-mediated completion for sketch-declared narrative holes;
   \item a finite-regression theorem for replay/compare gates and the proof obligation it leaves
         behind;
-  \item a worked example and captured comparison, with a separate audit and reproduction
-        artifact.
+  \item a worked example and captured comparison, with the complete audit and reproduction
+        supplement in Appendix~\ref{app:catsynth-supplement}.
 \end{enumerate}
 
 % ---------------------------------------------------------------------------
@@ -901,9 +908,10 @@ preference gap, so replay passes, but it does not preserve the approved breed an
 fields, so semantic compare fails.}
 \end{center}
 
-The method, experimental protocol, and reported results are fully stated in this paper.  An
-optional artifact supplement adds the complete per-generation trace, screenshots, source map,
-and reproduction commands.
+The method, experimental protocol, and reported results are fully stated in this paper.
+Appendix~\ref{app:catsynth-supplement} adds the complete per-generation trace, screenshots,
+source map, and reproduction commands.  The repository also publishes that appendix as a
+standalone supplement PDF.
 
 \subsection{Captured synthesis trajectory}
 
@@ -1135,15 +1143,27 @@ outside those encoded cases and predicates still belongs to human review and fut
 \section*{Artifact availability}
 
 The argument, method, experimental design, reported results, and limitations are complete in
-this paper.  A separate public artifact is available for audit and reproduction; it does not
-extend the method or the paper's claims.  It contains CatSynth's synthetic fixtures, initial and
+this paper.  Appendix~\ref{app:catsynth-supplement} provides the illustrated audit and
+reproduction companion.  The public artifact adds CatSynth's synthetic fixtures, initial and
 evolved sketches, Developer and Oracle adapters, generated code and prompts, per-generation gate
-outcomes and diffs, compact token ledgers, browser application, full experiment histories, and an
-illustrated implementation supplement.  The artifact is available in the
-\href{https://github.com/muness/sketch-counterexample-agent}{public repository}.
+outcomes and diffs, compact token ledgers, browser application, and full experiment histories.
+The artifact is available in the
+\href{https://github.com/open-horizon-labs/sketch-counterexample-agent}{public repository}.
 
 \bibliographystyle{plain}
 \small
 \bibliography{references}
+
+\normalsize
+\clearpage
+\appendix
+\section{CatSynth Artifact Supplement}
+\label{app:catsynth-supplement}
+
+\begingroup
+\let\section\subsection
+\let\subsection\subsubsection
+\input{catsynth-worked-example}
+\endgroup
 
 \end{document}

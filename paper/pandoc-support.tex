@@ -1,0 +1,31 @@
+% Shared support for the Pandoc-generated CatSynth supplement fragment.
+% Keep this file arXiv-safe: use only packages shipped with TeX Live.
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{etoolbox}
+\newcounter{none}
+\setlength{\emergencystretch}{3em}
+
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{%
+  \noindent
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi
+  \makebox[\linewidth][c]{%
+    \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+    \else\usebox{\pandoc@box}%
+    \fi
+  }%
+}
+\makeatother
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}

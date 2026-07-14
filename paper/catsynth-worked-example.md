@@ -1,9 +1,16 @@
-# CatSynth Artifact Supplement: The Full Sketch–Counterexample Run
+---
+title: "CatSynth Artifact Supplement: The Full Sketch-Counterexample Run"
+author:
+  - Muness Castle
+  - Eric Rubeck
+date: July 2026
+---
 
 This is the audit and reproduction companion to *Agentic Synthesis against
-Counterexample-Supplemented Sketches*. The [paper](main.pdf) contains the complete argument,
-method, experimental design, reported results, and limitations. Nothing in this supplement
-extends its method or claims.
+Counterexample-Supplemented Sketches*. The paper contains the complete argument, method,
+experimental design, reported results, and limitations. The distributed paper appends this same
+material; `catsynth-supplement.pdf` packages it separately for readers who want the implementation
+trace on its own. Nothing in the supplement extends the paper's method or claims.
 
 This supplement provides the implementation depth that would interrupt the paper: the complete
 CatSynth generation sequence, screenshots, reproduction commands, source map, and links from
@@ -69,18 +76,22 @@ From `examples/catsynth`:
 
 ```bash
 uv run --with-requirements requirements.txt \
-python experiment/adaptive_open_world_experiment.py \
+  python experiment/adaptive_open_world_experiment.py \
   --model gpt-5.4-mini \
   --max-repairs 12
 ```
 
-The published run used GPT-5.4-mini with low effort. The adapter disabled tools and environment
-access, disabled provider fallback, and used an ephemeral thread for every call. Raw JSON-RPC
-transcripts stayed local; the repository retains every generated sketch, strategy, prompt,
-failure, gate outcome, diff, and usage total.
+This published three-path driver uses Codex App Server. The run used GPT-5.4-mini with low effort.
+The adapter disabled tools and environment access, disabled provider fallback, and used an
+ephemeral thread for every call. It consumed 173 model calls and 3,251,645 recorded model tokens
+across all three paths, including post-acceptance evaluation. Raw JSON-RPC transcripts stayed
+local; the repository retains every generated sketch, strategy, prompt, failure, gate outcome,
+diff, and usage total. The [CatSynth README](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth)
+documents the portable driver for Codex App Server and OpenAI-compatible Chat Completions
+endpoints.
 
-The captured evidence is in
-`examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`.
+The captured evidence is in the
+[checked-in run directory](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712).
 
 ## The starting point
 
@@ -219,9 +230,9 @@ is a genuine new counterexample rather than another explanation pasted into CE3.
 CE4 adds two connected rules:
 
 - `avoid_needy` applies a one-point soft penalty to breeds with high sociability;
-- base preference scoring continues to use only `wants_size`, `wants_affection`, and
-  `wants_fluffy`. Default `activity_level`, `noise_tolerance`, and `experience` values do not add
-  score unless an approved sketch clause gives them semantics.
+- base preference scoring continues to use only the three explicit `wants_*` fields: size,
+  affection, and fluffiness. Default activity, noise, and experience values do not add score
+  unless an approved sketch clause gives them semantics.
 
 Developer revises the sketch and deterministic code. The prompt remains green. The gate
 passes 5/5:
@@ -234,6 +245,45 @@ CE3 tags:       PASS
 CE4 ranking:    PASS
 gate:           5/5
 ```
+
+## Generation 005: distinct soft rules compose
+
+The next accepted case activates three different soft policy predicates. The current strategy
+returns Abyssinian because it stops short of applying the full soft-policy total. The approved
+output is British Shorthair.
+
+CE6 adds a general rule: every distinct applicable `discourage` predicate contributes before the
+final ranking and tie-break. Developer revises the sketch and strategy; the complete gate passes
+6/6.
+
+## Generation 006: duplicate concerns count once across surfaces
+
+The next profile expresses the same high-energy concern twice: once through a structured policy
+row and once through a narrative note. Before repair, the prompt emits no tag. The approved output
+requires `avoid_high_energy`, while the ranking must apply the shared energy predicate only once.
+
+CE7 makes the sketch join structured rules and narrative tags by the semantic triple of cat
+attribute, operator, and value. Developer revises the sketch, prompt, and strategy; the complete
+gate passes 7/7.
+
+## Generation 007: unknown safety data escalates
+
+The next profile supplies `unknown` for allergy status. The current strategy treats it like no
+allergy and recommends Persian. CE10 distinguishes missing or unsupported safety data from a
+negative value: the implementation must return `escalate` with no breed until an operator can
+clarify the input.
+
+Developer records the rule in the sketch and implements the escalation. The complete gate passes
+8/8.
+
+## Generation 008: malformed applicable policy escalates with provenance
+
+The final accepted case supplies an applicable hard policy row whose cat operator is unsupported.
+The current strategy silently ignores it and recommends Persian. CE12 requires `escalate` and
+cites `invalid_reviewer_policy`, preserving which policy source needs repair.
+
+Developer adds the validation and provenance rule to the sketch and strategy. The full retained
+gate passes the initial anchor and all eight accepted counterexamples: 9/9.
 
 The final retained Sketch-CE implementation passes 18/21 withheld cases. It misses two multi-tag
 cases because no accepted discovery has yet defined `avoid_vocal`, and it misses one normalized
@@ -272,40 +322,48 @@ the problem is already known, while Sketch-CE changes the governing sketch as th
 new policy. The captured open-world experiment adds two controls to identify what carries that
 policy forward.
 
-- **Replay all** rebuilds from the initial sketch and every accepted case known at the current
+- **Replay-all** rebuilds from the initial sketch and every accepted case known at the current
   discovery epoch. It asks the model to infer policy again from raw examples.
 - **Evolved-sketch rebuild** discards code and prompt, then receives only the current evolved
   sketch and known-code anchors. If its gate fails, it receives one visible failure at a time.
   This is the method's clean-regeneration test.
-- **Sketch-CE** keeps the current sketch, code, and prompt and repairs each newly accepted case.
+- **Sketch-CE with retained code** keeps the current sketch, code, and prompt and repairs each
+  newly accepted case.
 
-| Measure | Replay all | Evolved-sketch rebuild | Sketch-CE |
+| Measure | Replay-all | Evolved-sketch rebuild | Sketch-CE (retained code) |
 |---|---:|---:|---:|
-| **Tokens through visible acceptance** | **891,880** | **828,628** | **1,021,822** |
+| **All recorded model tokens, including evaluation** | **1,061,834** | **998,307** | **1,191,504** |
+| Tokens through visible acceptance | 891,880 | 828,628 | 1,021,822 |
+| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
 | Developer calls | 15 | 16 | 9 |
 | Developer tokens | 400,081 | 371,050 | 217,576 |
 | Runtime Oracle tokens through acceptance | 491,799 | 457,578 | 657,478 |
 | Specification Oracle tokens | 0 | 0 | 146,768 |
-| Post-acceptance evaluation tokens | 169,954 | 169,679 | 169,682 |
-| Total recorded tokens, including evaluation | 1,061,834 | 998,307 | 1,191,504 |
+| Rebuilds | 9 | 9 | 1 |
 | Extra repair attempts | 6 | 7 | 0 |
+| Prior regressions on first attempt | 2 | 7 | 0 |
 | Artifact churn lines | 2,394 | 2,326 | 719 |
 | Final strategy LOC | 224 | 228 | 298 |
 | Final decision nodes | 77 | 70 | 110 |
-| Visible accepted CEs | 8/8 | 8/8 | 8/8 |
-| Withheld cases | 15/21 | 19/21 | 18/21 |
+| Accepted CE evaluation | 8/8 | 8/8 | 8/8 |
+| Withheld evaluation | 15/21 | 19/21 | 18/21 |
 
-Tokens through acceptance include Developer edits, prompt-mediated Runtime Oracle checks, and
-Specification Oracle rule proposals. The final visible and withheld evaluation is reported
-separately. The candidate cases were external inputs. Sketch-CE paid to classify them and propose
-general rules for the failures; the controls inherited the resulting promotion schedule without
-paying for candidate classification or rule proposal. The totals therefore have different
-boundaries and are not end-to-end price rankings. Retained Sketch-CE used less Developer work
-and produced less churn. Evolved-sketch rebuild passed 19/21 withheld cases versus 15/21
-for replay all. In this run, the evolved synthesis of the accepted examples generalized better
-than asking the same model to re-infer policy from all examples at every epoch. Sketch-CE's final
-strategy was the largest and had the most decision nodes, so the retained path shows less rework
-during evolution, not better final maintainability.
+The first row includes every recorded Developer, Runtime Oracle, Specification Oracle, and
+post-acceptance evaluation call. Tokens through acceptance exclude only the final visible and
+withheld evaluation. Provider totals count input plus output; cached input and reasoning are
+subsets, not additional tokens.
+
+The candidate cases were external inputs. Sketch-CE paid to classify them and propose general
+rules for failures. Both controls inherited the promotion schedule, and evolved-sketch rebuild
+also inherited the sketch checkpoints. Their totals omit discovery work and are not end-to-end
+price rankings.
+
+Sketch-CE with retained code used less Developer work and produced less cumulative churn.
+Evolved-sketch rebuild passed 19/21 withheld cases versus 15/21 for Replay-all. In this run, the
+evolved synthesis of the accepted examples generalized better than asking the same model to
+re-infer policy from all examples at every epoch. The retained strategy was the largest and had
+the most decision nodes, so that path shows less rework during evolution, not better final
+maintainability.
 
 This is one model, one candidate order, and one sample per path. It supports the hypothesis that
 reviewed policy synthesis can carry lessons better than raw example replay. It does not establish
@@ -317,8 +375,8 @@ The experiment is the synthesis history. The browser is the finished inspection 
 
 ```bash
 cd examples/catsynth
-python3 cli.py seed --no-wiki
-python3 cli.py serve
+uv run --with-requirements requirements.txt python cli.py seed --no-wiki
+uv run --with-requirements requirements.txt python cli.py serve
 ```
 
 Open <http://127.0.0.1:8000>.
@@ -327,12 +385,12 @@ Open <http://127.0.0.1:8000>.
 
 The UI exposes the stable repository artifacts:
 
-1. **Sketch** — the strategy, policy order, holes, and abstention behavior.
-2. **CE archive / regression set** — approved expected outputs, tempting outputs, violated rules,
+1. **Sketch** - the strategy, policy order, holes, and abstention behavior.
+2. **CE archive / regression set** - approved expected outputs, tempting outputs, violated rules,
    and sketch links. CatSynth shows the same cases in both roles because `R = A`.
-3. **Oracle A** — deterministic hard-rule filtering, ranking, and abstention.
-4. **Oracle B** — prompt-mediated narrative tags constrained to a controlled vocabulary.
-5. **Gate** — replay and semantic comparison over CatSynth's regression set.
+3. **Oracle A** - deterministic hard-rule filtering, ranking, and abstention.
+4. **Oracle B** - prompt-mediated narrative tags constrained to a controlled vocabulary.
+5. **Gate** - replay and semantic comparison over CatSynth's regression set.
 
 The browser's Review button records only a local operator decision in SQLite. It does not invoke
 Developer or revise `SKETCH.md`. The experiment history, not that button, is the evidence for the
@@ -370,28 +428,25 @@ did not follow the approved policy.
 
 | Paper concept | Repository artifact |
 |---|---|
-| Initial sketch | `examples/catsynth/experiment/initial_sketch.md` |
-| Counterexample reveal schedule | `examples/catsynth/experiment/cases.json` |
-| Accepted CE archive | `examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json` |
-| Regression set (`R = A`) | `examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json` |
-| Developer/Oracle/gate orchestration | `examples/catsynth/experiment/run_experiment.py` |
-| Codex App Server adapter | `examples/catsynth/catsynth/codex_app_server.py` |
-| OpenAI-compatible adapter | `examples/catsynth/catsynth/openai_compat.py` |
-| Reference Oracle A | `examples/catsynth/catsynth/oracle_a.py` |
-| Runtime Oracle B | `examples/catsynth/catsynth/oracle_b.py` |
-| UI archive / regression fixtures | `examples/catsynth/catsynth/seed.py` |
-| UI replay and compare | `examples/catsynth/catsynth/gate.py` |
-| Browser inspection surface | `examples/catsynth/catsynth/app.py` and `static/` |
-| Adaptive comparison harness | `examples/catsynth/experiment/adaptive_open_world_experiment.py` |
-| Captured generations and results | `examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/` |
+| Initial sketch | [`initial_sketch.md`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/initial_sketch.md) |
+| Candidate manifest | [`adaptive_candidate_manifest.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_candidate_manifest.json) |
+| Operator references | [`cases.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/cases.json) |
+| Accepted CE archive and regression set (`R = A`) | [`promoted-corpus.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json) |
+| Experiment driver | [`run_experiment.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/run_experiment.py) |
+| Codex App Server adapter | [`codex_app_server.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/codex_app_server.py) |
+| OpenAI-compatible adapter | [`openai_compat.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/openai_compat.py) |
+| Oracle A | [`oracle_a.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_a.py) |
+| Oracle B | [`oracle_b.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_b.py) |
+| UI fixtures | [`seed.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/seed.py) |
+| UI gate | [`gate.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/gate.py) |
+| UI app | [`app.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/app.py) and [`static/`](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/catsynth/static) |
+| Comparison harness | [`adaptive_open_world_experiment.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_open_world_experiment.py) |
+| Captured run | [Published run](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712) |
 
 ## Claim boundary
 
-The successful iterative gate establishes finite-regression correctness relative to these
-fixtures, expected outputs, and evaluator code. The withheld cases add limited evidence of
-generalization.
-Neither result establishes correctness for all owner profiles, real breed facts, incorrect golden
-rows, buggy checkers, unencoded policy, future model behavior, or other models and reveal orders.
-
-That boundary is part of the method. CatSynth preserves enough evidence for a reader to see where
-the claim begins and where it stops.
+CatSynth's iterative gate establishes finite-regression correctness only for these fixtures,
+expected outputs, and evaluators. The withheld cases provide limited evidence beyond the gate.
+Neither result establishes correctness for all owner profiles, real breed facts, bad expected
+outputs or checkers, unencoded policy, future model behavior, or other models and reveal orders.
+CatSynth preserves the evidence needed to inspect that boundary.
