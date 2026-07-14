@@ -2,6 +2,8 @@ cff-version: 1.2.0
 message: "Please cite the paper. If you rely on the code or captured artifacts, cite the software release as well."
 title: "Agentic Synthesis against Counterexample-Supplemented Sketches"
 type: software
+version: "0.1.1"
+date-released: 2026-07-14
 abstract: >-
   A repository-native method and runnable CatSynth artifact for evolving a
   partial software sketch through operator-approved counterexamples,
@@ -34,4 +36,4 @@ preferred-citation:
   year: 2026
   status: preprint
   license: CC-BY-4.0
-  url: "https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/paper/main.pdf"
+  url: "https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/v0.1.1/paper/main.pdf"
