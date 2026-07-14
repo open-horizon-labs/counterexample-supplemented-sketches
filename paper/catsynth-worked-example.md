@@ -86,12 +86,12 @@ The adapter disabled tools and environment access, disabled provider fallback, a
 ephemeral thread for every call. It consumed 173 model calls and 3,251,645 recorded model tokens
 across all three paths, including post-acceptance evaluation. Raw JSON-RPC transcripts stayed
 local; the repository retains every generated sketch, strategy, prompt, failure, gate outcome,
-diff, and usage total. The [CatSynth README](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth)
+diff, and usage total. The [CatSynth README](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth)
 documents the portable driver for Codex App Server and OpenAI-compatible Chat Completions
 endpoints.
 
 The captured evidence is in the
-[checked-in run directory](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712).
+[checked-in run directory](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712).
 
 ## The starting point
 
@@ -428,20 +428,20 @@ did not follow the approved policy.
 
 | Paper concept | Repository artifact |
 |---|---|
-| Initial sketch | [`initial_sketch.md`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/initial_sketch.md) |
-| Candidate manifest | [`adaptive_candidate_manifest.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_candidate_manifest.json) |
-| Operator references | [`cases.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/cases.json) |
-| Accepted CE archive and regression set (`R = A`) | [`promoted-corpus.json`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json) |
-| Experiment driver | [`run_experiment.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/run_experiment.py) |
-| Codex App Server adapter | [`codex_app_server.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/codex_app_server.py) |
-| OpenAI-compatible adapter | [`openai_compat.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/openai_compat.py) |
-| Oracle A | [`oracle_a.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_a.py) |
-| Oracle B | [`oracle_b.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_b.py) |
-| UI fixtures | [`seed.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/seed.py) |
-| UI gate | [`gate.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/gate.py) |
-| UI app | [`app.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/app.py) and [`static/`](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/catsynth/static) |
-| Comparison harness | [`adaptive_open_world_experiment.py`](https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_open_world_experiment.py) |
-| Captured run | [Published run](https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712) |
+| Initial sketch | [`initial_sketch.md`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/initial_sketch.md) |
+| Candidate manifest | [`adaptive_candidate_manifest.json`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/adaptive_candidate_manifest.json) |
+| Operator references | [`cases.json`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/cases.json) |
+| Accepted CE archive and regression set (`R = A`) | [`promoted-corpus.json`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json) |
+| Experiment driver | [`run_experiment.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/run_experiment.py) |
+| Codex App Server adapter | [`codex_app_server.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/codex_app_server.py) |
+| OpenAI-compatible adapter | [`openai_compat.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/openai_compat.py) |
+| Oracle A | [`oracle_a.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/oracle_a.py) |
+| Oracle B | [`oracle_b.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/oracle_b.py) |
+| UI fixtures | [`seed.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/seed.py) |
+| UI gate | [`gate.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/gate.py) |
+| UI app | [`app.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/app.py) and [`static/`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/catsynth/static) |
+| Comparison harness | [`adaptive_open_world_experiment.py`](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/adaptive_open_world_experiment.py) |
+| Captured run | [Published run](https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712) |
 
 ## Claim boundary
 

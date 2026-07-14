@@ -87,12 +87,12 @@ The adapter disabled tools and environment access, disabled provider fallback, a
 ephemeral thread for every call. It consumed 173 model calls and 3,251,645 recorded model tokens
 across all three paths, including post-acceptance evaluation. Raw JSON-RPC transcripts stayed
 local; the repository retains every generated sketch, strategy, prompt, failure, gate outcome,
-diff, and usage total. The \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth}{CatSynth README}
+diff, and usage total. The \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth}{CatSynth README}
 documents the portable driver for Codex App Server and OpenAI-compatible Chat Completions
 endpoints.
 
 The captured evidence is in the
-\href{https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712}{checked-in run directory}.
+\href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712}{checked-in run directory}.
 
 \section{The starting point}\label{the-starting-point}
 
@@ -515,20 +515,20 @@ Repository artifact
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Initial sketch & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/initial_sketch.md}{\texttt{initial\_sketch.md}} \\
-Candidate manifest & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_candidate_manifest.json}{\texttt{adaptive\_candidate\_manifest.json}} \\
-Operator references & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/cases.json}{\texttt{cases.json}} \\
-Accepted CE archive and regression set (\texttt{R\ =\ A}) & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json}{\texttt{promoted-corpus.json}} \\
-Experiment driver & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/run_experiment.py}{\texttt{run\_experiment.py}} \\
-Codex App Server adapter & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/codex_app_server.py}{\texttt{codex\_app\_server.py}} \\
-OpenAI-compatible adapter & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/openai_compat.py}{\texttt{openai\_compat.py}} \\
-Oracle A & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_a.py}{\texttt{oracle\_a.py}} \\
-Oracle B & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/oracle_b.py}{\texttt{oracle\_b.py}} \\
-UI fixtures & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/seed.py}{\texttt{seed.py}} \\
-UI gate & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/gate.py}{\texttt{gate.py}} \\
-UI app & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/catsynth/app.py}{\texttt{app.py}} and \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/catsynth/static}{\texttt{static/}} \\
-Comparison harness & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/blob/main/examples/catsynth/experiment/adaptive_open_world_experiment.py}{\texttt{adaptive\_open\_world\_experiment.py}} \\
-Captured run & \href{https://github.com/open-horizon-labs/sketch-counterexample-agent/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712}{Published run} \\
+Initial sketch & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/initial_sketch.md}{\texttt{initial\_sketch.md}} \\
+Candidate manifest & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/adaptive_candidate_manifest.json}{\texttt{adaptive\_candidate\_manifest.json}} \\
+Operator references & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/cases.json}{\texttt{cases.json}} \\
+Accepted CE archive and regression set (\texttt{R\ =\ A}) & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/promoted-corpus.json}{\texttt{promoted-corpus.json}} \\
+Experiment driver & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/run_experiment.py}{\texttt{run\_experiment.py}} \\
+Codex App Server adapter & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/codex_app_server.py}{\texttt{codex\_app\_server.py}} \\
+OpenAI-compatible adapter & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/openai_compat.py}{\texttt{openai\_compat.py}} \\
+Oracle A & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/oracle_a.py}{\texttt{oracle\_a.py}} \\
+Oracle B & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/oracle_b.py}{\texttt{oracle\_b.py}} \\
+UI fixtures & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/seed.py}{\texttt{seed.py}} \\
+UI gate & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/gate.py}{\texttt{gate.py}} \\
+UI app & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/catsynth/app.py}{\texttt{app.py}} and \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/catsynth/static}{\texttt{static/}} \\
+Comparison harness & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/blob/main/examples/catsynth/experiment/adaptive_open_world_experiment.py}{\texttt{adaptive\_open\_world\_experiment.py}} \\
+Captured run & \href{https://github.com/open-horizon-labs/counterexample-supplemented-sketches/tree/main/examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712}{Published run} \\
 \end{longtable}
 }
 
