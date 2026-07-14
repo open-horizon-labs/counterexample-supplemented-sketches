@@ -1,23 +1,29 @@
 # Agentic Synthesis against Counterexample-Supplemented Sketches
 
-This repository demonstrates a coding method for systems whose real specification is still
-being discovered.
+Coding agents can fix a failing example without capturing the rule that made it fail. This
+repository presents a method for carrying that rule into the next generation of code.
 
-Start with a sketch of the strategy and let a coding agent generate an implementation. When the
-world reveals a failure, the system asks an operator whether it exposes a missing or mistaken
-rule. Only explicit operator approval makes the case an accepted counterexample. Every accepted
-counterexample changes the sketch, after which the agent repairs or regenerates the
-implementation under that evolved sketch.
+Start with a sketch: a partial statement of the strategy, interfaces, and known rules. An agent
+generates the first implementation. When a concrete case fails, an operator decides which loop
+it belongs to:
 
-The method does not accumulate every counterexample in the generation prompt. The sketch carries
-the reviewed synthesis of what the team has learned. The full counterexample archive records why
-the sketch changed. A curated regression subset checks that later implementations still honor
-those lessons. The code is replaceable: maintainers must be able to regenerate it from the
-current sketch and repository anchors, then pass the regression gate.
+- If the sketch already states the right rule, repair the code.
+- If the case exposes a missing or mistaken rule, the operator may approve it as a
+  counterexample. Approval includes the corrected output and the policy change.
 
-CatSynth is the runnable example. It includes the teaching UI, the experiment harness, every
-generated implementation and sketch, and an open-world comparison against two rebuild
-strategies.
+For each accepted counterexample, the agent revises the sketch and repairs or regenerates the
+implementation. A regression gate checks the result against selected earlier cases before the
+next case enters the loop.
+
+The full counterexample archive records why the sketch changed. A curated regression set checks
+later implementations against selected policy boundaries. The agent never receives either
+collection as bulk prompt context: the evolved sketch carries the team's reviewed policy, and
+the agent sees one active failure at a time. Code and prompts are disposable. Maintainers
+periodically regenerate them from the sketch and repository constraints and require the result
+to pass the same gate.
+
+CatSynth makes the loop runnable and inspectable. It includes the application, the experiment
+harness, every generated sketch and implementation, and comparisons with two rebuild controls.
 
 ## The method
 
