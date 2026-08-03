@@ -67,16 +67,22 @@ output against the sketch. Current documentation calls the deterministic check
 sketch and projection, a teaching UI, and controls that test what the evolved sketch and retained
 code contribute.
 
-## Install the CESS workflow skill
+## Install CESS for your agents
 
-Install the repository's self-contained CESS skill with the open `skills` CLI:
+Install the skill if you want agents to apply CESS in other repositories without reteaching the
+method each time. It turns the paper into an operating protocol: preserve the sketch's rules and
+open holes, ask before inventing policy, keep the complete archive separate from curated
+regressions, and run both acceptance checks.
+
+Install it for your user account:
 
 ```bash
-npx skills add open-horizon-labs/counterexample-supplemented-sketches --skill cess
+npx skills add open-horizon-labs/counterexample-supplemented-sketches \
+  --skill cess --global --yes
 ```
 
-The skill preserves the artifact distinctions, runs both checks, and provides forms for sketch
-evolution, CE approval, validation, and fresh-projection checks. Its source is
+The skill includes working forms for counterexample approval, sketch changes, Developer
+authority, validation, and fresh-projection checks. Its source is
 [`skills/cess/SKILL.md`](skills/cess/SKILL.md).
 
 ## The method
