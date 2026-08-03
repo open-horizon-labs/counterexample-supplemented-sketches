@@ -1,0 +1,11 @@
+{
+  "date": "2026-08-02",
+  "model": "gpt-5.4-mini",
+  "protocol": "two-check-manual-sketch-approval-with-explicit-change-contract",
+  "promoted_case_count": 8,
+  "evaluations": {
+    "replay_all": {"visible": "8/8", "withheld": "14/21"},
+    "reviewed_sketch": {"visible": "8/8", "withheld": "17/21"},
+    "sketch_ce": {"visible": "8/8", "withheld": "16/21"}
+  }
+}

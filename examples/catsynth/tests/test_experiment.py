@@ -47,6 +47,33 @@ class ExperimentTests(unittest.TestCase):
             "fields": fields, "passed": passed, "oracle_trace": None,
         }
 
+    @staticmethod
+    def _sketch_review(evaluations, passed=True):
+        cases = [{
+            "id": item["id"],
+            "verdict": "pass" if passed else "fail",
+            "applicable_clauses": ["test clause"],
+            "required_behavior": "follow the test sketch",
+            "difference": "" if passed else "test review failure",
+            "failure_class": "none" if passed else "projection-defect",
+            "passed": passed,
+        } for item in evaluations]
+        return {
+            "passed": bool(cases) and all(item["passed"] for item in cases),
+            "passed_count": sum(1 for item in cases if item["passed"]),
+            "total": len(cases),
+            "cases": cases,
+        }
+
+    @staticmethod
+    def _approve_sketch(_proposal):
+        return {
+            "proposal_id": "test",
+            "decision": "approve",
+            "rationale": "Test fixture authorizes this sketch change.",
+            "approver": "unit-test",
+        }
+
     def test_iterative_flow_targets_one_failure_and_gates_full_corpus(self):
         cases = json.loads(experiment.CASES_PATH.read_text())[:2]
         developer_calls = []
@@ -91,7 +118,6 @@ class ExperimentTests(unittest.TestCase):
             [self._evaluation(cases[0], True)],
             [self._evaluation(cases[0], False), self._evaluation(cases[1], True)],
             [self._evaluation(cases[0], True), self._evaluation(cases[1], True)],
-            [self._evaluation(cases[0], True), self._evaluation(cases[1], True)],
         ])
 
         def fake_gate(workspace, promoted, client, ledger, label):
@@ -108,9 +134,15 @@ class ExperimentTests(unittest.TestCase):
              patch.object(experiment, "call_developer", side_effect=fake_developer), \
              patch.object(experiment, "call_oracle", side_effect=fake_oracle), \
              patch.object(experiment, "evaluate_case", side_effect=fake_evaluate), \
-             patch.object(experiment, "run_gate", side_effect=fake_gate):
+             patch.object(experiment, "run_gate", side_effect=fake_gate), \
+             patch.object(
+                 experiment, "run_sketch_review",
+                 side_effect=lambda _w, _c, evaluations, *_a, **_k:
+                 self._sketch_review(evaluations),
+             ):
             result = experiment.run_iterative(
                 Path(tmp), cases, object(), experiment.Ledger(), max_repairs=4,
+                sketch_approver=self._approve_sketch,
             )
 
         self.assertEqual(developer_calls, [
@@ -119,7 +151,7 @@ class ExperimentTests(unittest.TestCase):
             ("repair", cases[1]["id"]),
             ("repair", cases[0]["id"]),
         ])
-        self.assertEqual(gate_sizes, [0, 1, 2, 2, 2])
+        self.assertEqual(gate_sizes, [0, 1, 2, 2])
         self.assertTrue(result["final_gate"]["passed"])
         self.assertIn("sketch_after", result["initial_generation"])
 
@@ -161,12 +193,18 @@ class ExperimentTests(unittest.TestCase):
              patch.object(experiment, "call_developer", side_effect=fake_developer), \
              patch.object(experiment, "call_oracle", side_effect=fake_oracle), \
              patch.object(experiment, "evaluate_case", side_effect=lambda *_a, **_k: next(introductions)), \
-             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)):
+             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)), \
+             patch.object(
+                 experiment, "run_sketch_review",
+                 side_effect=lambda _w, _c, evaluations, *_a, **_k:
+                 self._sketch_review(evaluations),
+             ):
             with self.assertRaisesRegex(
                 ExperimentError, "without revising the sketch"
             ):
                 experiment.run_iterative(
                     Path(tmp), [case], object(), experiment.Ledger(), max_repairs=1,
+                    sketch_approver=self._approve_sketch,
                 )
 
         self.assertEqual(calls, 2)
@@ -211,6 +249,55 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(
             payload["known_code_contract"]["rule_fields"],
             experiment.known_code_contract()["rule_fields"],
+        )
+        contract = payload["sketch_change_contract"]
+        self.assertEqual(
+            contract["active_change_authority"]["approved_case"]["id"],
+            cases[1]["id"],
+        )
+        self.assertEqual(len(contract["retained_counterexample_authority"]), 2)
+        self.assertIn("do not choose", contract["conflict_protocol"])
+        self.assertTrue(contract["preservation_requirements"])
+
+    def test_developer_can_request_authority_clarification_without_file_changes(self):
+        class Resolver:
+            def __call__(self, _proposal):
+                raise AssertionError("Sketch approval should not run")
+
+            def clarify(self, request):
+                self.request = request
+                return {
+                    "clarification": "Preserve the explicit hole; change no policy.",
+                    "authority": "unit-test",
+                }
+
+        resolver = Resolver()
+        response = {
+            "strategy_py": "unchanged",
+            "oracle_prompt": "unchanged",
+            "sketch_md": "unchanged",
+            "clarification_request": "Does this CE resolve the adjacent empty-input hole?",
+        }
+        client = SimpleNamespace(chat=lambda *args, **kwargs: SimpleNamespace(
+            content=json.dumps(response), request={}, response={}, reasoning="", usage={}
+        ))
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            experiment.baseline_workspace(workspace)
+            before = experiment.workspace_text(workspace)
+            parsed, record = experiment.call_developer_with_approval(
+                workspace, [], None, "iterative", "initial", "clarify",
+                client, experiment.Ledger(), resolver,
+            )
+            after = experiment.workspace_text(workspace)
+        self.assertEqual(parsed, {})
+        self.assertEqual(before, after)
+        self.assertEqual(
+            record["next_failure"]["failure_kind"],
+            "authority-clarification-answered",
+        )
+        self.assertEqual(
+            record["authority_clarification"]["authority"], "unit-test",
         )
 
     def test_single_shot_prompt_is_clean_room_and_self_contained(self):
@@ -287,7 +374,7 @@ class ExperimentTests(unittest.TestCase):
         self.assertEqual(payload["complete_immutable_specification"], complete_spec)
         self.assertEqual(payload["current_strategy_py"], "")
         self.assertEqual(payload["current_oracle_prompt"], "")
-        self.assertIsNone(payload["visible_gate_failures"])
+        self.assertIsNone(payload["visible_validation_failures"])
         self.assertNotIn("complete_corpus", payload)
         self.assertNotIn("active_failing_counterexample", payload)
         for case in [
@@ -318,8 +405,9 @@ class ExperimentTests(unittest.TestCase):
             "hidden-reversed-rule-order",
         }.issubset(ids))
 
-    def test_one_shot_repair_prompt_contains_current_files_and_all_visible_failures(self):
+    def test_one_shot_repair_prompt_keeps_complete_corpus_and_visible_failures(self):
         promoted = json.loads(experiment.CASES_PATH.read_text())[:2]
+        complete = experiment.complete_case_packets(promoted)
         failures = [{"id": promoted[0]["id"]}, {"id": promoted[1]["id"]}]
         with tempfile.TemporaryDirectory() as tmp:
             workspace = Path(tmp)
@@ -328,15 +416,35 @@ class ExperimentTests(unittest.TestCase):
             (workspace / "SKETCH.md").write_text("# Current repaired sketch\n")
             messages = experiment.developer_messages(
                 workspace, promoted, failures, "one_shot_repair", "one_shot_repair",
+                complete_corpus=complete,
             )
         payload = json.loads(messages[1]["content"])
         self.assertIn("one-shot-generated", messages[0]["content"])
         self.assertIsNone(payload["active_failing_counterexample"])
         self.assertEqual(payload["active_failing_counterexamples"], failures)
-        self.assertNotIn("complete_corpus", payload)
+        self.assertEqual(payload["complete_corpus"], complete)
+        self.assertEqual(
+            payload["promoted_case_ids"], [case["id"] for case in promoted],
+        )
         self.assertEqual(payload["current_sketch_md"], "# Current repaired sketch\n")
         self.assertIn("def recommend", payload["current_strategy_py"])
         self.assertEqual(payload["current_oracle_prompt"], "Classify {note}.\n")
+
+    def test_reviewed_sketch_repair_authorizes_projection_repair_not_new_policy(self):
+        failures = [{"id": "visible-failure", "failure_kind": "sketch-review"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            experiment.baseline_workspace(workspace)
+            messages = experiment.developer_messages(
+                workspace, [], failures, "reviewed_sketch", "one_shot_repair",
+            )
+        payload = json.loads(messages[1]["content"])
+        authority = payload["sketch_change_contract"]["active_change_authority"]
+        self.assertEqual(
+            authority["kind"], "projection_repair_under_current_sketch",
+        )
+        self.assertEqual(authority["exact_failure_packets"], failures)
+        self.assertIn("No new sketch policy", authority["scope"])
 
     def test_one_shot_cost_includes_repairs_until_visible_gate_passes(self):
         promoted = json.loads(experiment.CASES_PATH.read_text())[:2]
@@ -378,17 +486,23 @@ class ExperimentTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, \
              patch.object(experiment, "call_developer", side_effect=fake_developer), \
-             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)):
+             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)), \
+             patch.object(
+                 experiment, "run_sketch_review",
+                 side_effect=lambda _w, _c, evaluations, *_a, **_k:
+                 self._sketch_review(evaluations),
+             ):
             result = experiment.run_one_shot_repair(
                 Path(tmp), promoted, "# Final sketch\n", object(),
                 experiment.Ledger(), max_repairs=2,
+                sketch_approver=self._approve_sketch,
             )
 
         self.assertEqual(len(calls), 2)
         self.assertEqual(calls[0]["phase"], "one_shot")
         self.assertEqual(len(calls[0]["corpus"]), 2)
         self.assertEqual(calls[1]["phase"], "one_shot_repair")
-        self.assertIsNone(calls[1]["corpus"])
+        self.assertEqual(len(calls[1]["corpus"]), 2)
         self.assertEqual(
             [item["id"] for item in calls[1]["failures"]],
             [promoted[0]["id"], promoted[1]["id"]],
@@ -479,15 +593,19 @@ class ExperimentTests(unittest.TestCase):
              "cases": [self._evaluation(experiment.initial_acceptance_case(), False)]},
             {"passed": True, "passed_count": 1, "total": 1,
              "cases": [self._evaluation(experiment.initial_acceptance_case(), True)]},
-            {"passed": True, "passed_count": 1, "total": 1,
-             "cases": [self._evaluation(experiment.initial_acceptance_case(), True)]},
         ])
 
         with tempfile.TemporaryDirectory() as tmp, \
              patch.object(experiment, "call_developer", side_effect=fake_developer), \
-             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)):
+             patch.object(experiment, "run_gate", side_effect=lambda *_a, **_k: next(gates)), \
+             patch.object(
+                 experiment, "run_sketch_review",
+                 side_effect=lambda _w, _c, evaluations, *_a, **_k:
+                 self._sketch_review(evaluations),
+             ):
             result = experiment.run_iterative(
                 Path(tmp), [], object(), experiment.Ledger(), max_repairs=1,
+                sketch_approver=self._approve_sketch,
             )
 
             self.assertEqual(calls, [
@@ -522,9 +640,15 @@ class ExperimentTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, \
              patch.object(experiment, "call_developer", side_effect=fake_initial), \
              patch.object(experiment, "call_oracle") as oracle, \
-             patch.object(experiment, "evaluate_case", return_value=self._evaluation(case, True)):
+             patch.object(experiment, "evaluate_case", return_value=self._evaluation(case, True)), \
+             patch.object(
+                 experiment, "run_sketch_review",
+                 side_effect=lambda _w, _c, evaluations, *_a, **_k:
+                 self._sketch_review(evaluations),
+             ):
             result = experiment.run_iterative(
                 Path(tmp), [case], object(), experiment.Ledger(), max_repairs=2,
+                sketch_approver=self._approve_sketch,
             )
         self.assertFalse(oracle.called)
         self.assertEqual(result["promoted"], [])
@@ -545,6 +669,111 @@ class ExperimentTests(unittest.TestCase):
             )
         self.assertTrue(gate["passed"])
         self.assertEqual(seen, ["initial-preference-ranking", case["id"]])
+
+    def test_two_check_validation_requires_gate_and_sketch_review(self):
+        case = experiment.initial_acceptance_case()
+        evaluation = self._evaluation(case, True)
+        gate = {
+            "passed": True, "passed_count": 1, "total": 1,
+            "cases": [evaluation],
+        }
+        review = self._sketch_review([evaluation], passed=False)
+        with patch.object(experiment, "run_gate", return_value=gate), \
+             patch.object(experiment, "run_sketch_review", return_value=review):
+            validation = experiment.run_validation(
+                Path("/tmp"), [], object(), experiment.Ledger(), "test",
+            )
+        self.assertTrue(validation["gate"]["passed"])
+        self.assertFalse(validation["sketch_review"]["passed"])
+        self.assertFalse(validation["passed"])
+
+    def test_sketch_review_prompt_uses_sketch_not_approved_output(self):
+        case = experiment.initial_acceptance_case()
+        evaluation = self._evaluation(case, True)
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / "SKETCH.md").write_text("# Current sketch\nRank preferences.\n")
+            messages = experiment.sketch_review_messages(
+                workspace, [case], [evaluation],
+            )
+        payload = json.loads(messages[1]["content"])
+        self.assertEqual(payload["current_sketch_md"], "# Current sketch\nRank preferences.\n")
+        self.assertNotIn("expected", payload["cases"][0])
+        self.assertNotIn("reviewer_policy", payload["cases"][0])
+        self.assertEqual(payload["cases"][0]["observed_output"], evaluation["actual"])
+
+    def test_rejected_sketch_change_restores_last_approved_workspace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            experiment.baseline_workspace(workspace)
+            before = experiment.workspace_text(workspace)
+
+            def fake_developer(*_args, **_kwargs):
+                (workspace / "SKETCH.md").write_text("# Unauthorized policy\n")
+                (workspace / "strategy.py").write_text("# unauthorized code\n")
+                (workspace / "oracle_prompt.txt").write_text("unauthorized prompt\n")
+                return {"sketch_md": "changed"}, {
+                    "error": None,
+                    "diffs": {"SKETCH.diff": "+ unauthorized policy"},
+                }
+
+            with patch.object(experiment, "call_developer", side_effect=fake_developer):
+                parsed, record = experiment.call_developer_with_approval(
+                    workspace, [], {"id": "ce-x"}, "iterative", "repair",
+                    "ce-x:attempt-1", object(), experiment.Ledger(),
+                    lambda _proposal: {
+                        "decision": "reject",
+                        "rationale": "Settles policy outside the approved CE.",
+                        "approver": "unit-test",
+                    },
+                )
+
+            self.assertEqual(parsed, {})
+            self.assertEqual(experiment.workspace_text(workspace), before)
+            self.assertTrue(record["workspace_restored"])
+            self.assertEqual(
+                record["next_failure"]["failure_kind"],
+                "sketch-approval-rejected",
+            )
+
+    def test_authorized_reviewer_can_override_wrong_model_review(self):
+        case = experiment.initial_acceptance_case()
+        evaluation = self._evaluation(case, True)
+        response = {"cases": [{
+            "id": case["id"],
+            "verdict": "fail",
+            "applicable_clauses": ["ranking"],
+            "required_behavior": "wrong arithmetic",
+            "difference": "model reviewer made a test error",
+            "failure_class": "projection-defect",
+        }]}
+
+        class ReviewClient:
+            def chat(self, *_args, **_kwargs):
+                return experiment.ChatResult(
+                    content=json.dumps(response), reasoning="", usage={},
+                    request={}, response={},
+                )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            (workspace / "SKETCH.md").write_text("# Current sketch\n")
+            result = experiment.run_sketch_review(
+                workspace, [case], [evaluation], ReviewClient(),
+                experiment.Ledger(), "test-review",
+                lambda proposal: {
+                    "proposal_id": "test-adjudication",
+                    "decisions": [{
+                        "id": proposal["model_non_pass_cases"][0]["id"],
+                        "verdict": "pass",
+                        "rationale": "The model reviewer omitted a score term.",
+                    }],
+                    "reviewer": "unit-test",
+                },
+            )
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["cases"][0]["model_verdict"], "fail")
+        self.assertEqual(result["cases"][0]["verdict"], "pass")
 
     def test_codex_backend_pins_spark_low_and_minimal_other_controls(self):
         class FakeCodex(CodexAppServerClient):

@@ -24,34 +24,40 @@ Corresponding author: Muness Castle, muness@muness.com
 
 ## Abstract
 
-Coding agents can fix a failing example without preserving the domain rule that made it fail, so
-later generations can repeat the same plausible mistake. We present agentic synthesis against
-counterexample-supplemented sketches, a repository-native method for systems whose governing
-policy is discovered during implementation. A human starts with a partial, code-shaped sketch,
-and a coding agent generates the first implementation. When a concrete failure exposes missing
-or mistaken policy, an operator explicitly approves the corrected behavior and rule. The agent
-then revises the sketch and repairs or regenerates code and prompt surfaces for that one
-counterexample. The full archive preserves provenance; a selected regression set gates each
-revision before the next candidate is revealed; and periodic clean regeneration tests whether
-the evolved sketch, rather than prompt history or accumulated examples, carries the learned
-policy.
+Coding agents can fix a failing example without preserving the domain rule that made it fail.
+We present agentic synthesis against counterexample-supplemented sketches, a repository-native
+method for systems whose policy is discovered during implementation. A human starts with a
+partial sketch, and a coding agent compiles a replaceable projection. When simulation exposes
+missing or mistaken policy, an operator approves the corrected behavior and the minimum general
+rule the case authorizes. Every Developer call names its change authority and the rules, holes,
+anchors, and approved behavior that must survive. Conflict or ambiguous permission leaves the
+files unchanged and produces a clarification question. A complete archive preserves provenance;
+a curated regression set gates distinct
+boundaries. Before another candidate is revealed, the active case and curated regressions must
+pass both deterministic approved-output comparison and a separate review against the current
+sketch. Periodic clean regeneration tests whether the sketch carries the learned policy.
 
-We demonstrate the method with CatSynth, a synthetic browser application and captured
-coding-agent experiment. In one open-world run with GPT-5.4-mini, 8 of 14 frozen candidate cases
-became counterexamples. The rebuild controls inherited that promotion schedule, and all three
-paths passed the 8 accepted cases. Rebuilding from the evolved sketch passed 19 of 21 withheld
-cases, compared with 15 of 21 when rebuilding from the initial sketch and replaying all accepted
-examples. Retaining code across counterexamples required 9 Developer calls and 719 lines of
-cumulative artifact churn, versus 15 calls and 2,394 lines for replay-all, and passed 18 of 21
-withheld cases. These results provide inspectable evidence that the evolved sketch carried
-reviewed policy and that retaining code reduced rework in this run; with one model and one reveal
-order, they do not establish general superiority or correctness beyond the encoded checks.
+We demonstrate the method with CatSynth, a captured synthetic application. In one open-world run
+with GPT-5.4-mini, 8 of 14 frozen candidates
+became counterexamples. Under the corrected protocol, replay-all, evolved-sketch rebuild, and
+retained Sketch-CE each passed all 8 accepted cases. They passed 14, 17, and 16 of 21 withheld
+cases, respectively. Sketch review rejected premature empty-input and tag policies and restored
+dropped anchors; adjudicated reviewer errors did not become policy. One model and one reveal
+order cannot establish general correctness or superiority. On this suite, the second check
+exposed drift hidden by deterministic replay, and the reviewed sketch passed three more withheld
+cases than raw example replay.
 
 ## Comments
 
-32 pages, 5 displayed figures (4 distinct screenshots). Includes the CatSynth artifact
+36 pages, 5 displayed figures (4 distinct screenshots). Includes the CatSynth artifact
 supplement. Code and captured experiment artifacts:
 https://github.com/open-horizon-labs/counterexample-supplemented-sketches
+
+For an arXiv replacement, append this revision description to the existing comments:
+
+`Clarifies the two-check CESS method and Developer change authority; adds the protocol-correct
+CatSynth rerun and replaces the prior withheld-case headline. Results are now 14/21 for
+replay-all, 17/21 for evolved-sketch rebuild, and 16/21 for retained Sketch-CE.`
 
 ## Before final submission
 

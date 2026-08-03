@@ -6,7 +6,7 @@ Cat facts come from Wikipedia (cached into SQLite). Local tables hold the
 owner-trait rulesets. An evolved sketch carries learned policy. The SQLite
 table projects operator-approved counterexamples into both archive A and
 regression set R; this small demo uses A = R. A two-layer gate (replay +
-semantic compare) checks the current resolver against R.
+approved-output compare) checks the current resolver against R.
 """
 
 __all__ = ["DB_PATH"]

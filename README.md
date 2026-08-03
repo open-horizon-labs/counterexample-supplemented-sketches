@@ -1,97 +1,146 @@
 # Agentic Synthesis against Counterexample-Supplemented Sketches
 
-Coding agents can fix a failing example without capturing the rule that made it fail. This
-repository presents a method for carrying that rule into the next generation of code.
+Coding agents can fix an example without learning the rule that made it fail. CESS carries that
+rule into the sketch, the next generated implementation, and the checks that protect later
+repairs.
 
-Start with a sketch: a partial statement of the strategy, interfaces, and known rules. An agent
-generates the first implementation. When a concrete case fails, an operator decides which loop
-it belongs to:
+Start with a sketch `S`: the user's current specification, including strategy, interfaces, known
+rules, and open holes. Generate a replaceable projection `P` from `S` and the repository anchors
+`K`. The projection may include code, prompts, and configuration.
 
-- If the sketch already states the right rule, repair the code.
-- If the case exposes a missing or mistaken rule, the operator may approve it as a
-  counterexample. Approval includes the corrected output and the policy change.
+Exercise `P` in simulation. A capable model and/or user compares its output with `S`. If the
+output violates a rule already in `S`, repair `P` without changing policy. If the failure exposes
+a missing or mistaken rule, approve it as a counterexample, record it in archive `A`, revise `S`,
+and repair or regenerate `P`.
 
-For each accepted counterexample, the agent revises the sketch and repairs or regenerates the
-implementation. A regression gate checks the result against selected earlier cases before the
-next case enters the loop.
+Before revealing another candidate, validate the active case and curated regression set `R` in
+two ways:
 
-The full counterexample archive records why the sketch changed. A curated regression set checks
-later implementations against selected policy boundaries. The agent never receives either
-collection as bulk prompt context: the evolved sketch carries the team's reviewed policy, and
-the agent sees one active failure at a time. Code and prompts are disposable. Maintainers
-periodically regenerate them from the sketch and repository constraints and require the result
-to pass the same gate.
+1. Run the deterministic gate `G`: replay the state change and compare policy-bearing fields with
+   the approved output.
+2. Run the same cases in simulation and have a capable model and/or user compare the outputs with
+   the current sketch.
 
-The method stands independently of its example. [CatSynth](examples/catsynth/README.md) is the
-runnable supplement: a synthetic domain that shows the method in action from the initial sketch
-through each approved counterexample, sketch revision, code repair, and regression gate. It also
-includes every generated sketch and implementation, a teaching UI, and two rebuild controls that
-help explain what the evolved sketch and retained code contribute.
+The same reviewer may perform both judgments. Keep the decisions separate: first decide whether
+the output follows the current sketch; only then decide whether to repair the projection or
+approve a change to the sketch. Otherwise a bad implementation can excuse itself by rewriting
+the specification.
+
+An approved, active CE authorizes the smallest general rule needed to produce its corrected
+output and satisfy its approved clause. That rule is not an invention merely because it was
+absent from the previous sketch. The approval does not authorize neighboring choices that the CE
+does not settle. Before a CE is active—including initial compilation—existing sketch rules and
+explicit holes remain the authority; a later CE cannot retroactively justify an earlier policy
+decision.
+
+Every Developer prompt must make that boundary explicit. It must include the exact source allowed
+to change the sketch, the current rules and holes that must survive, the approved cases whose
+behavior must not regress, and the projection contracts that must remain stable. If those sources
+conflict or leave the permitted change ambiguous, the Developer must leave the files unchanged
+and ask the policy authority one precise question. It must not guess which source wins.
+
+Archive `A` remains complete. Regression set `R` remains curated. After an active CE passes both
+checks, retain it in `R` only when existing regressions do not protect the same boundary. Never
+give `A` to the generator as bulk policy context. Periodically discard `P`, regenerate it from
+`S + K`, and run `R` through both checks again. If the generator needs the archive to recover a
+rule, the sketch has not captured that rule.
+
+The repository originally called the gate's deterministic policy-field check `semantic compare`.
+That name hid the difference between comparing fields with an approved output and reviewing an
+output against the sketch. Current documentation calls the deterministic check
+**approved-output compare** and reserves **sketch review** for the model/user judgment against
+`S`.
+
+## What changed in this revision
+
+- Acceptance now requires two checks over the active case and curated `R`: deterministic
+  approved-output comparison and separate review against the current sketch.
+- Archive `A` remains complete while `R` remains curated.
+- Every Developer call receives exact change authority and preservation duties. A conflict or
+  ambiguous permission stops the edit and produces one clarification question.
+- The protocol-correct CatSynth result is 14/21 withheld cases for replay-all, 17/21 for
+  evolved-sketch rebuild, and 16/21 for retained Sketch-CE. The earlier 15/21, 19/21, and 18/21
+  scores came from a deterministic-only capture and are not the current method result.
+- The reusable workflow is packaged as the installable `cess` skill below.
+
+[CatSynth](examples/catsynth/README.md) is the runnable supplement. It records every generated
+sketch and projection, a teaching UI, and controls that test what the evolved sketch and retained
+code contribute.
+
+## Install the CESS workflow skill
+
+Install the repository's self-contained CESS skill with the open `skills` CLI:
+
+```bash
+npx skills add open-horizon-labs/counterexample-supplemented-sketches --skill cess
+```
+
+The skill preserves the artifact distinctions, runs both checks, and provides forms for sketch
+evolution, CE approval, validation, and fresh-projection checks. Its source is
+[`skills/cess/SKILL.md`](skills/cess/SKILL.md).
 
 ## The method
 
-The method keeps six roles separate:
+Keep these artifacts separate:
 
 | Symbol | Artifact | Job |
 |---|---|---|
 | `S` | Evolved sketch | Reviewed policy and known holes. |
 | `A` | Accepted-counterexample archive | Complete record of approved corrections and sketch changes. |
-| `R ⊆ A` | Regression corpus | Selected cases that protect distinct policy boundaries. |
+| `R ⊆ A` | Regression set | Curated cases that reject distinct known wrong implementations. |
 | `K` | Repository anchors | Fixed interfaces, types, and known-code constraints. |
-| `H` | Generated code and prompts | Replaceable implementation of the current sketch. |
-| `G` | Regression gate | Runs the active case and `R`, then compares actual and approved outputs. |
+| `P` (`H` in the paper) | Compiled projection | Replaceable code, prompts, and configuration generated from the current sketch. |
+| `G` | Deterministic gate | Runs replay and approved-output compare over the active case and `R`. |
 
 `Developer` means the coding agent that edits the sketch, code, and prompt surfaces.
 
-1. Write an initial sketch `S0` that states the interface, the known strategy, and the holes that
-   remain open.
-2. Give `S0` and `K` to Developer. Developer generates the first implementation `H0`.
-3. Observe one concrete failure.
-4. If `S` already states the right rule, treat the failure as an implementation error. Give that
-   one failure to Developer and repair `H` without changing policy. Run `R` and repair any
-   regression before observing another case.
-5. If the failure contradicts or extends `S`, raise it to the operator. The operator reviews the
-   case, corrected output, tempting wrong output, and missing rule. Only explicit approval turns
-   the case into a counterexample.
-6. Add the accepted counterexample to `A`.
-7. Give Developer `S`, `H`, `K`, and that one active counterexample. Developer returns a revised
-   sketch `S'` and any needed code or prompt changes. The operator checks the sketch revision
-   against the approved correction.
-8. Run the active counterexample and `R`. If a regression fails, return it as the next active
-   failure and repair under the revised sketch. Do not reveal another case until the gate passes.
-9. Add the active counterexample to `R` when it protects a policy boundary that selected cases do
-   not already cover. Keep every accepted counterexample in `A`, even when `R` is smaller.
-10. Periodically discard `H`, regenerate it from `S` and `K`, and run `G(R)`. If regeneration needs
-    the archived examples as prompt context, the sketch has not captured the policy well enough.
-    Then return to step 3.
+1. Write `S0` with the known strategy, interfaces, rules, and holes.
+2. Generate `P0` from `S0 + K`.
+3. Exercise one case in simulation and compare the output with `S`.
+4. If `S` already governs the failure, repair `P` without changing policy.
+5. If the failure exposes missing or mistaken policy, approve it as a CE and add it to `A`.
+6. Revise `S`, then repair or regenerate `P`. Add the minimum general rule entailed by the active
+   approved CE, even when that rule was absent from the prior sketch. Leave adjacent policy
+   choices open.
+7. Add a deterministic check that rejects the tempting wrong repair, or link the CE to an
+   existing regression that already protects the same boundary.
+8. Run the active case and `R` through `G`. Run those same cases in simulation and compare their
+   outputs with the current `S`.
+9. If either check fails, make one failure active and repair it before revealing another case.
+10. After both checks pass, curate `R`. Keep `A` complete even when the active CE is redundant in
+    routine regression.
+11. Periodically regenerate `P` from `S + K` without archive context and run `R` through both
+    checks.
 
-The sketch carries the learned policy. The archive carries the evidence. The regression corpus
-checks generated implementations. The code can be replaced.
+The sketch carries the policy. The archive carries the decision history. The regression set
+protects selected boundaries. The gate checks encoded behavior. Sketch review catches divergence
+that the current checkers do not encode. The projection can be replaced.
 
 ```mermaid
 flowchart TD
-    S0["Initial sketch S0"] --> H0["Generate implementation H0"]
-    H0 --> O["Observe one failing case"]
+    S0["Initial sketch S0"] --> H0["Compile projection P0"]
+    H0 --> O["Simulate and compare output with S"]
     O --> Q{"Does it expose a missing or mistaken rule?"}
     Q -->|no| B["Repair implementation under current sketch"]
-    B --> GR["Run regression corpus R"]
+    B --> GR["Run deterministic gate G on active + R"]
     Q -->|yes| P["Raise proposed CE to operator"]
     P -->|reject| O
     P -->|approve| A["Accept CE into archive A"]
     A --> S["Revise and review evolved sketch S"]
-    S --> H["Repair or regenerate implementation H"]
+    S --> H["Repair or regenerate projection P"]
     H --> GR
+    GR -->|pass| JS["Review simulated active + R outputs against S"]
     GR -->|fail| B
-    GR -->|pass| C["Curate discriminating regression subset R"]
+    JS -->|fail| B
+    JS -->|pass| C["Curate R; retain complete A"]
     C --> O
-    S --> F["Periodic fresh rewrite from S + K"]
+    S --> F["Periodic fresh projection from S + K"]
     F --> GR
 ```
 
 The loop borrows CEGIS's generate-counterexample-revise-verify rhythm, but not its proof strength.
-Here, a coding model edits source and prompt files, and the gate checks only encoded cases. A green
-gate says that the current `H` passes `G(R)`. It says nothing about cases or rules outside that
-gate.
+The deterministic gate proves only its encoded predicates over `R`. Sketch review adds a recorded
+judgment against `S`; it is not a proof. Passing both checks says nothing about cases outside `R`.
 
 ## Use a complete specification when you have it
 
@@ -130,11 +179,13 @@ python3 cli.py serve
 Open <http://127.0.0.1:8000>.
 
 The focal case is an allergic owner who wants a large, fluffy, affectionate cat. A naive
-preference-only strategy chooses Persian. Replay accepts that visible preference match. Semantic
-compare rejects it because the approved synthetic policy requires Siberian and cites the hard
-rule `allergy_requires_hypoallergenic`.
+preference-only strategy chooses Persian. Replay accepts that visible preference match.
+Approved-output compare rejects it because the approved synthetic policy requires Siberian and
+cites the hard rule `allergy_requires_hypoallergenic`.
 
-![CatSynth showing replay pass and semantic compare failure](paper/figures/catsynth/04-naive-gate.png)
+![CatSynth showing replay pass and approved-output compare failure](paper/figures/catsynth/04-naive-gate.png)
+
+The captured screenshot uses the original label “semantic compare.”
 
 CatSynth's breed attributes and policy rows are synthetic fixtures. They illustrate the loop;
 they are not pet-selection or medical advice.
@@ -153,9 +204,10 @@ wording, but the frozen reviewed output and sketch clause controlled promotion. 
 not approve its own policy change.
 
 Eight candidates failed the retained implementation and became accepted counterexamples. Six
-already passed and were recorded as coverage without being sent to Developer. CatSynth uses all
-eight accepted counterexamples as regressions, so `R = A` in this run. The method permits a
-smaller curated `R`.
+already passed and were recorded as coverage without being sent to Developer. In this captured
+run, the maintainers selected all eight accepted counterexamples for regression, so `R = A` in
+the paper's notation. That was a run-specific curation decision, not a rule that every archived
+CE must remain in `R`.
 
 The harness replayed the same eight-case discovery schedule through three paths:
 
@@ -170,7 +222,12 @@ The harness replayed the same eight-case discovery schedule through three paths:
 The two rebuild paths are controls. They test what the evolved sketch carries and what retaining
 generated code contributes; they are not additional recommended methodologies.
 
-## What the run found
+## Historical deterministic-only capture
+
+The following table describes the July 2026 capture. It did not require separate sketch review
+and approval on every repair, so its withheld scores are not results for the current CESS method.
+The table remains for reproducibility and for its measured calls, tokens, repairs, and churn. Use
+the protocol-correct rerun below for the current withheld result.
 
 | Measure | Replay-all | Evolved-sketch rebuild | Sketch-CE (retained code) |
 |---|---:|---:|---:|
@@ -202,13 +259,12 @@ therefore omit discovery work that Sketch-CE includes. These are real usage tota
 not end-to-end price alternatives. Withheld cases ran only after visible acceptance and were
 never returned as repair input.
 
-The run produced two findings:
+The historical capture produced two diagnostics:
 
-- **On this run's withheld cases, the evolved sketch carried policy better than raw example
-  replay.** Evolved-sketch rebuild passed 19/21, compared with 15/21 for Replay-all. It also used
-  fewer tokens, produced fewer decision nodes, and required one more repair attempt than
-  Replay-all. This is evidence for the hypothesis that reviewed policy synthesis can outperform
-  repeated inference from the example archive.
+- **Its withheld pattern motivated the two-check rerun; it is not the current headline.**
+  Evolved-sketch rebuild passed 19/21, compared with 15/21 for Replay-all. Because this capture
+  lacked required sketch review and approval, those scores cannot support a claim about the
+  current two-check method.
 - **Retaining code reduced Developer work and churn.** Sketch-CE with retained code used 9
   Developer calls, 217,576 Developer tokens, and 719 lines of cumulative artifact churn, with no
   extra repairs or prior regressions. Its broader all-model token total was the largest, and its
@@ -216,6 +272,35 @@ The run produced two findings:
   claims, not better final maintainability.
 
 One run with one model and one reveal order cannot establish a general performance advantage.
+
+## Protocol-correct two-check rerun
+
+On 2026-08-02, we reran `gpt-5.4-mini` with separate deterministic and sketch-review checks,
+manual approval of every sketch change, reviewer adjudication, and an explicit Developer change
+contract on every call. The contract named the exact policy authority and preservation duties;
+when those sources conflicted, Developer had to leave the files unchanged and ask for
+clarification.
+
+| Evaluation | Replay-all | Evolved-sketch rebuild | Sketch-CE (retained code) |
+|---|---:|---:|---:|
+| Visible accepted cases | 8/8 | 8/8 | 8/8 |
+| Withheld cases | 14/21 | 17/21 | 16/21 |
+
+The current result preserves the main directional finding but narrows it. Rebuilding from the
+reviewed evolved sketch passed three more withheld cases than replay-all. Retained code did not
+improve on clean regeneration from that sketch in this sample. This is one continuation of one
+model run, not evidence of a general performance ranking.
+
+The more important change is visible before the scores. The old capture could show a passing
+repair, but not whether its sketch quietly filled an open hole or dropped an existing anchor. The
+two-check run rejected drafts that assigned an empty-catalog operation before CE11, gave CE3's
+`avoid_needy` tag a ranking effect before CE4, or removed stable input-shape clauses. It also
+overruled reviewer arithmetic errors without treating those errors as policy authority. The full
+case-by-case discussion is in the [compact rerun record](examples/catsynth/experiment/results/two-check-reruns-20260802/README.md#what-the-clarification-changed).
+
+The Spark trial remains incomplete: it reached CE-012, then failed to preserve the complete
+approved malformed-rule policy within the old 24-repair bound. See the
+[compact rerun record](examples/catsynth/experiment/results/two-check-reruns-20260802/README.md).
 
 Read the [guided epoch-by-epoch walkthrough](paper/catsynth-worked-example.md)
 ([PDF](paper/catsynth-supplement.pdf)), or audit the
@@ -300,7 +385,7 @@ output, and usage fields.
 | OpenAI-compatible adapter | [`catsynth/openai_compat.py`](examples/catsynth/catsynth/openai_compat.py) |
 | Deterministic reference, Oracle A | [`catsynth/oracle_a.py`](examples/catsynth/catsynth/oracle_a.py) |
 | Prompt-mediated runtime surface, Oracle B | [`catsynth/oracle_b.py`](examples/catsynth/catsynth/oracle_b.py) |
-| Replay and semantic compare | [`catsynth/gate.py`](examples/catsynth/catsynth/gate.py) |
+| Replay and approved-output compare | [`catsynth/gate.py`](examples/catsynth/catsynth/gate.py) |
 | Teaching UI | [`catsynth/app.py`](examples/catsynth/catsynth/app.py) and [`catsynth/static/`](examples/catsynth/catsynth/static/) |
 | Every saved generation | [`experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/`](examples/catsynth/experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/) |
 
@@ -314,10 +399,12 @@ uv run --with-requirements requirements.txt \
 
 ## Evidence limits
 
-Each green gate says only that the current implementation passes the repository's current replay
-and semantic checks for `R`. It does not establish correctness for unseen cases, unencoded rules,
-wrong approved outputs, buggy checkers, future model behavior, or real cat-selection
-decisions.
+Each green CatSynth executable gate says only that the current projection passes the repository's
+current replay and approved-output checks for its regression set. The captured experiment does
+not record the separate post-repair sketch review now required by CESS. Its results therefore
+cover sketch evolution and the deterministic gate, not the complete two-check acceptance rule.
+Neither check establishes correctness for unseen cases, unencoded rules, wrong approved outputs,
+buggy checkers, future model behavior, or real cat-selection decisions.
 
 The experiment uses one model, one candidate order, and one captured run. The withheld scores
 describe those 21 cases; they do not measure behavior beyond that suite. Equal visible results do

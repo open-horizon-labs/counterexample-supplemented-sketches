@@ -43,3 +43,9 @@ to duplicate them as ancillary files.
 
 Paste the title, authors, abstract, comments, categories, and license from
 [`arxiv-metadata.md`](arxiv-metadata.md). Confirm the coauthor metadata before submitting.
+
+For a revision of an announced paper, rebuild the archive and upload it through **Replace** on
+the arXiv user page. The ZIP is the complete replacement source package, not a patch. Copy the
+replacement description from `arxiv-metadata.md` into the new `Comments` field while preserving
+still-valid comments such as the page count and repository link. A repository or GitHub release
+does not update arXiv automatically.

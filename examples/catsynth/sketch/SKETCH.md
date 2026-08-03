@@ -23,7 +23,7 @@ repair could close the same visible gap, higher-priority operations win:
 a hard rule.* A high-preference breed that violates a hard rule is a **forbidden
 repair**, even though it "closes the gap" of finding an attractive cat.
 
-## Policy-bearing fields (what semantic compare checks)
+## Policy-bearing fields (what approved-output compare checks)
 
 - `operation` — recommend / abstain / escalate
 - `breed` — the selected breed name (null unless recommending)

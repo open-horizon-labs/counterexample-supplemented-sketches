@@ -46,6 +46,22 @@ def compact_gate(gate: dict[str, Any]) -> dict[str, Any]:
     } | {"cases": [compact_case(case) for case in gate.get("cases", [])]}
 
 
+def compact_sketch_review(review: dict[str, Any]) -> dict[str, Any]:
+    keep = ("id", "verdict", "applicable_clauses", "required_behavior",
+            "difference", "failure_class", "passed", "model_verdict",
+            "adjudication")
+    return {
+        key: review[key]
+        for key in ("passed", "passed_count", "total", "error")
+        if key in review
+    } | {
+        "cases": [
+            {key: item[key] for key in keep if key in item}
+            for item in review.get("cases", [])
+        ]
+    }
+
+
 def compact_failure(value: Any) -> Any:
     if not isinstance(value, dict):
         return value
@@ -55,17 +71,23 @@ def compact_failure(value: Any) -> Any:
         "id", "scenario_id", "reviewer_policy", "counterexample_clause",
         "profile", "relevant_rule_rows", "relevant_oracle_tag_rules",
         "checked_fields", "expected", "actual", "mismatches", "failure_kind",
+        "sketch_review",
     )
     return {key: value[key] for key in keep if key in value}
 
 
 def developer_metadata(record: dict[str, Any]) -> dict[str, Any]:
-    return {
+    metadata = {
         "usage": record.get("usage", {}),
         "error": record.get("error"),
         "parsed_keys": record.get("parsed_keys", []),
         "diffs": record.get("diffs", {}),
     }
+    if "sketch_approval" in record:
+        metadata["sketch_approval"] = record["sketch_approval"]
+    if record.get("workspace_restored"):
+        metadata["workspace_restored"] = True
+    return metadata
 
 
 def publish_generation(source: Path, destination: Path, record_path: Path,
@@ -88,6 +110,15 @@ def publish_generation(source: Path, destination: Path, record_path: Path,
         "gate": compact_gate(record.get("gate", read_json(source / "gate.json"))),
         "developer": developer_metadata(record),
     }
+    review = record.get("sketch_review")
+    if review is None and (source / "sketch-review.json").exists():
+        review = read_json(source / "sketch-review.json")
+    if review is not None:
+        metadata["sketch_review"] = compact_sketch_review(review)
+        metadata["validation_passed"] = record.get(
+            "validation_passed",
+            metadata["gate"].get("passed") and review.get("passed"),
+        )
     write_json(destination / "metadata.json", metadata)
 
 
@@ -106,13 +137,7 @@ def publish_spec_first(raw: Path, destination: Path, report: dict[str, Any]) -> 
     destination.mkdir(parents=True)
     shutil.copy2(raw.parent.parent / "complete_spec.md", destination / "complete_spec.md")
     arm = report["arms"]["spec_first_repair"]
-    write_json(destination / "results.json", {
-        key: report[key]
-        for key in (
-            "run_id", "created_at", "mode", "provider", "model", "inference",
-            "max_repairs", "visible_case_count",
-        )
-    } | {"arm": {
+    arm_result = {
         "repair_attempts": arm["repair_attempts"],
         "visible_failure_feedback_events": arm["visible_failure_feedback_events"],
         "developer": arm["tokens"]["by_category"]["developer_spec_first_repair"],
@@ -120,7 +145,19 @@ def publish_spec_first(raw: Path, destination: Path, report: dict[str, Any]) -> 
         "quality": arm["quality"],
         "final_gate": compact_gate(arm["final_gate"]),
         "evaluation": compact_evaluation(arm["evaluation"]),
-    }})
+    }
+    if "final_sketch_review" in arm:
+        arm_result["final_sketch_review"] = compact_sketch_review(
+            arm["final_sketch_review"]
+        )
+        arm_result["final_validation_passed"] = arm["final_validation_passed"]
+    write_json(destination / "results.json", {
+        key: report[key]
+        for key in (
+            "run_id", "created_at", "mode", "provider", "model", "inference",
+            "max_repairs", "visible_case_count",
+        )
+    } | {"arm": arm_result})
     for index, source in enumerate(sorted((raw / "spec-first-repair" / "generations").iterdir()), 1):
         publish_generation(
             source,
@@ -155,7 +192,7 @@ def publish_adaptive(raw: Path, destination: Path, report: dict[str, Any]) -> No
     results["arms"] = {}
     for name, arm in report["arms"].items():
         developer_category = "developer_iterative" if name == "sketch_ce" else f"developer_{name}"
-        results["arms"][name] = {
+        arm_result = {
             "metrics": arm["metrics"],
             "quality": arm["quality"],
             "tokens": arm["tokens"],
@@ -163,6 +200,12 @@ def publish_adaptive(raw: Path, destination: Path, report: dict[str, Any]) -> No
             "final_gate": compact_gate(arm["final_gate"]),
             "evaluation": compact_evaluation(arm["evaluation"]),
         }
+        if "final_sketch_review" in arm:
+            arm_result["final_sketch_review"] = compact_sketch_review(
+                arm["final_sketch_review"]
+            )
+            arm_result["final_validation_passed"] = arm["final_validation_passed"]
+        results["arms"][name] = arm_result
     write_json(destination / "results.json", results)
 
     for cycle in sorted((raw / "sketch-ce").glob("cycle-*/introduced-counterexample.json")):
@@ -176,6 +219,11 @@ def publish_adaptive(raw: Path, destination: Path, report: dict[str, Any]) -> No
             "status": status,
             "counterexample": case,
             "evaluation_before_promotion": compact_case(value["evaluation"]),
+            **({
+                "sketch_review_before_promotion": compact_sketch_review(
+                    read_json(cycle.parent / "introduced-sketch-review.json")
+                )
+            } if (cycle.parent / "introduced-sketch-review.json").exists() else {}),
         })
 
     sketch_generations = sorted((raw / "sketch-ce" / "generations").iterdir())

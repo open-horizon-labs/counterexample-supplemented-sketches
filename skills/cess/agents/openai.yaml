@@ -1,0 +1,4 @@
+interface:
+  display_name: "CESS"
+  short_description: "Evolve sketches through reviewed counterexamples"
+  default_prompt: "Use $cess to evolve this sketch and its compiled projection from one reviewed counterexample."

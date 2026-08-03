@@ -1,7 +1,7 @@
 """Gate tests: the deterministic, model-free part of the loop.
 
 These assert the paper's central lesson in code: policy mode is E-correct, and
-the naive (tempting) resolver is caught by *semantic compare* on the allergy
+the naive (tempting) resolver is caught by *approved-output compare* on the allergy
 counterexample even though *replay* accepts it.
 
 Stdlib ``unittest`` (no third-party test runner), to match the repo's other

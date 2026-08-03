@@ -2,7 +2,7 @@
 
 These dataclasses are the output shape the agent must preserve. The gate,
 the oracles, the API, and the UI all speak in terms of `Recommendation`.
-The *policy-bearing* fields (see `policy_fields`) are the ones semantic
+The *policy-bearing* fields (see `policy_fields`) are the ones approved-output
 compare checks; everything else in a recommendation is diagnostic trace.
 """
 
@@ -85,7 +85,7 @@ class Recommendation:
     """The output shape (both the expected y and the candidate r).
 
     Policy-bearing fields: operation, breed, cited_rules. Everything else is
-    diagnostic and is ignored by semantic compare.
+    diagnostic and is ignored by approved-output compare.
     """
 
     operation: Operation
@@ -96,7 +96,7 @@ class Recommendation:
     trace: dict = field(default_factory=dict)
 
     def policy_fields(self) -> dict:
-        """The subset semantic compare enforces."""
+        """The subset approved-output compare enforces."""
         return {
             "operation": self.operation.value
             if isinstance(self.operation, Operation)

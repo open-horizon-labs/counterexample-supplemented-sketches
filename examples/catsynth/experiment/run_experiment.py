@@ -1,9 +1,10 @@
 """Run the paired coding-agent experiment and capture the complete evidence trail.
 
 Arm A reveals one operator-reviewed counterexample at a time, requires the
-Developer to evolve the sketch, and repairs until the regression gate passes.
+Developer to evolve the sketch, and repairs until the regression gate and
+review against the current sketch both pass.
 Arm B gives the same model the initial sketch and complete accepted archive in
-one call, then repairs every visible failure until the same gate passes. This
+one call, then repairs every visible failure until both checks pass. This
 experiment uses every accepted CE as a regression (R = A). Both arms start from
 the byte-identical clean-room baseline and use the same provider, model,
 fixtures, inference settings, and final evaluator.
@@ -20,7 +21,7 @@ import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Callable, Protocol
 
 EXAMPLE_ROOT = Path(__file__).resolve().parents[1]
 if str(EXAMPLE_ROOT) not in sys.path:
@@ -80,8 +81,11 @@ DEVELOPER_OUTPUT_SCHEMA = {
         "strategy_py": {"type": "string"},
         "oracle_prompt": {"type": "string"},
         "sketch_md": {"type": "string"},
+        "clarification_request": {"type": ["string", "null"]},
     },
-    "required": ["strategy_py", "oracle_prompt", "sketch_md"],
+    "required": [
+        "strategy_py", "oracle_prompt", "sketch_md", "clarification_request",
+    ],
     "additionalProperties": False,
 }
 SPEC_DEVELOPER_OUTPUT_SCHEMA = {
@@ -91,6 +95,40 @@ SPEC_DEVELOPER_OUTPUT_SCHEMA = {
         "oracle_prompt": {"type": "string"},
     },
     "required": ["strategy_py", "oracle_prompt"],
+    "additionalProperties": False,
+}
+SKETCH_REVIEW_OUTPUT_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "cases": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "verdict": {
+                        "type": "string",
+                        "enum": ["pass", "fail", "needs-authority"],
+                    },
+                    "applicable_clauses": {
+                        "type": "array", "items": {"type": "string"},
+                    },
+                    "required_behavior": {"type": "string"},
+                    "difference": {"type": "string"},
+                    "failure_class": {
+                        "type": "string",
+                        "enum": ["none", "projection-defect", "possible-sketch-gap"],
+                    },
+                },
+                "required": [
+                    "id", "verdict", "applicable_clauses", "required_behavior",
+                    "difference", "failure_class",
+                ],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": ["cases"],
     "additionalProperties": False,
 }
 
@@ -167,6 +205,166 @@ class Ledger:
             },
         }
         return {"overall": overall, "by_category": categories, "calls": self.calls}
+
+
+SketchApprover = Callable[[dict[str, Any]], dict[str, Any]]
+SketchReviewAdjudicator = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+class ManualSketchApprover:
+    """Block the experiment until an authorized reviewer decides a sketch change."""
+
+    def __init__(self, root: Path):
+        self.root = root / "sketch-approvals"
+        self.clarification_root = root / "authority-clarifications"
+        self._next_id = 1
+        self._next_clarification_id = 1
+
+    def __call__(self, proposal: dict[str, Any]) -> dict[str, Any]:
+        proposal_id = f"{self._next_id:03d}"
+        self._next_id += 1
+        pending = self.root / f"{proposal_id}-pending.json"
+        write_json(pending, {"proposal_id": proposal_id, **proposal})
+        print(f"SKETCH_APPROVAL_REQUIRED {pending.resolve()}", flush=True)
+        print(
+            "Reply with one-line JSON: "
+            '{"decision":"approve|reject","rationale":"...","approver":"..."}',
+            flush=True,
+        )
+        while True:
+            raw = input().strip()
+            try:
+                decision = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                print(f"Invalid approval JSON: {exc}", flush=True)
+                continue
+            if not isinstance(decision, dict):
+                print("Approval must be a JSON object.", flush=True)
+                continue
+            if decision.get("decision") not in {"approve", "reject"}:
+                print("decision must be approve or reject.", flush=True)
+                continue
+            if not str(decision.get("rationale", "")).strip():
+                print("rationale must be non-empty.", flush=True)
+                continue
+            if not str(decision.get("approver", "")).strip():
+                print("approver must be non-empty.", flush=True)
+                continue
+            record = {
+                "proposal_id": proposal_id,
+                "decision": decision["decision"],
+                "rationale": str(decision["rationale"]).strip(),
+                "approver": str(decision["approver"]).strip(),
+                "decided_at": datetime.now(timezone.utc).isoformat(),
+            }
+            write_json(self.root / f"{proposal_id}-decision.json", record)
+            return record
+
+    def clarify(self, request: dict[str, Any]) -> dict[str, Any]:
+        """Block until the policy authority supplies the requested clarification."""
+        request_id = f"{self._next_clarification_id:03d}"
+        self._next_clarification_id += 1
+        pending = self.clarification_root / f"{request_id}-pending.json"
+        write_json(pending, {"request_id": request_id, **request})
+        print(f"AUTHORITY_CLARIFICATION_REQUIRED {pending.resolve()}", flush=True)
+        print(
+            "Reply with one-line JSON: "
+            '{"clarification":"...","authority":"..."}',
+            flush=True,
+        )
+        while True:
+            raw = input().strip()
+            try:
+                answer = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                print(f"Invalid clarification JSON: {exc}", flush=True)
+                continue
+            if not isinstance(answer, dict):
+                print("Clarification must be a JSON object.", flush=True)
+                continue
+            if not str(answer.get("clarification", "")).strip():
+                print("clarification must be non-empty.", flush=True)
+                continue
+            if not str(answer.get("authority", "")).strip():
+                print("authority must be non-empty.", flush=True)
+                continue
+            record = {
+                "request_id": request_id,
+                "clarification": str(answer["clarification"]).strip(),
+                "authority": str(answer["authority"]).strip(),
+                "answered_at": datetime.now(timezone.utc).isoformat(),
+            }
+            write_json(
+                self.clarification_root / f"{request_id}-answer.json", record,
+            )
+            return record
+
+
+class ManualSketchReviewAdjudicator:
+    """Ask an authorized reviewer to resolve non-pass model review verdicts."""
+
+    def __init__(self, root: Path):
+        self.root = root / "sketch-review-adjudications"
+        self._next_id = 1
+
+    def __call__(self, proposal: dict[str, Any]) -> dict[str, Any]:
+        proposal_id = f"{self._next_id:03d}"
+        self._next_id += 1
+        pending = self.root / f"{proposal_id}-pending.json"
+        write_json(pending, {"proposal_id": proposal_id, **proposal})
+        case_ids = [item["id"] for item in proposal["model_non_pass_cases"]]
+        print(f"SKETCH_REVIEW_ADJUDICATION_REQUIRED {pending.resolve()}", flush=True)
+        print(
+            "Reply with one-line JSON: "
+            '{"decisions":[{"id":"...","verdict":"pass|fail|needs-authority",'
+            '"rationale":"..."}],"reviewer":"..."}',
+            flush=True,
+        )
+        while True:
+            raw = input().strip()
+            try:
+                value = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                print(f"Invalid adjudication JSON: {exc}", flush=True)
+                continue
+            decisions = value.get("decisions") if isinstance(value, dict) else None
+            reviewer = str(value.get("reviewer", "")).strip() if isinstance(value, dict) else ""
+            if not isinstance(decisions, list) or not reviewer:
+                print("decisions must be an array and reviewer must be non-empty.", flush=True)
+                continue
+            returned_ids = [item.get("id") for item in decisions if isinstance(item, dict)]
+            if len(returned_ids) != len(set(returned_ids)) or set(returned_ids) != set(case_ids):
+                print(f"decisions must cover exactly these case IDs: {case_ids}", flush=True)
+                continue
+            valid = True
+            for item in decisions:
+                if item.get("verdict") not in {"pass", "fail", "needs-authority"}:
+                    valid = False
+                if not str(item.get("rationale", "")).strip():
+                    valid = False
+            if not valid:
+                print("Each decision needs a valid verdict and non-empty rationale.", flush=True)
+                continue
+            record = {
+                "proposal_id": proposal_id,
+                "decisions": decisions,
+                "reviewer": reviewer,
+                "decided_at": datetime.now(timezone.utc).isoformat(),
+            }
+            write_json(self.root / f"{proposal_id}-decision.json", record)
+            return record
+
+
+def workspace_text(workspace: Path) -> dict[str, str]:
+    return {
+        filename: (workspace / filename).read_text(encoding="utf-8")
+        for filename in ("SKETCH.md", "strategy.py", "oracle_prompt.txt")
+    }
+
+
+def restore_workspace_text(workspace: Path, state: dict[str, str]) -> None:
+    for filename, value in state.items():
+        (workspace / filename).write_text(value, encoding="utf-8")
 
 
 def fixtures() -> tuple[list[dict], dict[str, dict], dict[str, dict]]:
@@ -330,6 +528,181 @@ def run_gate(workspace: Path, promoted: list[dict], client: ChatClient,
     }
 
 
+def sketch_review_messages(workspace: Path, cases: list[dict[str, Any]],
+                           evaluations: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Build a review request without supplying approved outputs or the CE archive."""
+    by_id = {case["id"]: case for case in cases}
+    active_rule_ids = {
+        rule_id for case in cases for rule_id in case.get("rule_ids", [])
+    }
+    _, _, all_rules = fixtures()
+    review_cases = []
+    for evaluation in evaluations:
+        case_id = evaluation.get("id")
+        if case_id not in by_id:
+            raise ExperimentError(f"sketch review received unknown case {case_id!r}")
+        case = by_id[case_id]
+        rule_ids = case.get("rule_sequence", sorted(active_rule_ids))
+        review_cases.append({
+            "id": case_id,
+            "profile": profile_for_case(case),
+            "candidate_breeds": breeds_for_case(case),
+            "rules_supplied": [all_rules[rule_id] for rule_id in rule_ids],
+            "observed_output": evaluation.get("candidate") or evaluation.get("actual"),
+            "oracle_tags": (evaluation.get("actual") or {}).get("oracle_tags", []),
+        })
+    payload = {
+        "task": (
+            "Review each observed output against the current sketch. Use only the sketch and "
+            "supplied input facts. Do not infer an approved output that is not stated by the "
+            "sketch. Return pass when the output follows the sketch, fail when it violates a "
+            "stated clause, and needs-authority when the sketch is missing or ambiguous about "
+            "a policy needed to judge the output. Use failure_class none with pass, "
+            "projection-defect with fail, and possible-sketch-gap with needs-authority. "
+            "For a ranking decision, calculate every score term named by the sketch for the "
+            "observed choice and its closest alternatives before assigning a verdict. "
+            "Return exactly one result for each case id."
+        ),
+        "current_sketch_md": (workspace / "SKETCH.md").read_text(encoding="utf-8"),
+        "cases": review_cases,
+    }
+    return [
+        {
+            "role": "system",
+            "content": (
+                "You are the sketch reviewer in a synthetic software-synthesis experiment. "
+                "Judge simulated behavior against the supplied sketch. You may identify a "
+                "projection defect or a possible sketch gap, but you may not approve a policy "
+                "change. Return JSON only."
+            ),
+        },
+        {"role": "user", "content": json.dumps(payload, indent=2)},
+    ]
+
+
+def run_sketch_review(workspace: Path, cases: list[dict[str, Any]],
+                      evaluations: list[dict[str, Any]], client: ChatClient,
+                      ledger: Ledger, label: str,
+                      adjudicator: SketchReviewAdjudicator | None = None) -> dict[str, Any]:
+    """Ask a capable model to judge simulated outputs against the current sketch."""
+    messages = sketch_review_messages(workspace, cases, evaluations)
+    result = client.chat(
+        messages, max_tokens=5000, temperature=0,
+        extra={"output_schema": SKETCH_REVIEW_OUTPUT_SCHEMA},
+    )
+    ledger.add("sketch_reviewer", label, result)
+    parsed = extract_json(result.content)
+    raw_cases = parsed.get("cases")
+    if not isinstance(raw_cases, list):
+        raise ExperimentError("sketch reviewer must return a cases array")
+    expected_ids = [evaluation["id"] for evaluation in evaluations]
+    returned_ids = [item.get("id") for item in raw_cases if isinstance(item, dict)]
+    if len(returned_ids) != len(set(returned_ids)):
+        raise ExperimentError("sketch reviewer returned duplicate case IDs")
+    if set(returned_ids) != set(expected_ids):
+        raise ExperimentError(
+            "sketch reviewer case IDs differ from requested corpus: "
+            f"expected {expected_ids}, got {returned_ids}"
+        )
+    by_id = {item["id"]: item for item in raw_cases}
+    reviewed = []
+    for case_id in expected_ids:
+        item = copy.deepcopy(by_id[case_id])
+        verdict = item.get("verdict")
+        failure_class = item.get("failure_class")
+        if verdict == "pass" and failure_class != "none":
+            raise ExperimentError(
+                f"sketch reviewer marked {case_id} pass with {failure_class!r}"
+            )
+        if verdict == "fail" and failure_class != "projection-defect":
+            raise ExperimentError(
+                f"sketch reviewer marked {case_id} fail with {failure_class!r}"
+            )
+        if verdict == "needs-authority" and failure_class != "possible-sketch-gap":
+            raise ExperimentError(
+                f"sketch reviewer marked {case_id} needs-authority with {failure_class!r}"
+            )
+        item["passed"] = verdict == "pass"
+        reviewed.append(item)
+    adjudication = None
+    non_pass = [item for item in reviewed if not item["passed"]]
+    if non_pass and adjudicator is not None:
+        review_payload = json.loads(messages[1]["content"])
+        adjudication = adjudicator({
+            "label": label,
+            "current_sketch_md": review_payload["current_sketch_md"],
+            "cases": review_payload["cases"],
+            "model_non_pass_cases": non_pass,
+            "decision_boundary": (
+                "Judge only whether observed output follows the current sketch. "
+                "Do not approve a sketch or policy change in this decision."
+            ),
+        })
+        decisions = {
+            item["id"]: item for item in adjudication.get("decisions", [])
+            if isinstance(item, dict)
+        }
+        if set(decisions) != {item["id"] for item in non_pass}:
+            raise ExperimentError("review adjudicator did not decide every non-pass case")
+        for item in non_pass:
+            decision = decisions[item["id"]]
+            verdict = decision.get("verdict")
+            if verdict not in {"pass", "fail", "needs-authority"}:
+                raise ExperimentError("review adjudicator returned an invalid verdict")
+            item["model_verdict"] = item["verdict"]
+            item["adjudication"] = {
+                "verdict": verdict,
+                "rationale": decision.get("rationale"),
+                "reviewer": adjudication.get("reviewer"),
+                "proposal_id": adjudication.get("proposal_id"),
+            }
+            item["verdict"] = verdict
+            item["failure_class"] = {
+                "pass": "none",
+                "fail": "projection-defect",
+                "needs-authority": "possible-sketch-gap",
+            }[verdict]
+            item["passed"] = verdict == "pass"
+    review_result = {
+        "passed": bool(reviewed) and all(item["passed"] for item in reviewed),
+        "passed_count": sum(1 for item in reviewed if item["passed"]),
+        "total": len(reviewed),
+        "cases": reviewed,
+        "model": result_record(result),
+    }
+    if adjudication is not None:
+        review_result["adjudication"] = adjudication
+    return review_result
+
+
+def run_validation(workspace: Path, promoted: list[dict], client: ChatClient,
+                   ledger: Ledger, label: str,
+                   adjudicator: SketchReviewAdjudicator | None = None) -> dict[str, Any]:
+    """Run the deterministic gate and the separate review over active + R."""
+    gate = run_gate(workspace, promoted, client, ledger, f"{label}:gate")
+    corpus = [initial_acceptance_case(), *promoted]
+    review = run_sketch_review(
+        workspace, corpus, gate.get("cases", []), client, ledger,
+        f"{label}:sketch-review",
+        adjudicator,
+    )
+    return {
+        "passed": gate.get("passed", False) and review.get("passed", False),
+        "gate": gate,
+        "sketch_review": review,
+    }
+
+
+def failed_sketch_review(error: Any, total: int) -> dict[str, Any]:
+    return {
+        "passed": False,
+        "passed_count": 0,
+        "total": total,
+        "cases": [],
+        "error": str(error),
+    }
+
+
 def oracle_prompt(case: dict, observed: dict) -> list[dict[str, str]]:
     _, _, rules = fixtures()
     breeds = breeds_for_case(case)
@@ -475,38 +848,159 @@ def known_code_contract() -> dict[str, Any]:
     }
 
 
+def approved_case_authority(case: dict[str, Any]) -> dict[str, Any]:
+    """Extract the exact approved policy authority from a promoted case packet."""
+    return {
+        "id": case.get("id"),
+        "approved_policy": case.get("reviewer_policy", case.get("policy")),
+        "approved_counterexample_clause": case.get(
+            "counterexample_clause", case.get("sketch_rule"),
+        ),
+        "approved_output": case.get("expected"),
+        "checked_fields": case.get("checked_fields", [
+            "operation", "breed", "cited_rules", "oracle_tags",
+        ]),
+    }
+
+
+def sketch_change_contract(promoted: list[dict], active_failure: Any,
+                           arm: str, phase: str,
+                           complete_corpus: Any = None) -> dict[str, Any]:
+    """State exact sketch-change authority and preservation duties for every call."""
+    retained = (
+        [approved_case_authority(case) for case in promoted]
+        if phase != "initial" and arm != "reviewed_sketch"
+        else []
+    )
+    corpus = [
+        approved_case_authority(case) for case in (complete_corpus or [])
+        if isinstance(case, dict)
+    ]
+    if phase == "one_shot" or (phase == "one_shot_repair" and corpus):
+        change_authority = {
+            "kind": "approved_complete_corpus",
+            "cases": corpus,
+            "scope": (
+                "Each supplied case authorizes only the minimum general rule entailed "
+                "by its approved policy, clause, checked fields, and approved output."
+            ),
+        }
+    elif phase == "one_shot_repair":
+        change_authority = {
+            "kind": "projection_repair_under_current_sketch",
+            "exact_failure_packets": active_failure,
+            "cases": [],
+            "scope": (
+                "Repair the projection so the supplied failures follow current_sketch_md. "
+                "No new sketch policy is authorized."
+            ),
+        }
+    elif phase == "initial":
+        change_authority = {
+            "kind": "none",
+            "cases": [],
+            "scope": (
+                "No new policy is authorized. The sketch may be reorganized or clarified "
+                "only without changing its meaning or filling an explicit hole."
+            ),
+        }
+    else:
+        underlying = active_failure
+        if isinstance(active_failure, dict) and isinstance(
+            active_failure.get("active_failure"), dict,
+        ):
+            underlying = active_failure["active_failure"]
+        active_id = underlying.get("id") if isinstance(underlying, dict) else None
+        approved = next(
+            (case for case in retained if case.get("id") == active_id), None,
+        )
+        if approved is None and isinstance(underlying, dict) and (
+            underlying.get("reviewer_policy") is not None
+            or underlying.get("counterexample_clause") is not None
+        ):
+            approved = approved_case_authority(underlying)
+        if (
+            isinstance(active_failure, dict)
+            and active_failure.get("failure_kind") == "authority-clarification-answered"
+        ):
+            change_authority = {
+                "kind": "authorized_clarification",
+                "exact_failure_packet": active_failure,
+                "scope": (
+                    "The supplied authority clarification resolves only its stated "
+                    "question. It authorizes no adjacent policy choice."
+                ),
+            }
+        else:
+            change_authority = {
+                "kind": "active_approved_counterexample_or_existing_policy_repair",
+                "approved_case": approved,
+                "exact_failure_packet": active_failure,
+                "scope": (
+                    "If approved_case is present, it authorizes only the minimum general "
+                    "rule it entails. Otherwise repair the projection under existing policy; "
+                    "no new sketch policy is authorized."
+                ),
+            }
+    return {
+        "prior_policy_authority": (
+            "current_sketch_md is the complete authority for policy that predates this call."
+        ),
+        "retained_counterexample_authority": retained,
+        "active_change_authority": change_authority,
+        "preservation_requirements": [
+            "Preserve every current sketch clause that active_change_authority does not directly change.",
+            "Preserve every explicit policy hole unless active_change_authority directly resolves it.",
+            "Preserve every retained approved counterexample and its checked output fields.",
+            "Preserve the public function signature, output shape, data encodings, prompt placeholder, and tag-array contract in known_code_contract.",
+            "Preserve case independence: do not branch on scenario IDs or hard-code fixtures or named outputs.",
+            "Do not infer authority from an unrevealed, later, analogous, or merely plausible case.",
+        ],
+        "conflict_protocol": (
+            "If current_sketch_md, retained_counterexample_authority, "
+            "active_change_authority, known_code_contract, or an approval rejection "
+            "conflict or leave the authorized change ambiguous, do not choose a "
+            "resolution. Return all three current files unchanged and set "
+            "clarification_request to one precise question. Otherwise set "
+            "clarification_request to null."
+        ),
+    }
+
+
 def developer_messages(workspace: Path, promoted: list[dict], active_failure: Any,
                        arm: str, phase: str,
                        complete_corpus: Any = None) -> list[dict[str, str]]:
-    del promoted
     strategy = (workspace / "strategy.py").read_text(encoding="utf-8")
     prompt = (workspace / "oracle_prompt.txt").read_text(encoding="utf-8")
     sketch = (workspace / "SKETCH.md").read_text(encoding="utf-8")
     if phase == "initial":
         task = (
             "Generate the initial implementation from the sketch. You may clarify or reorganize the "
-            "sketch while preserving its policy. Return compact JSON with exactly three string keys: "
-            "strategy_py, oracle_prompt, and sketch_md. Each value is a complete file."
+            "sketch while preserving its policy. Return compact JSON with the three complete-file "
+            "string keys strategy_py, oracle_prompt, and sketch_md, plus clarification_request."
         )
     elif phase == "one_shot":
         task = (
             "Generate the complete implementation from the initial sketch and complete corpus in one "
-            "shot. Return compact JSON with exactly three string keys: strategy_py, oracle_prompt, "
-            "and sketch_md."
+            "shot. Return compact JSON with the three complete-file string keys strategy_py, "
+            "oracle_prompt, and sketch_md, plus clarification_request."
         )
     elif phase == "one_shot_repair":
         task = (
-            "Revise the current sketch and implementation to close every supplied failing "
-            "counterexample while preserving cases that already pass. Return compact JSON with "
-            "exactly three string keys: strategy_py, oracle_prompt, and sketch_md. Each value must "
-            "be the complete replacement file."
+            "Revise the current sketch and implementation to encode the complete promoted corpus "
+            "and close every supplied failure while preserving cases that already pass. The "
+            "complete corpus remains authoritative even after a rejected proposal is rolled back. "
+            "Return compact JSON with the three complete-file string keys strategy_py, "
+            "oracle_prompt, and sketch_md, plus clarification_request."
         )
     else:
         task = (
-            "Revise the sketch and implementation as you see fit to close the one active failing "
-            "counterexample while preserving prior behavior. Return compact JSON with exactly three "
-            "string keys: strategy_py, oracle_prompt, and sketch_md. Each value must be the complete "
-            "replacement file."
+            "Close the one active failure while preserving prior behavior and policy. If it is an "
+            "approved counterexample, revise the sketch only as far as its approved policy and "
+            "counterexample clause entail. If it is an implementation, validation, or review defect "
+            "already governed by the sketch, preserve sketch policy. Return compact JSON with the three "
+            "complete-file string keys strategy_py, oracle_prompt, and sketch_md, plus "
+            "clarification_request."
         )
     if phase == "one_shot":
         system = (
@@ -517,7 +1011,7 @@ def developer_messages(workspace: Path, promoted: list[dict], active_failure: An
     elif phase == "one_shot_repair":
         system = (
             "You are the Developer repairing a one-shot-generated implementation. Use the current "
-            "sketch, code, prompt, and complete set of visible gate failures. Close those failures "
+            "sketch, code, prompt, and complete set of visible validation failures. Close those failures "
             "without regressing behavior that already passes. JSON only."
         )
     elif phase == "initial":
@@ -530,7 +1024,7 @@ def developer_messages(workspace: Path, promoted: list[dict], active_failure: An
         system = (
             "You are the Developer in a repository repair loop. Revise the sketch and "
             "implementation to close the one active failure while preserving behavior that "
-            "already passes the regression gate. JSON only."
+            "already passes both regression checks. JSON only."
         )
     payload = {
         "arm": arm,
@@ -541,9 +1035,18 @@ def developer_messages(workspace: Path, promoted: list[dict], active_failure: An
             "Return operation, breed, cited_rules, and rationale.",
             "Do not import modules, access files/network, inspect scenario_id, or hard-code breeds by case.",
             "You may generalize the active counterexample into the sketch, code, and prompt. Do not invent unrevealed counterexamples or paste case-specific fixtures into the sketch.",
+            "An active approved counterexample authorizes the minimum general rule required by its corrected output and approved clause, even when that rule was absent from the prior sketch.",
+            "Preserve every existing policy clause, anchor, and explicit hole unless the active approved counterexample directly changes it.",
+            "When no approved counterexample is active, preserve open policy holes. Never use a later counterexample to justify an earlier proposal.",
+            "Do not decide empty, invalid, narrative, or other adjacent behavior unless the active approved counterexample entails that decision.",
+            "If a sketch approval was rejected, follow its rationale and keep the last approved workspace as the authority.",
+            "In one-shot repair, every case in complete_corpus remains authoritative; encode all of its promoted clauses, not only the latest visible failure.",
             "oracle_prompt must contain {note} and return JSON with a tags array; only use tag meanings defined by the current sketch or supplied counterexamples.",
         ],
         "known_code_contract": known_code_contract(),
+        "sketch_change_contract": sketch_change_contract(
+            promoted, active_failure, arm, phase, complete_corpus,
+        ),
         "current_sketch_md": sketch,
         "active_failing_counterexample": (
             active_failure if phase != "one_shot_repair" else None
@@ -551,9 +1054,10 @@ def developer_messages(workspace: Path, promoted: list[dict], active_failure: An
         "current_strategy_py": strategy,
         "current_oracle_prompt": prompt,
     }
-    if phase == "one_shot":
+    if phase in {"one_shot", "one_shot_repair"}:
         payload["complete_corpus"] = complete_corpus
-    elif phase == "one_shot_repair":
+        payload["promoted_case_ids"] = [case["id"] for case in promoted]
+    if phase == "one_shot_repair":
         payload["active_failing_counterexamples"] = active_failure
     return [
         {"role": "system", "content": system},
@@ -589,9 +1093,11 @@ def complete_case_packets(promoted: list[dict]) -> list[dict[str, Any]]:
 
 
 def apply_developer(workspace: Path, parsed: dict[str, Any]) -> dict[str, str]:
-    if set(parsed) != {"strategy_py", "oracle_prompt", "sketch_md"}:
+    file_keys = {"strategy_py", "oracle_prompt", "sketch_md"}
+    if set(parsed) != file_keys | {"clarification_request"}:
         raise ExperimentError(
-            "Developer JSON must contain exactly strategy_py, oracle_prompt, and sketch_md"
+            "Developer JSON must contain strategy_py, oracle_prompt, sketch_md, and "
+            "clarification_request"
         )
     strategy = parsed["strategy_py"]
     prompt = parsed["oracle_prompt"]
@@ -645,12 +1151,129 @@ def call_developer(workspace: Path, promoted: list[dict], active_failure: Any,
     record = result_record(result)
     try:
         parsed = extract_json(result.content)
+        clarification = parsed.get("clarification_request")
+        if clarification is not None and not isinstance(clarification, str):
+            raise ExperimentError("clarification_request must be a string or null")
+        if isinstance(clarification, str) and clarification.strip():
+            record.update({
+                "error": None,
+                "parsed_keys": sorted(parsed),
+                "diffs": {},
+                "clarification_request": clarification.strip(),
+            })
+            return {}, record
         diffs = apply_developer(workspace, parsed)
     except Exception as exc:
         record.update({"error": f"{type(exc).__name__}: {exc}", "parsed_keys": [], "diffs": {}})
         return {}, record
     record.update({"error": None, "parsed_keys": sorted(parsed), "diffs": diffs})
     return parsed, record
+
+
+def call_developer_with_approval(
+    workspace: Path,
+    promoted: list[dict],
+    active_failure: Any,
+    arm: str,
+    phase: str,
+    label: str,
+    client: ChatClient,
+    ledger: Ledger,
+    sketch_approver: SketchApprover | None,
+    complete_corpus: Any = None,
+) -> tuple[dict, dict]:
+    before = workspace_text(workspace)
+    parsed, record = call_developer(
+        workspace, promoted, active_failure, arm, phase, label,
+        client, ledger, complete_corpus,
+    )
+    if not parsed:
+        request = record.get("clarification_request")
+        if request:
+            clarify = getattr(sketch_approver, "clarify", None)
+            if not callable(clarify):
+                record["error"] = (
+                    "Developer requested authority clarification, but no authority "
+                    "clarification resolver was configured"
+                )
+                return {}, record
+            answer = clarify({
+                "arm": arm,
+                "phase": phase,
+                "label": label,
+                "question": request,
+                "sketch_change_contract": sketch_change_contract(
+                    promoted, active_failure, arm, phase, complete_corpus,
+                ),
+            })
+            record["authority_clarification"] = answer
+            record["next_failure"] = {
+                "id": "authority-clarification",
+                "failure_kind": "authority-clarification-answered",
+                "question": request,
+                "authorized_clarification": answer,
+                "expected": (
+                    "Revise the files using the supplied clarification and no broader authority."
+                ),
+                "actual": "No files were changed while clarification was pending.",
+            }
+            record["error"] = "Authority clarification answered; Developer must retry."
+        return parsed, record
+    after = workspace_text(workspace)
+    if before["SKETCH.md"] == after["SKETCH.md"]:
+        record["sketch_approval"] = {
+            "decision": "not-required",
+            "rationale": "Developer did not change the sketch.",
+        }
+        return parsed, record
+    if sketch_approver is None:
+        restore_workspace_text(workspace, before)
+        raise ExperimentError(
+            "Developer changed SKETCH.md but no sketch approver was configured"
+        )
+    proposal = {
+        "arm": arm,
+        "phase": phase,
+        "label": label,
+        "active_failure": active_failure,
+        "promoted_case_ids": [case["id"] for case in promoted],
+        "complete_corpus_case_ids": [
+            case["id"] for case in (complete_corpus or [])
+            if isinstance(case, dict) and "id" in case
+        ],
+        "before_sketch": before["SKETCH.md"],
+        "after_sketch": after["SKETCH.md"],
+        "sketch_diff": record.get("diffs", {}).get("SKETCH.diff", ""),
+        "review_questions": [
+            "Does the proposed sketch preserve previously approved policy?",
+            "Does each new policy claim follow as the minimum general rule required by the active approved CE or supplied corpus, even if absent from the prior sketch?",
+            "If no approved CE is active, does the proposal preserve every open policy hole?",
+            "Does the change avoid settling adjacent policy that remains open?",
+        ],
+    }
+    approval = sketch_approver(proposal)
+    if approval.get("decision") not in {"approve", "reject"}:
+        restore_workspace_text(workspace, before)
+        raise ExperimentError("sketch approver returned an invalid decision")
+    record["sketch_approval"] = approval
+    if approval["decision"] == "approve":
+        return parsed, record
+    restore_workspace_text(workspace, before)
+    rejection = {
+        "id": (
+            active_failure.get("id", "sketch-change")
+            if isinstance(active_failure, dict) else "sketch-change"
+        ),
+        "failure_kind": "sketch-approval-rejected",
+        "approval": approval,
+        "active_failure": active_failure,
+        "expected": "a sketch change within the approved policy boundary",
+        "actual": "the proposed sketch change was rejected and the workspace was restored",
+    }
+    record["next_failure"] = rejection
+    record["error"] = f"Sketch change rejected: {approval['rationale']}"
+    record["workspace_restored"] = True
+    return {}, record
 
 
 def spec_developer_messages(workspace: Path, complete_spec: str,
@@ -674,7 +1297,7 @@ def spec_developer_messages(workspace: Path, complete_spec: str,
         "complete_immutable_specification": complete_spec,
         "current_strategy_py": strategy,
         "current_oracle_prompt": prompt,
-        "visible_gate_failures": failures,
+        "visible_validation_failures": failures,
         "constraints": [
             "The specification is authoritative and may not be revised.",
             "Do not inspect or branch on concrete scenario IDs, case IDs, or named fixture outputs.",
@@ -686,7 +1309,8 @@ def spec_developer_messages(workspace: Path, complete_spec: str,
         "Implement the complete immutable specification without worked examples. JSON only."
         if initial else
         "You are the Developer repairing a specification-first implementation. The complete "
-        "specification remains immutable. Use the current files and visible gate failures. JSON only."
+        "specification remains immutable. Use the current files and visible validation failures. "
+        "JSON only."
     )
     return [
         {"role": "system", "content": system},
@@ -758,13 +1382,16 @@ def baseline_workspace(path: Path) -> None:
 
 def snapshot_generation(path: Path, workspace: Path, promoted: list[dict],
                         gate: dict[str, Any], developer: Any,
-                        active_failure: Any = None) -> None:
+                        active_failure: Any = None,
+                        sketch_review: Any = None) -> None:
     path.mkdir(parents=True, exist_ok=False)
     shutil.copy2(workspace / "strategy.py", path / "strategy.py")
     shutil.copy2(workspace / "oracle_prompt.txt", path / "oracle_prompt.txt")
     shutil.copy2(workspace / "SKETCH.md", path / "SKETCH.md")
     write_json(path / "corpus.json", promoted)
     write_json(path / "gate.json", gate)
+    if sketch_review is not None:
+        write_json(path / "sketch-review.json", sketch_review)
     if active_failure is not None:
         write_json(path / "active_failure.json", active_failure)
     if developer is not None:
@@ -800,6 +1427,67 @@ def failure_packet(case: dict, evaluation: dict[str, Any]) -> dict[str, Any]:
             if value.get("checked", True) and not value["match"]
         },
     }
+
+
+def validation_failure_packets(promoted: list[dict], gate: dict[str, Any],
+                               sketch_review: dict[str, Any],
+                               record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return one repair packet per case that failed either acceptance check."""
+    if record.get("next_failure") is not None:
+        value = record["next_failure"]
+        return value if isinstance(value, list) else [value]
+    cases_by_id = {
+        case["id"]: case for case in [initial_acceptance_case(), *promoted]
+    }
+    reviews = {
+        item["id"]: item for item in sketch_review.get("cases", [])
+        if isinstance(item, dict) and item.get("id") in cases_by_id
+    }
+    packets = []
+    seen = set()
+    for evaluation in gate.get("cases", []):
+        case_id = evaluation.get("id")
+        review = reviews.get(case_id)
+        if case_id not in cases_by_id:
+            continue
+        if evaluation.get("passed") and (review is None or review.get("passed")):
+            continue
+        packet = failure_packet(cases_by_id[case_id], evaluation)
+        if review is not None and not review.get("passed"):
+            packet["failure_kind"] = "sketch-review"
+            packet["sketch_review"] = {
+                key: review.get(key)
+                for key in (
+                    "verdict", "applicable_clauses", "required_behavior",
+                    "difference", "failure_class",
+                )
+            }
+        packets.append(packet)
+        seen.add(case_id)
+    for case_id, review in reviews.items():
+        if review.get("passed") or case_id in seen:
+            continue
+        packets.append({
+            "id": case_id,
+            "failure_kind": "sketch-review",
+            "reviewer_policy": cases_by_id[case_id]["policy"],
+            "counterexample_clause": cases_by_id[case_id]["sketch_rule"],
+            "profile": profile_for_case(cases_by_id[case_id]),
+            "actual": None,
+            "sketch_review": review,
+        })
+    if packets:
+        return packets
+    return [{
+        "id": "two-check-validation",
+        "failure_kind": "validation-contract",
+        "expected": "deterministic gate and sketch review both pass",
+        "actual": (
+            sketch_review.get("error") or gate.get("error")
+            or record.get("error") or "unknown validation failure"
+        ),
+        "mismatches": {},
+    }]
 
 
 def initial_acceptance_case() -> dict[str, Any]:
@@ -839,7 +1527,9 @@ def initial_failure(gate: dict[str, Any], record: dict[str, Any]) -> dict[str, A
 
 
 def run_iterative(output: Path, cases: list[dict], client: ChatClient,
-                  ledger: Ledger, max_repairs: int) -> dict:
+                  ledger: Ledger, max_repairs: int,
+                  sketch_approver: SketchApprover | None = None,
+                  review_adjudicator: SketchReviewAdjudicator | None = None) -> dict:
     if max_repairs < 0:
         raise ExperimentError("max_repairs must be zero or greater")
     workspace = output / "workspace"
@@ -851,19 +1541,25 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
     initial_attempts = []
     active_failure = None
     initial_gate: dict[str, Any] = {}
+    initial_review: dict[str, Any] = {}
+    initial_validation_passed = False
     for attempt in range(max_repairs + 1):
         phase = "initial" if attempt == 0 else "repair"
         label = "initial-generation" if attempt == 0 else f"initial-repair-{attempt:02d}"
-        parsed, record = call_developer(
+        parsed, record = call_developer_with_approval(
             workspace, [], active_failure, "iterative", phase, label,
-            client, ledger,
+            client, ledger, sketch_approver,
         )
         if parsed:
             try:
-                initial_gate = run_gate(
+                validation = run_validation(
                     workspace, [], client, ledger,
                     f"iterative-initial-acceptance-attempt-{attempt + 1}",
+                    review_adjudicator,
                 )
+                initial_gate = validation["gate"]
+                initial_review = validation["sketch_review"]
+                initial_validation_passed = validation["passed"]
                 initial_gate["scope"] = "initial sketch acceptance"
             except Exception as exc:
                 initial_gate = {
@@ -871,13 +1567,21 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
                     "scope": "initial sketch acceptance",
                     "error": f"{type(exc).__name__}: {exc}",
                 }
+                initial_review = failed_sketch_review(
+                    f"{type(exc).__name__}: {exc}", 1,
+                )
+                initial_validation_passed = False
         else:
             initial_gate = {
                 "passed": False, "passed_count": 0, "total": 0, "cases": [],
                 "scope": "initial generation contract",
                 "error": record.get("error"),
             }
+            initial_review = failed_sketch_review(record.get("error"), 1)
+            initial_validation_passed = False
         record["gate"] = initial_gate
+        record["sketch_review"] = initial_review
+        record["validation_passed"] = initial_validation_passed
         record["active_counterexample_id"] = (
             active_failure["id"] if active_failure is not None else None
         )
@@ -887,19 +1591,23 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
         )
         snapshot_generation(
             output / "generations" / snapshot_name,
-            workspace, [], initial_gate, record, active_failure,
+            workspace, [], initial_gate, record, active_failure, initial_review,
         )
         initial_attempts.append(record)
         generation += 1
-        if initial_gate["passed"]:
+        if initial_validation_passed:
             break
-        active_failure = initial_failure(initial_gate, record)
-    if not initial_gate["passed"]:
+        active_failure = validation_failure_packets(
+            [], initial_gate, initial_review, record,
+        )[0]
+    if not initial_validation_passed:
         raise ExperimentError(
-            "Developer did not satisfy the initial sketch after "
+            "Developer did not satisfy both initial checks after "
             f"{max_repairs} repair attempts"
         )
     initial_sketch_after = (workspace / "SKETCH.md").read_text(encoding="utf-8")
+    final_gate = initial_gate
+    final_sketch_review = initial_review
 
     for index, case in enumerate(cases, 1):
         proposed = revealed + [case]
@@ -913,7 +1621,18 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
             "counterexample": case,
             "evaluation": introduced_failure,
         })
-        if introduced_failure["passed"]:
+        try:
+            introduced_review = run_sketch_review(
+                workspace, [case], [introduced_failure], client, ledger,
+                f"iterative-cycle-{index}-introduced-review:{case['id']}",
+                review_adjudicator,
+            )
+        except Exception as exc:
+            introduced_review = failed_sketch_review(
+                f"{type(exc).__name__}: {exc}", 1,
+            )
+        write_json(cycle_root / "introduced-sketch-review.json", introduced_review)
+        if introduced_failure["passed"] and introduced_review["passed"]:
             coverage_gate = run_gate(
                 workspace, revealed, client, ledger,
                 f"iterative-cycle-{index}-coverage-check",
@@ -921,6 +1640,7 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
             coverage = {
                 "case": case["id"], "status": "coverage-not-promoted",
                 "introduced_failure": introduced_failure,
+                "introduced_sketch_review": introduced_review,
                 "attempts": [], "gate": coverage_gate,
                 "sketch_after": (workspace / "SKETCH.md").read_text(encoding="utf-8"),
             }
@@ -935,62 +1655,79 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
         write_json(output / "oracle" / f"{index:02d}-{case['id']}.json", oracle_record)
         revealed.append(promoted_case)
         attempts = []
-        target_case = promoted_case
-        target_evaluation = introduced_failure
         gate = {
             "passed": False, "passed_count": 0, "total": 1,
             "cases": [introduced_failure], "scope": "new counterexample only",
         }
+        sketch_review = introduced_review
+        validation_passed = False
+        active_failure = validation_failure_packets(
+            [promoted_case], gate, sketch_review, {},
+        )[0]
         for attempt in range(1, max_repairs + 1):
-            active_failure = failure_packet(target_case, target_evaluation)
-            cycle_dir = cycle_root / f"attempt-{attempt:02d}-{target_case['id']}"
+            cycle_dir = cycle_root / f"attempt-{attempt:02d}-{active_failure['id']}"
             cycle_dir.mkdir(parents=True, exist_ok=True)
             try:
-                parsed, record = call_developer(
+                parsed, record = call_developer_with_approval(
                     workspace, revealed, active_failure, "iterative", "repair",
-                    f"{target_case['id']}:attempt-{attempt}", client, ledger,
+                    f"{active_failure['id']}:attempt-{attempt}", client, ledger,
+                    sketch_approver,
                 )
                 if parsed:
-                    gate = run_gate(
+                    validation = run_validation(
                         workspace, revealed, client, ledger,
                         f"iterative-cycle-{index}-attempt-{attempt}",
+                        review_adjudicator,
                     )
+                    gate = validation["gate"]
+                    sketch_review = validation["sketch_review"]
+                    validation_passed = validation["passed"]
                 else:
                     gate = {**gate, "developer_error": record["error"]}
+                    sketch_review = failed_sketch_review(record.get("error"), len(revealed) + 1)
+                    validation_passed = False
                 record["gate"] = gate
-                record["active_counterexample_id"] = target_case["id"]
+                record["sketch_review"] = sketch_review
+                record["validation_passed"] = validation_passed
+                record["active_counterexample_id"] = active_failure["id"]
             except Exception as exc:
                 record = {
                     "error": f"{type(exc).__name__}: {exc}", "gate": gate,
-                    "active_counterexample_id": target_case["id"],
+                    "sketch_review": failed_sketch_review(
+                        f"{type(exc).__name__}: {exc}", len(revealed) + 1,
+                    ),
+                    "validation_passed": False,
+                    "active_counterexample_id": active_failure["id"],
                 }
+                sketch_review = record["sketch_review"]
+                validation_passed = False
             write_json(cycle_dir / "record.json", record)
             snapshot_generation(
                 output / "generations" /
-                f"{generation:03d}-repair-{target_case['id']}-attempt-{attempt:02d}",
-                workspace, revealed, gate, record, active_failure,
+                f"{generation:03d}-repair-{active_failure['id']}-attempt-{attempt:02d}",
+                workspace, revealed, gate, record, active_failure, sketch_review,
             )
             generation += 1
             attempts.append(record)
-            if gate["passed"]:
+            if validation_passed:
                 break
-            failed = next(item for item in gate["cases"] if not item["passed"])
-            target_case = next(
-                item for item in [initial_acceptance_case(), *revealed]
-                if item["id"] == failed["id"]
-            )
-            target_evaluation = failed
+            active_failure = validation_failure_packets(
+                revealed, gate, sketch_review, record,
+            )[0]
         cycles.append({
             "case": promoted_case["id"], "status": "promoted",
             "oracle": oracle_record,
             "introduced_failure": introduced_failure,
-            "attempts": attempts, "gate": gate,
+            "attempts": attempts, "gate": gate, "sketch_review": sketch_review,
             "sketch_after": (workspace / "SKETCH.md").read_text(encoding="utf-8"),
         })
-        if not gate["passed"]:
+        if not validation_passed:
             raise ExperimentError(
-                f"Developer did not close {promoted_case['id']} after {max_repairs} attempts"
+                f"Developer did not close both checks for {promoted_case['id']} after "
+                f"{max_repairs} attempts"
             )
+        final_gate = gate
+        final_sketch_review = sketch_review
         sketch_after_ce = (workspace / "SKETCH.md").read_text(encoding="utf-8")
         if sketch_after_ce == sketch_before_ce:
             raise ExperimentError(
@@ -1002,41 +1739,32 @@ def run_iterative(output: Path, cases: list[dict], client: ChatClient,
         "initial_generation": {
             "attempts": initial_attempts,
             "gate": initial_gate,
+            "sketch_review": initial_review,
             "sketch_after": initial_sketch_after,
         },
         "final_sketch": (workspace / "SKETCH.md").read_text(encoding="utf-8"),
-        "final_gate": run_gate(workspace, revealed, client, ledger, "iterative-final"),
+        "final_gate": final_gate,
+        "final_sketch_review": final_sketch_review,
+        "final_validation_passed": (
+            final_gate.get("passed", False)
+            and final_sketch_review.get("passed", False)
+        ),
     }
 
 
 def one_shot_failure_packets(promoted: list[dict], gate: dict[str, Any],
-                             record: dict[str, Any]) -> list[dict[str, Any]]:
-    cases_by_id = {
-        case["id"]: case for case in [initial_acceptance_case(), *promoted]
-    }
-    packets = [
-        failure_packet(cases_by_id[item["id"]], item)
-        for item in gate.get("cases", [])
-        if not item.get("passed") and item.get("id") in cases_by_id
-    ]
-    if packets:
-        return packets
-    return [{
-        "id": "one-shot-generated-implementation",
-        "failure_kind": "developer-output-or-runtime-contract",
-        "expected": "valid files that pass the complete visible regression gate",
-        "actual": gate.get("error") or record.get("error") or "unknown failure",
-        "mismatches": {"execution": {
-            "expected": "a valid implementation that passes the visible gate",
-            "actual": gate.get("error") or record.get("error") or "unknown failure",
-            "match": False,
-        }},
-    }]
+                             record: dict[str, Any],
+                             sketch_review: Any = None) -> list[dict[str, Any]]:
+    return validation_failure_packets(
+        promoted, gate, sketch_review or {}, record,
+    )
 
 
 def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str,
                         client: ChatClient, ledger: Ledger,
-                        max_repairs: int) -> dict:
+                        max_repairs: int,
+                        sketch_approver: SketchApprover | None = None,
+                        review_adjudicator: SketchReviewAdjudicator | None = None) -> dict:
     if max_repairs < 0:
         raise ExperimentError("max_repairs must be zero or greater")
     workspace = output / "workspace"
@@ -1046,20 +1774,27 @@ def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str
     attempts = []
     failures = None
     gate: dict[str, Any] = {}
+    sketch_review: dict[str, Any] = {}
+    validation_passed = False
     for attempt in range(max_repairs + 1):
         initial = attempt == 0
         phase = "one_shot" if initial else "one_shot_repair"
         label = "initial-one-shot" if initial else f"one-shot-repair-{attempt:02d}"
-        parsed, record = call_developer(
+        parsed, record = call_developer_with_approval(
             workspace, promoted, failures, "one_shot_repair", phase, label,
-            client, ledger, complete_corpus=complete_corpus if initial else None,
+            client, ledger, sketch_approver,
+            complete_corpus=complete_corpus,
         )
         if parsed:
             try:
-                gate = run_gate(
+                validation = run_validation(
                     workspace, promoted, client, ledger,
-                    f"batch-visible-gate-attempt-{attempt + 1}",
+                    f"batch-visible-attempt-{attempt + 1}",
+                    review_adjudicator,
                 )
+                gate = validation["gate"]
+                sketch_review = validation["sketch_review"]
+                validation_passed = validation["passed"]
             except Exception as exc:
                 gate = {
                     "passed": False, "passed_count": 0,
@@ -1067,6 +1802,10 @@ def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str
                     "scope": "one-shot-generated implementation failed during the visible gate",
                     "error": f"{type(exc).__name__}: {exc}",
                 }
+                sketch_review = failed_sketch_review(
+                    f"{type(exc).__name__}: {exc}", len(promoted) + 1,
+                )
+                validation_passed = False
         else:
             gate = {
                 "passed": False, "passed_count": 0,
@@ -1074,7 +1813,13 @@ def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str
                 "scope": "one-shot Developer output contract failed",
                 "error": record.get("error"),
             }
+            sketch_review = failed_sketch_review(
+                record.get("error"), len(promoted) + 1,
+            )
+            validation_passed = False
         record["gate"] = gate
+        record["sketch_review"] = sketch_review
+        record["validation_passed"] = validation_passed
         record["repair_number"] = attempt
         record["visible_failures_supplied"] = failures or []
         write_json(output / f"attempt-{attempt + 1:02d}" / "record.json", record)
@@ -1082,15 +1827,17 @@ def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str
             output / "generations" /
             ("000-initial-one-shot" if initial else
              f"{attempt:03d}-one-shot-repair-{attempt:02d}"),
-            workspace, complete_corpus, gate, record, failures,
+            workspace, complete_corpus, gate, record, failures, sketch_review,
         )
         attempts.append(record)
-        if gate["passed"]:
+        if validation_passed:
             break
-        failures = one_shot_failure_packets(promoted, gate, record)
-    if not gate["passed"]:
+        failures = one_shot_failure_packets(
+            promoted, gate, record, sketch_review,
+        )
+    if not validation_passed:
         raise ExperimentError(
-            "One-shot + repair Developer did not satisfy the visible regression gate after "
+            "One-shot + repair Developer did not satisfy both visible checks after "
             f"{max_repairs} repair attempts"
         )
     return {
@@ -1102,12 +1849,17 @@ def run_one_shot_repair(output: Path, promoted: list[dict], starting_sketch: str
             len(item["visible_failures_supplied"]) for item in attempts
         ),
         "final_gate": gate,
+        "final_sketch_review": sketch_review,
+        "final_validation_passed": validation_passed,
     }
 
 
 def spec_failure_packets(cases: list[dict], gate: dict[str, Any],
                          active_rule_ids: set[str],
-                         record: dict[str, Any]) -> list[dict[str, Any]]:
+                         record: dict[str, Any],
+                         sketch_review: Any = None) -> list[dict[str, Any]]:
+    if sketch_review is not None:
+        return validation_failure_packets(cases, gate, sketch_review, record)
     cases_by_id = {
         case["id"]: case for case in [initial_acceptance_case(), *cases]
     }
@@ -1147,7 +1899,8 @@ def spec_failure_packets(cases: list[dict], gate: dict[str, Any],
 
 def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
                           client: ChatClient, ledger: Ledger,
-                          max_repairs: int) -> dict:
+                          max_repairs: int,
+                          review_adjudicator: SketchReviewAdjudicator | None = None) -> dict:
     if max_repairs < 0:
         raise ExperimentError("max_repairs must be zero or greater")
     workspace = output / "workspace"
@@ -1159,6 +1912,8 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
     attempts = []
     failures = None
     gate: dict[str, Any] = {}
+    sketch_review: dict[str, Any] = {}
+    validation_passed = False
     for attempt in range(max_repairs + 1):
         initial = attempt == 0
         label = "initial-spec-first" if initial else f"spec-repair-{attempt:02d}"
@@ -1167,10 +1922,14 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
         )
         if parsed:
             try:
-                gate = run_gate(
+                validation = run_validation(
                     workspace, cases, client, ledger,
-                    f"spec-visible-gate-attempt-{attempt + 1}",
+                    f"spec-visible-attempt-{attempt + 1}",
+                    review_adjudicator,
                 )
+                gate = validation["gate"]
+                sketch_review = validation["sketch_review"]
+                validation_passed = validation["passed"]
             except Exception as exc:
                 gate = {
                     "passed": False, "passed_count": 0,
@@ -1178,6 +1937,10 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
                     "scope": "spec-first implementation failed during the visible gate",
                     "error": f"{type(exc).__name__}: {exc}",
                 }
+                sketch_review = failed_sketch_review(
+                    f"{type(exc).__name__}: {exc}", len(cases) + 1,
+                )
+                validation_passed = False
         else:
             gate = {
                 "passed": False, "passed_count": 0,
@@ -1185,7 +1948,13 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
                 "scope": "spec-first Developer output contract failed",
                 "error": record.get("error"),
             }
+            sketch_review = failed_sketch_review(
+                record.get("error"), len(cases) + 1,
+            )
+            validation_passed = False
         record["gate"] = gate
+        record["sketch_review"] = sketch_review
+        record["validation_passed"] = validation_passed
         record["repair_number"] = attempt
         record["visible_failures_supplied"] = failures or []
         write_json(output / f"attempt-{attempt + 1:02d}" / "record.json", record)
@@ -1193,15 +1962,17 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
             output / "generations" /
             ("000-initial-spec-first" if initial else
              f"{attempt:03d}-spec-repair-{attempt:02d}"),
-            workspace, cases, gate, record, failures,
+            workspace, cases, gate, record, failures, sketch_review,
         )
         attempts.append(record)
-        if gate["passed"]:
+        if validation_passed:
             break
-        failures = spec_failure_packets(cases, gate, active_rule_ids, record)
-    if not gate["passed"]:
+        failures = spec_failure_packets(
+            cases, gate, active_rule_ids, record, sketch_review,
+        )
+    if not validation_passed:
         raise ExperimentError(
-            "Spec-first Developer did not satisfy the visible regression gate after "
+            "Spec-first Developer did not satisfy both visible checks after "
             f"{max_repairs} repair attempts"
         )
     return {
@@ -1213,6 +1984,8 @@ def run_spec_first_repair(output: Path, cases: list[dict], complete_spec: str,
             len(item["visible_failures_supplied"]) for item in attempts
         ),
         "final_gate": gate,
+        "final_sketch_review": sketch_review,
+        "final_validation_passed": validation_passed,
     }
 
 
@@ -1477,13 +2250,19 @@ def markdown_report(report: dict[str, Any]) -> str:
         arm["tokens"]["by_category"].get("spec_oracle", {}).get("total_tokens", 0)
         for arm in arms
     ]
+    sketch_reviewer = [
+        arm["tokens"]["by_category"].get("sketch_reviewer", {}).get("total_tokens", 0)
+        for arm in arms
+    ]
     developer = [
         it["tokens"]["by_category"].get("developer_iterative", {}).get("total_tokens", 0),
         one_shot["tokens"]["by_category"].get("developer_one_shot_repair", {}).get("total_tokens", 0),
     ]
     acceptance = [
-        dev + runtime + spec
-        for dev, runtime, spec in zip(developer, runtime_acceptance, specification)
+        dev + runtime + spec + review
+        for dev, runtime, spec, review in zip(
+            developer, runtime_acceptance, specification, sketch_reviewer,
+        )
     ]
     lines = [
         "# Iterative counterexamples vs one-shot + repair",
@@ -1501,6 +2280,7 @@ def markdown_report(report: dict[str, Any]) -> str:
         f"| Developer tokens to visible acceptance | {developer[0]} | {developer[1]} |",
         f"| Runtime Oracle tokens through acceptance | {runtime_acceptance[0]} | {runtime_acceptance[1]} |",
         f"| Specification Oracle tokens | {specification[0]} | {specification[1]} |",
+        f"| Sketch Reviewer tokens | {sketch_reviewer[0]} | {sketch_reviewer[1]} |",
         f"| Post-acceptance evaluation tokens | {post_acceptance[0]} | {post_acceptance[1]} |",
         f"| Total recorded tokens, including evaluation | {it['tokens']['overall']['total_tokens']} | {one_shot['tokens']['overall']['total_tokens']} |",
         f"| Visible reference cases | {it['evaluation']['visible_passed']}/{it['evaluation']['visible_total']} | {one_shot['evaluation']['visible_passed']}/{one_shot['evaluation']['visible_total']} |",
@@ -1511,12 +2291,13 @@ def markdown_report(report: dict[str, Any]) -> str:
         "",
         "The iterative arm evolves the sketch one operator-reviewed counterexample at a time.",
         "The one-shot arm receives the initial sketch and complete accepted archive in its first call. If",
-        "the visible gate fails, each later Developer call receives the current files and all",
+        "either visible check fails, each later Developer call receives the current files and all",
         "visible failures. Every repair is included in the call and token totals above.",
         "Withheld cases are evaluated only after visible acceptance and are never repair input.",
-        "Tokens through acceptance include Developer, Runtime Oracle, and Specification Oracle",
-        "calls. Post-acceptance visible and withheld evaluation is reported separately.",
-        "Every request, response, reported reasoning field, usage record, diff, and gate result is retained",
+        "Tokens through acceptance include Developer, Runtime Oracle, Specification Oracle, and",
+        "Sketch Reviewer calls. Post-acceptance evaluation is reported separately.",
+        "Every request, response, reported reasoning field, usage record, diff, gate result, and",
+        "sketch-review verdict is retained",
         "under this run directory. `iterative/generations/` contains the complete readable",
         "implementation and result set for the baseline and every Developer attempt.",
     ]
@@ -1525,7 +2306,9 @@ def markdown_report(report: dict[str, Any]) -> str:
 
 def execute_experiment(output: Path, run_id: str, client: ChatClient,
                        max_repairs: int, endpoint: str,
-                       inference: dict[str, Any]) -> None:
+                       inference: dict[str, Any],
+                       sketch_approver: SketchApprover,
+                       review_adjudicator: SketchReviewAdjudicator) -> None:
     models = client.list_models()
     if client.model not in models:
         raise SystemExit(
@@ -1536,12 +2319,13 @@ def execute_experiment(output: Path, run_id: str, client: ChatClient,
     iterative_ledger, one_shot_ledger = Ledger(), Ledger()
     iterative = run_iterative(
         output / "iterative", cases, client, iterative_ledger, max_repairs,
+        sketch_approver, review_adjudicator,
     )
     promoted = iterative["promoted"]
     one_shot = run_one_shot_repair(
         output / "one-shot-repair", cases,
         INITIAL_SKETCH_PATH.read_text(encoding="utf-8"),
-        client, one_shot_ledger, max_repairs,
+        client, one_shot_ledger, max_repairs, sketch_approver, review_adjudicator,
     )
 
     for name, arm, ledger in (
@@ -1587,7 +2371,9 @@ def execute_experiment(output: Path, run_id: str, client: ChatClient,
 
 def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
                           client: ChatClient, max_repairs: int,
-                          endpoint: str, inference: dict[str, Any]) -> None:
+                          endpoint: str, inference: dict[str, Any],
+                          sketch_approver: SketchApprover,
+                          review_adjudicator: SketchReviewAdjudicator) -> None:
     models = client.list_models()
     if client.model not in models:
         raise SystemExit(
@@ -1611,7 +2397,7 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
     ledger = Ledger()
     arm = run_one_shot_repair(
         output / "one-shot-repair", promoted, starting_sketch,
-        client, ledger, max_repairs,
+        client, ledger, max_repairs, sketch_approver, review_adjudicator,
     )
     workspace = Path(arm["workspace"])
     arm["evaluation"] = final_evaluation(
@@ -1621,6 +2407,7 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
     arm["tokens"] = ledger.totals()
     write_json(output / "one-shot-repair" / "summary.json", arm)
     developer = arm["tokens"]["by_category"].get("developer_one_shot_repair", {})
+    sketch_reviewer = arm["tokens"]["by_category"].get("sketch_reviewer", {})
     post_acceptance_tokens = sum(
         call["total_tokens"]
         for call in arm["tokens"]["calls"]
@@ -1653,6 +2440,7 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
         f"- Visible failure packets returned: {arm['visible_failure_feedback_events']}",
         f"- Tokens through visible acceptance: {acceptance_tokens}",
         f"- Developer tokens to visible acceptance: {developer.get('total_tokens', 0)}",
+        f"- Sketch Reviewer tokens: {sketch_reviewer.get('total_tokens', 0)}",
         f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
         f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
@@ -1666,7 +2454,8 @@ def execute_one_shot_only(output: Path, run_id: str, source_run: Any,
 
 def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
                             max_repairs: int, endpoint: str,
-                            inference: dict[str, Any]) -> None:
+                            inference: dict[str, Any],
+                            review_adjudicator: SketchReviewAdjudicator) -> None:
     models = client.list_models()
     if client.model not in models:
         raise SystemExit(
@@ -1679,7 +2468,7 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
     ledger = Ledger()
     arm = run_spec_first_repair(
         output / "spec-first-repair", cases, complete_spec,
-        client, ledger, max_repairs,
+        client, ledger, max_repairs, review_adjudicator,
     )
     workspace = Path(arm["workspace"])
     arm["evaluation"] = final_evaluation(
@@ -1689,6 +2478,7 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
     arm["tokens"] = ledger.totals()
     write_json(output / "spec-first-repair" / "summary.json", arm)
     developer = arm["tokens"]["by_category"].get("developer_spec_first_repair", {})
+    sketch_reviewer = arm["tokens"]["by_category"].get("sketch_reviewer", {})
     post_acceptance_tokens = sum(
         call["total_tokens"]
         for call in arm["tokens"]["calls"]
@@ -1722,13 +2512,15 @@ def execute_spec_first_only(output: Path, run_id: str, client: ChatClient,
         f"- Visible failure packets returned: {arm['visible_failure_feedback_events']}",
         f"- Tokens through visible acceptance: {acceptance_tokens}",
         f"- Developer tokens to visible acceptance: {developer.get('total_tokens', 0)}",
+        f"- Sketch Reviewer tokens: {sketch_reviewer.get('total_tokens', 0)}",
         f"- Post-acceptance evaluation tokens: {post_acceptance_tokens}",
         f"- Total recorded tokens, including evaluation: {arm['tokens']['overall']['total_tokens']}",
         f"- Visible evaluation: {evaluation['visible_passed']}/{evaluation['visible_total']}",
         f"- Withheld cases: {evaluation['hidden_passed']}/{evaluation['hidden_total']}",
         "",
         "The initial Developer request contained the immutable specification and empty files only.",
-        "Visible failures were supplied only after a failed gate. Withheld cases were never repair input.",
+        "Visible failures were supplied only after a failed gate or sketch review. Withheld cases "
+        "were never repair input.",
     ]
     (output / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(output)
@@ -1764,6 +2556,8 @@ def main() -> None:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     output = args.output or (HERE / "artifacts" / run_id)
     output.mkdir(parents=True, exist_ok=False)
+    sketch_approver = ManualSketchApprover(output)
+    review_adjudicator = ManualSketchReviewAdjudicator(output)
     if args.provider == "codex-app-server":
         client: ChatClient = CodexAppServerClient(
             model=args.model or DEFAULT_CODEX_MODEL,
@@ -1805,15 +2599,18 @@ def main() -> None:
         if args.spec_first:
             execute_spec_first_only(
                 output, run_id, client, args.max_repairs, endpoint, inference,
+                review_adjudicator,
             )
         elif args.one_shot_source_run or args.one_shot_canonical:
             execute_one_shot_only(
                 output, run_id, args.one_shot_source_run, client,
-                args.max_repairs, endpoint, inference,
+                args.max_repairs, endpoint, inference, sketch_approver,
+                review_adjudicator,
             )
         else:
             execute_experiment(
                 output, run_id, client, args.max_repairs, endpoint, inference,
+                sketch_approver, review_adjudicator,
             )
     finally:
         client.close()

@@ -4,7 +4,12 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from experiment.publish_experiment import compact_case, compact_failure, compact_gate
+from experiment.publish_experiment import (
+    compact_case,
+    compact_failure,
+    compact_gate,
+    compact_sketch_review,
+)
 
 
 class PublishExperimentTests(unittest.TestCase):
@@ -51,6 +56,23 @@ class PublishExperimentTests(unittest.TestCase):
         self.assertEqual(compact["expected"]["breed"], "A")
         self.assertEqual(compact["actual"]["breed"], "B")
         self.assertNotIn("oracle_trace", compact)
+
+    def test_compact_sketch_review_keeps_verdict_not_model_transport(self):
+        compact = compact_sketch_review({
+            "passed": False,
+            "passed_count": 0,
+            "total": 1,
+            "cases": [{
+                "id": "ce-x",
+                "verdict": "fail",
+                "failure_class": "projection-defect",
+                "difference": "violates clause",
+                "passed": False,
+            }],
+            "model": {"request": "large transport"},
+        })
+        self.assertEqual(compact["cases"][0]["verdict"], "fail")
+        self.assertNotIn("model", compact)
 
 
 if __name__ == "__main__":

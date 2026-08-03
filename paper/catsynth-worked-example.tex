@@ -33,6 +33,11 @@ For orientation, CatSynth maps the paper\textquotesingle s method onto four oper
 The code and prompt are replaceable. A clean implementation should be regenerable from the
 evolved sketch and known-code anchors without replaying the CE archive as generation context.
 
+The current method requires two checks before revealing another candidate: the deterministic
+gate runs the active case and \texttt{R}, and a capable model or person reviews those simulated outputs
+against the current sketch. The same reviewer may also approve a sketch change when authorized,
+but judging the output and changing the sketch remain separate decisions.
+
 CatSynth makes one simplifying choice: its run is small, so every accepted CE is also a
 regression case (\texttt{R\ =\ A}). That is why its gate sees every promoted case. The general method does
 not require the full archive to remain in the executable regression set.
@@ -63,6 +68,17 @@ the corrected behavior. Developer then receives the current three files and that
 must revise the sketch with the code or prompt. The gate runs the active case and current
 regressions. If an earlier case regresses, that failed regression becomes the next single
 Developer input. The harness reveals no new case until the gate is green.
+
+That sentence describes the captured experiment. The capture predates the explicit requirement
+to record a separate post-repair sketch review over the active case and \texttt{R}. It therefore tests
+sketch evolution and the deterministic gate, not the complete two-check acceptance rule or the
+cost of repeated sketch review.
+
+On August 2, 2026, a corrected two-check continuation completed the GPT-5.4-mini benchmark after
+the initial wrapper had stopped at an arbitrary 24-repair bound. Its final visible and withheld
+scores are reported below. GPT-5.3-codex-spark remains incomplete at CE-012 and is a bounded
+failure record, not a model ranking. The compact record is under
+\texttt{examples/catsynth/experiment/results/two-check-reruns-20260802/}.
 
 The captured run freezes candidate cases and authoritative expected outputs before execution,
 then treats them as a simulated operator-approved stream. That makes the experiment
@@ -302,7 +318,7 @@ cites \texttt{invalid\_reviewer\_policy}, preserving which policy source needs r
 Developer adds the validation and provenance rule to the sketch and strategy. The full retained
 gate passes the initial anchor and all eight accepted counterexamples: 9/9.
 
-The final retained Sketch-CE implementation passes 18/21 withheld cases. It misses two multi-tag
+In the historical deterministic-only capture, the final retained Sketch-CE implementation passes 18/21 withheld cases. It misses two multi-tag
 cases because no accepted discovery has yet defined \texttt{avoid\_vocal}, and it misses one normalized
 severe-allergy variant. Those failures show where another open-world counterexample could extend
 the current sketch.
@@ -425,15 +441,58 @@ also inherited the sketch checkpoints. Their totals omit discovery work and are 
 price rankings.
 
 Sketch-CE with retained code used less Developer work and produced less cumulative churn.
-Evolved-sketch rebuild passed 19/21 withheld cases versus 15/21 for Replay-all. In this run, the
-evolved synthesis of the accepted examples generalized better than asking the same model to
-re-infer policy from all examples at every epoch. The retained strategy was the largest and had
-the most decision nodes, so that path shows less rework during evolution, not better final
-maintainability.
+Evolved-sketch rebuild passed 19/21 withheld cases versus 15/21 for Replay-all. That pattern
+motivated the protocol-correct continuation below. Because this capture lacked required sketch
+review and approval, the scores are not evidence for the current two-check method. The retained
+strategy was the largest and had the most decision nodes, so that path shows less rework during
+evolution, not better final maintainability.
 
-This is one model, one candidate order, and one sample per path. It supports the hypothesis that
-reviewed policy synthesis can carry lessons better than raw example replay. It does not establish
-universal cost, correctness, or maintainability superiority.
+This is one model, one candidate order, and one sample per path. It does not establish universal
+cost, correctness, or maintainability superiority.
+
+\section{Protocol-correct continuation}\label{protocol-correct-continuation}
+
+On 2026-08-02, the same mini arm was completed with deterministic acceptance, separate review of
+each simulated output against the current sketch, manual approval of every sketch change, and an
+explicit authority-and-preservation contract in every Developer prompt.
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.4000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2000}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Evaluation
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Replay-all
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Evolved-sketch rebuild
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
+Sketch-CE (retained code)
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Visible accepted cases & 8/8 & 8/8 & 8/8 \\
+Withheld cases & 14/21 & 17/21 & 16/21 \\
+\end{longtable}
+}
+
+This replaces the old 19/21-versus-15/21 headline for the current method. The direction remains:
+the reviewed evolved sketch beats raw replay, now by three withheld cases. Retaining code finishes
+between the controls and does not beat clean regeneration from the sketch in this sample. The old
+table remains the captured source for token, repair, and churn measurements.
+
+The clarification changed what the experiment can observe. The old capture could record a passing
+repair but not whether its draft sketch filled an unresolved hole or dropped an existing anchor.
+The two-check run rejected drafts that assigned an empty-catalog operation before CE11, gave the
+CE3 \texttt{avoid\_needy} tag a ranking effect before CE4, or removed stable input-shape clauses. It also
+adjudicated reviewer math errors rather than converting them into policy changes. The result is
+not an alignment claim: it makes proposed policy drift reviewable before it becomes accepted
+sketch text.
 
 \section{How the UI illustrates the finished artifacts}\label{how-the-ui-illustrates-the-finished-artifacts}
 
@@ -464,8 +523,12 @@ The UI exposes the stable repository artifacts:
 \item
   \textbf{Oracle B} - prompt-mediated narrative tags constrained to a controlled vocabulary.
 \item
-  \textbf{Gate} - replay and semantic comparison over CatSynth\textquotesingle s regression set.
+  \textbf{Gate} - replay and approved-output comparison over CatSynth\textquotesingle s regression set.
 \end{enumerate}
+
+The current method also requires sketch review over the active case and \texttt{R}. The browser lets a
+person inspect the sketch and concrete outputs, but the captured experiment does not record that
+review after every repair.
 
 The browser\textquotesingle s Review button records only a local operator decision in SQLite. It does not invoke
 Developer or revise \texttt{SKETCH.md}. The experiment history, not that button, is the evidence for the
@@ -478,13 +541,13 @@ The CE archive / regression page keeps both sides of the focal correction:
 An expected output records what should happen. The tempting output and violated rule record why a
 plausible alternative must continue to fail.
 
-\section{Why replay and semantic compare stay separate}\label{why-replay-and-semantic-compare-stay-separate}
+\section{Why replay and approved-output compare stay separate}\label{why-replay-and-approved-output-compare-stay-separate}
 
 Replay asks whether the candidate closes the visible state gap. For the focal recommendation, it
 checks the encoded size, affection, and fluffiness preferences. It deliberately does not decide
 the hard allergy policy.
 
-Semantic compare checks the approved policy-bearing fields:
+Approved-output compare checks the approved policy-bearing fields:
 
 \begin{verbatim}
 operation
@@ -492,12 +555,17 @@ breed
 cited_rules
 \end{verbatim}
 
-The naive Persian result can therefore pass replay and fail semantic compare:
+The naive Persian result can therefore pass replay and fail approved-output compare:
 
-\includegraphics[width=0.85\linewidth,height=\textheight,keepaspectratio,alt={Naive gate where replay passes and semantic compare fails}]{figures/catsynth/04-naive-gate.png}
+\includegraphics[width=0.85\linewidth,height=\textheight,keepaspectratio,alt={Naive gate where replay passes and approved-output compare fails}]{figures/catsynth/04-naive-gate.png}
 
 The split makes the failure actionable. The candidate repaired the visible preference state but
 did not follow the approved policy.
+
+Sketch review is a third question: does the simulated output follow the current sketch, including
+meaning the deterministic checkers do not encode? A capable model or person performs that review.
+The captured screenshot still labels approved-output compare as ``semantic compare,'' the original
+terminology.
 
 \section{Source map}\label{source-map}
 
@@ -538,4 +606,5 @@ CatSynth\textquotesingle s iterative gate establishes finite-regression correctn
 expected outputs, and evaluators. The withheld cases provide limited evidence beyond the gate.
 Neither result establishes correctness for all owner profiles, real breed facts, bad expected
 outputs or checkers, unencoded policy, future model behavior, or other models and reveal orders.
-CatSynth preserves the evidence needed to inspect that boundary.
+The capture also does not evaluate the method\textquotesingle s separate sketch-review step. CatSynth preserves
+the evidence needed to inspect that boundary.

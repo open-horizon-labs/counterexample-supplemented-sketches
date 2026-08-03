@@ -4,15 +4,19 @@ CatSynth is the concrete supplement to the [paper](../../paper/main.pdf) and its
 [top-level method overview](../../README.md). The distributed paper includes the supplement as an
 appendix; the same material is also available as a
 [standalone CatSynth PDF](../../paper/catsynth-supplement.pdf). Those documents define the method.
-CatSynth shows it in action: a coding agent starts from a partial sketch, changes the sketch and
-implementation for one approved counterexample at a time, runs the full regression gate after
-every change, and leaves every generated state behind for inspection.
+CatSynth records the sketch-evolution and deterministic-gate parts of the method: a coding agent
+starts from a partial sketch, changes the sketch and implementation for one approved
+counterexample at a time, runs the regression gate after every change, and leaves every generated
+state behind for inspection. The captured experiment predates the method's explicit requirement
+to review the active case and `R` against the current sketch after each repair.
 
 You can use CatSynth four ways:
 
 - run the synthesis driver with Codex App Server or an OpenAI-compatible Chat Completions API;
 - audit the [checked-in open-world capture](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/),
   including every generated sketch, code file, prompt, failure, gate result, and token ledger;
+- inspect the [bounded 2026-08-02 two-check reruns](experiment/results/two-check-reruns-20260802/),
+  which exercise the current approval and sketch-review loop;
 - read the same run as a [guided epoch-by-epoch walkthrough](../../paper/catsynth-worked-example.md)
   ([PDF](../../paper/catsynth-supplement.pdf));
 - open a local FastAPI and SQLite teaching UI that makes the final artifacts and gate behavior
@@ -27,6 +31,15 @@ The evolved sketch is the durable generation input. Every accepted counterexampl
 captured run changed `SKETCH.md`. The accepted archive records why it changed, and the regression
 corpus tests later implementations. The code and prompt are replaceable implementation surfaces.
 
+The current method requires two checks before revealing another candidate:
+
+1. Run the active case and curated regression set `R` through the deterministic gate.
+2. Run those cases in simulation and have a capable model or person compare their outputs with
+   the current sketch.
+
+The capture records the first check, not a separate post-repair record of the second. Its results
+do not measure the complete two-check rule or the cost of sketch review.
+
 In the originating method, a case that countered the sketch was raised to the operator. Only
 explicit approval made its corrected output authoritative and allowed it to change policy.
 CatSynth freezes the candidate cases and authoritative expected outputs before execution, so the
@@ -36,7 +49,7 @@ CatSynth is small enough to use every accepted CE as a regression case. Its acce
 regression corpus are therefore the same set: `R = A`. Larger applications can preserve the full
 archive while selecting a smaller regression subset.
 
-The retained implementation arm runs this algorithm:
+The retained implementation arm captured in July 2026 runs this algorithm:
 
 ```text
 generate sketch + code + prompt from the initial sketch
@@ -73,6 +86,18 @@ The distinction matters: counterexamples teach the sketch; regression cases test
 CatSynth happens to retain every accepted CE in the gate, but the method does not require an
 ever-growing example prompt or a regression test for every archived case.
 
+An active, approved CE authorizes the minimum general rule required by its corrected output and
+approved clause. The rule may be new to the sketch; that is the point of sketch evolution. It
+does not authorize unrelated decisions. During initial generation, or when repairing an
+implementation defect under an already sufficient sketch, there is no CE authority to fill an
+open policy hole. A later CE cannot retroactively authorize that earlier choice.
+
+Every CatSynth Developer call now carries a structured sketch-change contract. It names the exact
+active authority, the prior sketch and retained behavior to preserve, stable code and prompt
+contracts, and forbidden shortcuts. If those sources conflict or leave the authorized change
+ambiguous, Developer must return the files unchanged and ask one precise question. The harness
+records the operator's answer and retries; Developer does not choose which authority wins.
+
 ## Choose the experiment shape
 
 Use spec-first when the complete governing policy can be written before implementation. Use
@@ -106,6 +131,10 @@ The core driver performs the same bounded sequence for each accepted counterexam
    that generation.
 7. Reveal the next candidate only after the gate passes. Run withheld evaluation only after
    visible acceptance; withheld failures never return to Developer.
+
+The current method adds sketch review of the active case and `R` after step 5 and requires both
+the gate and that review to pass before step 7. The published capture did not record that added
+review, so its historical artifacts remain unchanged.
 
 When a candidate exposes missing policy, the Specification Oracle may propose rule wording. The
 checked-in case supplies the frozen corrected output and sketch clause that simulate operator
@@ -210,7 +239,12 @@ two controls:
 The controls isolate what the evolved sketch carries and what preserving implementation state
 contributes. CatSynth uses every accepted CE as a regression in this run, so `R = A`.
 
-## Benchmark results
+## Historical deterministic-only benchmark
+
+This July 2026 table predates separate sketch review and approval on every repair. Its withheld
+scores are not results for the current CESS method. The table remains for reproducibility and for
+its measured calls, tokens, repairs, and churn. The current withheld result is the
+protocol-correct rerun below.
 
 | Measure | Replay-all | Evolved-sketch rebuild | Sketch-CE (retained code) |
 |---|---:|---:|---:|
@@ -241,12 +275,12 @@ inherited the resulting promotion schedule, and evolved-sketch rebuild also inhe
 checkpoints. Their totals omit discovery work. The table reports real usage, but it is not an
 end-to-end price comparison.
 
-This run supports three narrower findings:
+This capture provides three historical diagnostics:
 
-- **The evolved sketch carried more policy than replaying the accepted examples.**
-  Evolved-sketch rebuild passed 19/21 withheld cases, compared with 15/21 for Replay-all. This is
-  evidence for the hypothesis that reviewed policy synthesis can generalize better than asking a
-  model to infer the policy again from the raw example archive.
+- **Its withheld pattern motivated the two-check rerun; it is not the current headline.**
+  Evolved-sketch rebuild passed 19/21 withheld cases, compared with 15/21 for Replay-all. Because
+  this capture lacked required sketch review and approval, those scores cannot support a claim
+  about the current two-check method.
 - **Retaining code reduced Developer work and cumulative churn.** Sketch-CE with retained code
   used 9 Developer calls, 217,576 Developer tokens, and 719 lines of cumulative artifact churn.
   It needed no extra repairs and regressed no earlier case on a first attempt.
@@ -261,6 +295,22 @@ One model, one reveal order, and one frozen suite cannot establish a general adv
 [checked-in capture](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/). The
 [results JSON](experiment/results/gpt-5.4-mini-adaptive-open-world-v2-20260712/results.json)
 contains the machine-readable aggregate.
+
+## Protocol-correct two-check result
+
+On 2026-08-02, the mini arm was completed with both acceptance checks, manual approval of every
+sketch change, adjudication of non-pass review verdicts, and an explicit authority-and-
+preservation contract in every Developer prompt.
+
+| Evaluation | Replay-all | Evolved-sketch rebuild | Sketch-CE (retained code) |
+|---|---:|---:|---:|
+| Visible accepted cases | 8/8 | 8/8 | 8/8 |
+| Withheld cases | 14/21 | 17/21 | 16/21 |
+
+The evolved sketch beat raw replay by three withheld cases. Retaining the implementation did not
+beat clean regeneration from the reviewed sketch in this sample. These scores replace the old
+19/21-versus-15/21 headline for claims about the current two-check method; they do not replace
+the historical run's measured token and churn totals.
 
 ## The closed-world control
 
@@ -347,7 +397,7 @@ The browser exposes:
 - **CEs (A = R)** — inspect approved outputs, tempting outputs, and sketch links;
 - **Rules** — inspect hard `forbid` and soft `discourage` rows;
 - **Sketch** — read the finished human-facing strategy;
-- **Gate** — run replay and semantic compare separately;
+- **Gate** — run replay and approved-output compare separately;
 - **Playground** — exercise runtime Oracle B through the deterministic mock or an
   environment-configured OpenAI-compatible endpoint.
 
@@ -362,9 +412,10 @@ server. This changes Playground inference only; it does not turn the UI into the
 driver.
 
 The UI's focal allergy case makes the two gate predicates visible. A preference-only resolver
-chooses Persian. Replay accepts the visible size, affection, and fluffiness match. Semantic
-compare rejects the choice because the approved output is Siberian with the hard allergy rule
-cited.
+chooses Persian. Replay accepts the visible size, affection, and fluffiness match.
+Approved-output compare rejects the choice because the approved output is Siberian with the hard
+allergy rule cited. The captured screenshot and historical UI data may still use the original
+label “semantic compare.”
 
 The SQLite database is only a runtime projection. Delete `catsynth.db` and rerun
 `uv run --with-requirements requirements.txt python cli.py seed --no-wiki` to reconstruct it from
@@ -387,7 +438,7 @@ The SQLite database is only a runtime projection. Delete `catsynth.db` and rerun
 | OpenAI-compatible transport | [`catsynth/openai_compat.py`](catsynth/openai_compat.py) |
 | Reference deterministic policy | [`catsynth/oracle_a.py`](catsynth/oracle_a.py) |
 | Runtime narrative Oracle | [`catsynth/oracle_b.py`](catsynth/oracle_b.py) |
-| App replay and semantic compare | [`catsynth/gate.py`](catsynth/gate.py) |
+| App replay and approved-output compare | [`catsynth/gate.py`](catsynth/gate.py) |
 | Synthetic fixtures and UI corpus | [`catsynth/seed.py`](catsynth/seed.py) |
 | Teaching-UI command driver | [`cli.py`](cli.py) |
 | Browser app | [`catsynth/app.py`](catsynth/app.py) and [`catsynth/static/`](catsynth/static/) |
@@ -413,4 +464,5 @@ The app tests use the deterministic runtime Oracle so they remain model-free.
 A green gate covers the checked regression corpus under the current fixtures and evaluators. The
 21 withheld cases add variants to this one captured experiment; they do not turn the result into
 a universal claim. Incorrect fixtures, incorrect expected outputs, checker bugs, unseen policy,
-different models, and different reveal orders remain outside the evidence.
+different models, and different reveal orders remain outside the evidence. The capture also does
+not evaluate the current method's separate sketch-review requirement.

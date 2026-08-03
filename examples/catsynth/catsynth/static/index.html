@@ -107,18 +107,28 @@
             <span class="paper-ref">Gate G</span></div>
           <p>Verification is adversarial: a useful check passes the intended behavior <em>and</em> fails the
             tempting wrong patch. The gate runs two checks over regression set R — <strong>replay</strong> (did we
-            close the owner's state gap?) and <strong>semantic compare</strong> (do the policy-bearing fields
+            close the owner's state gap?) and <strong>approved-output compare</strong> (do the policy-bearing fields
             match?). Run it in naive mode and watch replay <em>accept</em> Persian while compare
             <em>rejects</em> it on the <code>breed</code> field.</p>
           <button class="btn btn-sm" data-goto="gate">Open the Gate →</button>
+        </li>
+
+        <li class="home-step">
+          <div class="step-head"><span class="step-num">6</span>
+            <h3>Review — compare simulated output with the sketch</h3>
+            <span class="paper-ref">Sketch review</span></div>
+          <p>After the deterministic gate passes, run the active case and regression set in
+            simulation. A capable model or person compares each output with the current sketch.
+            The captured experiment predates this required review record; use the Review tab to
+            inspect the concrete policy and tempting outputs.</p>
+          <button class="btn btn-sm" data-goto="review">Open Review →</button>
         </li>
       </ol>
 
       <div class="home-lesson">
         <h3>The lesson in one line</h3>
-        <p>A state-valid repair can still be a policy violation. Replay and semantic compare fail differently,
-          and both are needed — that is why the counterexample and the gate, not the happy path, define
-          “correct.”</p>
+        <p>A state-valid repair can still be a policy violation. Run the deterministic gate, then
+          review the simulated output against the sketch. Do not reveal another case until both pass.</p>
       </div>
     </section>
 
@@ -239,7 +249,7 @@
     <!-- GATE -->
     <section id="gate" class="panel" role="tabpanel">
       <div class="gate-controls">
-        <h2>Gate G — replay + semantic compare over regression set R</h2>
+        <h2>Gate G — replay + approved-output compare over regression set R</h2>
         <div class="row">
           <button class="btn primary" id="run-gate-policy">Run gate (policy)</button>
           <button class="btn" id="run-gate-naive">Run gate (naive / tempting)</button>

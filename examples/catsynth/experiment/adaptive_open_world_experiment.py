@@ -84,9 +84,12 @@ def compact_repair_failures(
     cumulative: list[dict[str, Any]],
     gate: dict[str, Any],
     record: dict[str, Any],
+    sketch_review: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Keep every failure while storing the shared breed catalog only once."""
-    packets = exp.one_shot_failure_packets(cumulative, gate, record)
+    packets = exp.one_shot_failure_packets(
+        cumulative, gate, record, sketch_review,
+    )
     compact = []
     for packet in packets:
         item = dict(packet)
@@ -109,26 +112,32 @@ def run_rebuild_epoch(
     client: exp.ChatClient,
     ledger: exp.Ledger,
     max_repairs: int,
+    sketch_approver: exp.SketchApprover,
+    review_adjudicator: exp.SketchReviewAdjudicator,
 ) -> dict[str, Any]:
     reset_workspace(workspace, authoritative_sketch)
     failures = None
     attempts = []
     gate: dict[str, Any] = {}
+    sketch_review: dict[str, Any] = {}
+    validation_passed = False
     first_gate = None
+    first_sketch_review = None
+    authoritative_corpus = (
+        exp.complete_case_packets(cumulative)
+        if arm == "replay_all" and epoch > 0
+        else None
+    )
     for attempt in range(max_repairs + 1):
         if attempt == 0 and epoch == 0:
             phase = "initial"
-            complete_corpus = None
         elif attempt == 0 and arm == "replay_all":
             phase = "one_shot"
-            complete_corpus = exp.complete_case_packets(cumulative)
         elif attempt == 0:
             phase = "initial"
-            complete_corpus = None
         else:
             phase = "one_shot_repair"
-            complete_corpus = None
-        parsed, record = exp.call_developer(
+        parsed, record = exp.call_developer_with_approval(
             workspace,
             cumulative,
             failures,
@@ -137,17 +146,22 @@ def run_rebuild_epoch(
             f"epoch-{epoch:02d}-attempt-{attempt + 1:02d}",
             client,
             ledger,
-            complete_corpus=complete_corpus,
+            sketch_approver,
+            complete_corpus=authoritative_corpus,
         )
         if parsed:
             try:
-                gate = exp.run_gate(
+                validation = exp.run_validation(
                     workspace,
                     cumulative,
                     client,
                     ledger,
                     f"{arm}-epoch-{epoch}-attempt-{attempt + 1}",
+                    review_adjudicator,
                 )
+                gate = validation["gate"]
+                sketch_review = validation["sketch_review"]
+                validation_passed = validation["passed"]
             except Exception as exc:
                 gate = {
                     "passed": False,
@@ -156,6 +170,10 @@ def run_rebuild_epoch(
                     "cases": [],
                     "error": f"{type(exc).__name__}: {exc}",
                 }
+                sketch_review = exp.failed_sketch_review(
+                    f"{type(exc).__name__}: {exc}", len(cumulative) + 1,
+                )
+                validation_passed = False
         else:
             gate = {
                 "passed": False,
@@ -164,9 +182,16 @@ def run_rebuild_epoch(
                 "cases": [],
                 "error": record.get("error"),
             }
+            sketch_review = exp.failed_sketch_review(
+                record.get("error"), len(cumulative) + 1,
+            )
+            validation_passed = False
         if first_gate is None:
             first_gate = json.loads(json.dumps(gate))
+            first_sketch_review = json.loads(json.dumps(sketch_review))
         record["gate"] = gate
+        record["sketch_review"] = sketch_review
+        record["validation_passed"] = validation_passed
         record["visible_failures_supplied"] = failures or []
         attempt_root = root / f"epoch-{epoch:02d}" / f"attempt-{attempt + 1:02d}"
         exp.write_json(attempt_root / "record.json", record)
@@ -177,14 +202,17 @@ def run_rebuild_epoch(
             gate,
             record,
             failures,
+            sketch_review,
         )
         attempts.append(record)
-        if gate.get("passed"):
+        if validation_passed:
             break
-        failures = compact_repair_failures(cumulative, gate, record)
-    if not gate.get("passed"):
+        failures = compact_repair_failures(
+            cumulative, gate, record, sketch_review,
+        )
+    if not validation_passed:
         raise exp.ExperimentError(
-            f"{arm} did not close epoch {epoch} after {max_repairs} repairs"
+            f"{arm} did not close both checks in epoch {epoch} after {max_repairs} repairs"
         )
     current_id = cumulative[-1]["id"] if cumulative else None
     prior_regressions = [
@@ -192,13 +220,22 @@ def run_rebuild_epoch(
         for item in (first_gate or {}).get("cases", [])
         if not item.get("passed") and item["id"] != current_id
     ]
+    prior_review_failures = [
+        item["id"]
+        for item in (first_sketch_review or {}).get("cases", [])
+        if not item.get("passed") and item["id"] != current_id
+    ]
     return {
         "epoch": epoch,
         "attempts": attempts,
         "repair_attempts": len(attempts) - 1,
         "first_gate": first_gate,
+        "first_sketch_review": first_sketch_review,
         "final_gate": gate,
+        "final_sketch_review": sketch_review,
+        "final_validation_passed": validation_passed,
         "prior_regressions_on_first_attempt": prior_regressions,
+        "prior_sketch_review_failures_on_first_attempt": prior_review_failures,
         "artifact_churn_lines": sum(diff_churn(item.get("diffs", {})) for item in attempts),
     }
 
@@ -210,6 +247,8 @@ def run_rebuild_arm(
     sketch_checkpoints: list[str],
     client: exp.ChatClient,
     max_repairs: int,
+    sketch_approver: exp.SketchApprover,
+    review_adjudicator: exp.SketchReviewAdjudicator,
 ) -> tuple[dict[str, Any], exp.Ledger]:
     workspace = root / "workspace"
     ledger = exp.Ledger()
@@ -224,6 +263,8 @@ def run_rebuild_arm(
             client,
             ledger,
             max_repairs,
+            sketch_approver,
+            review_adjudicator,
         )
     ]
     for index, case in enumerate(promoted, 1):
@@ -243,14 +284,17 @@ def run_rebuild_arm(
                 client,
                 ledger,
                 max_repairs,
+                sketch_approver,
+                review_adjudicator,
             )
         )
+    final_epoch = epochs[-1]
     return {
         "workspace": str(workspace),
         "epochs": epochs,
-        "final_gate": exp.run_gate(
-            workspace, promoted, client, ledger, f"{arm}-final-visible"
-        ),
+        "final_gate": final_epoch["final_gate"],
+        "final_sketch_review": final_epoch["final_sketch_review"],
+        "final_validation_passed": final_epoch["final_validation_passed"],
     }, ledger
 
 
@@ -261,6 +305,10 @@ def finish_arm(
     client: exp.ChatClient,
     ledger: exp.Ledger,
 ) -> None:
+    if not arm.get("final_validation_passed"):
+        raise exp.ExperimentError(
+            f"{name} failed its final deterministic gate or sketch review"
+        )
     workspace = Path(arm["workspace"])
     arm["evaluation"] = exp.final_evaluation(workspace, promoted, client, ledger, name)
     arm["quality"] = exp.quality_metrics(workspace)
@@ -278,6 +326,14 @@ def finish_arm(
                 for item in attempt["gate"].get("cases", [])
                 if not item.get("passed") and item["id"] != cycle["case"]
             ),
+            "prior_sketch_review_failures_on_first_attempt": sum(
+                1
+                for cycle in arm["cycles"]
+                if cycle["status"] == "promoted"
+                for attempt in cycle["attempts"][:1]
+                for item in attempt["sketch_review"].get("cases", [])
+                if not item.get("passed") and item["id"] != cycle["case"]
+            ),
             "artifact_churn_lines": sum(
                 diff_churn(record.get("diffs", {})) for record in records
             ),
@@ -289,6 +345,10 @@ def finish_arm(
             "repair_attempts": sum(epoch["repair_attempts"] for epoch in epochs),
             "prior_regressions_on_first_attempt": sum(
                 len(epoch["prior_regressions_on_first_attempt"]) for epoch in epochs
+            ),
+            "prior_sketch_review_failures_on_first_attempt": sum(
+                len(epoch["prior_sketch_review_failures_on_first_attempt"])
+                for epoch in epochs
             ),
             "artifact_churn_lines": sum(
                 epoch["artifact_churn_lines"] for epoch in epochs
@@ -321,10 +381,16 @@ def markdown_report(report: dict[str, Any]) -> str:
         arm["tokens"]["by_category"].get("spec_oracle", {}).get("total_tokens", 0)
         for arm in arms
     ]
+    sketch_review_tokens = [
+        arm["tokens"]["by_category"].get("sketch_reviewer", {}).get("total_tokens", 0)
+        for arm in arms
+    ]
     acceptance_tokens = [
-        developer_bucket(arm, name).get("total_tokens", 0) + runtime + specification
-        for arm, name, runtime, specification in zip(
-            arms, names, runtime_acceptance_tokens, specification_tokens
+        developer_bucket(arm, name).get("total_tokens", 0)
+        + runtime + specification + sketch_review
+        for arm, name, runtime, specification, sketch_review in zip(
+            arms, names, runtime_acceptance_tokens, specification_tokens,
+            sketch_review_tokens,
         )
     ]
     lines = [
@@ -345,11 +411,16 @@ def markdown_report(report: dict[str, Any]) -> str:
         ("Developer tokens", [developer_bucket(arm, name).get("total_tokens", 0) for arm, name in zip(arms, names)]),
         ("Runtime Oracle tokens through acceptance", runtime_acceptance_tokens),
         ("Specification Oracle tokens", specification_tokens),
+        ("Sketch Reviewer tokens", sketch_review_tokens),
         ("Post-acceptance evaluation tokens", post_acceptance_tokens),
         ("Total recorded tokens, including evaluation", [arm["tokens"]["overall"]["total_tokens"] for arm in arms]),
         ("Repair attempts", [arm["metrics"]["repair_attempts"] for arm in arms]),
         ("Rebuilds", [arm["metrics"]["rebuilds"] for arm in arms]),
         ("First-attempt prior regressions", [arm["metrics"]["prior_regressions_on_first_attempt"] for arm in arms]),
+        ("First-attempt prior sketch-review failures", [
+            arm["metrics"]["prior_sketch_review_failures_on_first_attempt"]
+            for arm in arms
+        ]),
         ("Artifact churn lines", [arm["metrics"]["artifact_churn_lines"] for arm in arms]),
         ("Final strategy LOC", [arm["quality"]["strategy_loc"] for arm in arms]),
         ("Final decision nodes", [arm["quality"]["decision_nodes"] for arm in arms]),
@@ -379,8 +450,11 @@ def markdown_report(report: dict[str, Any]) -> str:
         "received the initial sketch plus the cumulative accepted archive. Evolved-sketch rebuild",
         "received only the current evolved sketch checkpoint. Withheld cases were evaluated",
         "after visible acceptance and were never repair input.",
-        "Tokens through acceptance include Developer edits, Runtime Oracle checks, and",
-        "Specification Oracle rule proposals. Post-acceptance evaluation is separate.",
+        "Each repair advanced only after the deterministic gate and separate model-backed",
+        "review against the current sketch both passed for the active case and R.",
+        "Tokens through acceptance include Developer edits, Runtime Oracle checks,",
+        "Specification Oracle rule proposals, and Sketch Reviewer calls. Post-acceptance",
+        "evaluation is separate.",
         "Sketch-CE pays to evaluate the external candidates and propose rules for failures.",
         "The controls inherit the resulting promotion schedule, so their totals have a narrower",
         "boundary and are not end-to-end price alternatives.",
@@ -405,6 +479,8 @@ def main() -> None:
     output.mkdir(parents=True, exist_ok=False)
     shutil.copy2(MANIFEST_PATH, output / MANIFEST_PATH.name)
     client = CodexAppServerClient(model=args.model, cwd=HERE, timeout=600)
+    sketch_approver = exp.ManualSketchApprover(output)
+    review_adjudicator = exp.ManualSketchReviewAdjudicator(output)
     try:
         models = client.list_models()
         if args.model not in models:
@@ -412,7 +488,8 @@ def main() -> None:
 
         iterative_ledger = exp.Ledger()
         sketch_ce = exp.run_iterative(
-            output / "sketch-ce", candidates, client, iterative_ledger, args.max_repairs
+            output / "sketch-ce", candidates, client, iterative_ledger,
+            args.max_repairs, sketch_approver, review_adjudicator,
         )
         promoted = sketch_ce["promoted"]
         promoted_cycles = [
@@ -429,6 +506,8 @@ def main() -> None:
             sketch_checkpoints,
             client,
             args.max_repairs,
+            sketch_approver,
+            review_adjudicator,
         )
         reviewed_sketch, reviewed_ledger = run_rebuild_arm(
             "reviewed_sketch",
@@ -437,6 +516,8 @@ def main() -> None:
             sketch_checkpoints,
             client,
             args.max_repairs,
+            sketch_approver,
+            review_adjudicator,
         )
 
         arms = {

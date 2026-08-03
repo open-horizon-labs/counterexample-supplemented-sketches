@@ -8,7 +8,7 @@ small teaching app. The general method may curate R as a subset of archive A.
 - Compare: did the candidate use the encoded *policy-bearing* fields from the
            approved expectation? (operation, breed, cited_rules)
 
-Replay and compare fail differently on purpose. A preference-satisfying breed
+Replay and approved-output compare fail differently on purpose. A preference-satisfying breed
 that violates a hard rule (e.g. Persian for an allergic owner) passes replay and
 is rejected by compare -- exactly the tempting-repair case.
 """
@@ -62,7 +62,8 @@ def replay(owner: OwnerProfile, candidate: Recommendation,
     return False, f"operation {candidate.operation} has no encoded replay predicate"
 
 
-def semantic_compare(expected: Recommendation, candidate: Recommendation) -> tuple[bool, dict]:
+def approved_output_compare(expected: Recommendation,
+                            candidate: Recommendation) -> tuple[bool, dict]:
     """Compare the policy-bearing fields only."""
     e, c = expected.policy_fields(), candidate.policy_fields()
     fields = {}
@@ -70,6 +71,12 @@ def semantic_compare(expected: Recommendation, candidate: Recommendation) -> tup
         fields[key] = {"expected": e[key], "actual": c[key], "match": e[key] == c[key]}
     passed = all(f["match"] for f in fields.values())
     return passed, fields
+
+
+def semantic_compare(expected: Recommendation,
+                     candidate: Recommendation) -> tuple[bool, dict]:
+    """Backward-compatible name for approved-output compare."""
+    return approved_output_compare(expected, candidate)
 
 
 def _interpret(replay_ok: bool, compare_ok: bool) -> str:
@@ -90,7 +97,7 @@ def run_gate(conn, mode: str = "policy", llm_client: Optional[LLMClient] = None)
         owner = db.get_scenario(conn, case["scenario_id"])
         candidate = resolver.resolve(conn, owner, mode=mode, llm_client=llm_client)
         replay_ok, replay_detail = replay(owner, candidate, breeds, rules)
-        compare_ok, compare_fields = semantic_compare(case["expected"], candidate)
+        compare_ok, compare_fields = approved_output_compare(case["expected"], candidate)
         cases.append({
             "corpus_id": case["id"],
             "scenario_id": case["scenario_id"],
